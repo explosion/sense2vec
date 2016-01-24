@@ -54,10 +54,24 @@ cdef class Vectors:
 
     def save(self, loc):
         cdef CFile cfile = CFile(loc, 'w')
-        cdef const float* vec
+        cdef float* vec
         for vec in self.vectors:
             cfile.write_from(vec, self.nr_dim, sizeof(vec[0]))
         cfile.close()
+
+    def load(self, loc):
+        cdef CFile cfile = CFile(loc, 'r')
+        cdef vector[float] tmp
+        tmp.reserve(self.nr_dim)
+        while True:
+            try:
+                cfile.read_into(tmp.data(), self.nr_dim, sizeof(tmp[0]))
+            except IOError:
+                break
+            self.add(tmp)
+        cfile.close()
+
+
 
 
 cdef void linear_similarity(int* indices, float* scores,
