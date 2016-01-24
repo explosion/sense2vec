@@ -56,7 +56,7 @@ cdef class Vectors:
         cdef CFile cfile = CFile(loc, 'w')
         cdef const float* vec
         for vec in self.vectors:
-            cfile.write_from(vec, len(vec), sizeof(vec[0]))
+            cfile.write_from(vec, self.nr_dim, sizeof(vec[0]))
         cfile.close()
 
 
