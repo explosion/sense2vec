@@ -14,12 +14,15 @@ from spacy.strings cimport StringStore, hash_string
 from cymem.cymem cimport Pool
 cimport numpy as np
 import numpy
+from os import path
+import ujson as json
 
 
 ctypedef pair[float, int] Entry
 ctypedef priority_queue[Entry] Queue
 ctypedef float (*do_similarity_t)(const float* v1, const float* v2,
         float nrm1, float nrm2, int nr_dim) nogil
+
 
 cdef class VectorMap:
     '''Provide key-based access into the VectorStore. Keys are unicode strings.
@@ -49,6 +52,28 @@ cdef class VectorMap:
             hashed = hash_string(string)
             freq = self.freqs[hashed]
             yield (string, freq, self.data[i])
+
+    def save(self, data_dir):
+        with open(path.join(data_dir, 'strings.json'), 'w') as file_:
+            self.strings.dump(file_)
+        self.data.save(path.join(data_dir, 'vectors.bin'))
+        freqs = {}
+        cdef uint64_t hashed
+        for hashed, freq in self.freqs.items():
+            freqs[hashed] = freq
+        with open(path.join(data_dir, 'freqs.json'), 'w') as file_:
+            json.dump(freqs)
+
+    def load(self, data_dir):
+        self.data.load(path.join(data_dir, 'vectors.bin'))
+        with open(path.join(data_dir, 'strings.json')) as file_:
+            self.strings.load(file_)
+        with open(path.join(data_dir, 'freqs.json')) as file_:
+            freqs = json.load(file_)
+        cdef uint64_t hashed
+        for hashed, freq in freqs.iteritems():
+            self.freqs[hashed] = freq
+
 
 cdef class VectorStore:
     '''Maintain an array of float* pointers for word vectors, which the
