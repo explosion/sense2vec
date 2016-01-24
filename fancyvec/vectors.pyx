@@ -29,7 +29,7 @@ cdef class VectorMap:
     Also manage freqs.'''
     cdef readonly Pool mem
     cdef VectorStore data
-    cdef StringStore strings
+    cdef readonly StringStore strings
     cdef PreshMap freqs
     
     def __init__(self, nr_dim):
@@ -61,22 +61,24 @@ cdef class VectorMap:
         idx = self.strings[string]
         cdef uint64_t hashed = hash_string(string)
         self.freqs[hashed] = idx
+        assert self.data.vectors.size() == idx
         self.data.add(vector)
 
     def borrow(self, unicode string, int freq, float[:] vector):
         idx = self.strings[string]
         cdef uint64_t hashed = hash_string(string)
         self.freqs[hashed] = idx
+        assert self.data.vectors.size() == idx
         self.data.borrow(vector)
 
     def save(self, data_dir):
         with open(path.join(data_dir, 'strings.json'), 'w') as file_:
             self.strings.dump(file_)
         self.data.save(path.join(data_dir, 'vectors.bin'))
-        freqs = {}
+        freqs = []
         cdef uint64_t hashed
         for hashed, freq in self.freqs.items():
-            freqs[hashed] = freq
+            freqs.append([hashed, freq])
         with open(path.join(data_dir, 'freqs.json'), 'w') as file_:
             json.dump(freqs, file_)
 
@@ -87,7 +89,7 @@ cdef class VectorMap:
         with open(path.join(data_dir, 'freqs.json')) as file_:
             freqs = json.load(file_)
         cdef uint64_t hashed
-        for hashed, freq in freqs.iteritems():
+        for hashed, freq in freqs:
             self.freqs[hashed] = freq
 
 
@@ -106,6 +108,7 @@ cdef class VectorStore:
         self.nr_dim = nr_dim 
         zeros = <float*>self.mem.alloc(self.nr_dim, sizeof(float))
         self.vectors.push_back(zeros)
+        self.norms.push_back(0)
 
     def __getitem__(self, int i):
         cdef float* ptr = self.vectors.at(i)
@@ -118,7 +121,7 @@ cdef class VectorStore:
         memcpy(ptr,
             &vec[0], sizeof(ptr[0]) * self.nr_dim)
         self.norms.push_back(get_l2_norm(&ptr[0], self.nr_dim))
-        self.vectors.push_back(&ptr[0])
+        self.vectors.push_back(ptr)
     
     def borrow(self, float[:] vec):
         self.norms.push_back(get_l2_norm(&vec[0], self.nr_dim))
@@ -132,6 +135,7 @@ cdef class VectorStore:
             n, &query[0], self.nr_dim,
             &self.vectors[0], &self.norms[0], self.vectors.size(), 
             cosine_similarity)
+        print("Most similar", list(indices), list(scores))
         return indices, scores
 
     def save(self, loc):
@@ -156,7 +160,8 @@ cdef class VectorStore:
             cfile.read_into(&tmp[0], self.nr_dim, sizeof(tmp[0]))
             ptr = &tmp[0]
             cv = <float[:128]>ptr
-            self.add(cv)
+            if i >= 1:
+                self.add(cv)
         cfile.close()
 
 
@@ -167,7 +172,7 @@ cdef void linear_similarity(int* indices, float* scores,
     query_norm = get_l2_norm(query, nr_dim)
     # Initialize the partially sorted heap
     cdef priority_queue[pair[float, int]] queue
-    for i in range(nr_vector):
+    for i in range(nr_out):
         score = get_similarity(query, vectors[i], query_norm, norms[i], nr_dim)
         queue.push(pair[float, int](-score, i))
     # Get the rest of the similarities, maintaining the top N
@@ -218,4 +223,4 @@ cdef float cosine_similarity(const float* v1, const float* v2,
         dot = 0
         for i in range(n):
             dot += v1[i] * v2[i]
-    return dot / ((norm1 * norm2) + 1e-8)
+    return dot / (norm1 * norm2)
