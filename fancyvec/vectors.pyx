@@ -7,6 +7,7 @@ from libc.string cimport memcpy
 from libcpp.pair cimport pair
 from libcpp.queue cimport priority_queue
 from libcpp.vector cimport vector
+from spacy.cfile cimport CFile
 
 from cymem.cymem cimport Pool
 cimport numpy as np
@@ -50,6 +51,13 @@ cdef class Vectors:
             &self.vectors[0], &self.norms[0], self.vectors.size(), 
             cosine_similarity)
         return indices, scores
+
+    def save(self, loc):
+        cdef CFile cfile = CFile(loc, 'w')
+        cdef const float* vec
+        for vec in self.vectors:
+            cfile.write_from(vec, len(vec), sizeof(vec[0]))
+        cfile.close()
 
 
 cdef void linear_similarity(int* indices, float* scores,
