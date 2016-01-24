@@ -78,7 +78,7 @@ cdef class VectorMap:
         for hashed, freq in self.freqs.items():
             freqs[hashed] = freq
         with open(path.join(data_dir, 'freqs.json'), 'w') as file_:
-            json.dump(freqs)
+            json.dump(freqs, file_)
 
     def load(self, data_dir):
         self.data.load(path.join(data_dir, 'vectors.bin'))
