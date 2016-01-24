@@ -53,6 +53,18 @@ cdef class VectorMap:
             freq = self.freqs[hashed]
             yield (string, freq, self.data[i])
 
+    def add(self, unicode string, int freq, float[:] vector):
+        idx = self.strings[string]
+        cdef uint64_t hashed = hash_string(string)
+        self.freqs[hashed] = idx
+        self.data.add(vector)
+
+    def borrow(self, unicode string, int freq, float[:] vector):
+        idx = self.strings[string]
+        cdef uint64_t hashed = hash_string(string)
+        self.freqs[hashed] = idx
+        self.data.borrow(vector)
+
     def save(self, data_dir):
         with open(path.join(data_dir, 'strings.json'), 'w') as file_:
             self.strings.dump(file_)
