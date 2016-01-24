@@ -53,6 +53,10 @@ cdef class VectorMap:
             freq = self.freqs[hashed]
             yield (string, freq, self.data[i])
 
+    def most_similar(self, float[:] vector, int n):
+        indices, scores = self.data.most_similar(vector, n)
+        return [self.strings[idx] for idx in indices], scores
+
     def add(self, unicode string, int freq, float[:] vector):
         idx = self.strings[string]
         cdef uint64_t hashed = hash_string(string)
