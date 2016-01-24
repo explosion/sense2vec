@@ -1,16 +1,19 @@
 # cython: profile=True
 # cython: cdivision=True
 # cython: infer_types=True
-from libc.stdint cimport uint32_t
+from libc.stdint cimport int32_t
 from libc.stdint cimport uint64_t
 from libc.string cimport memcpy
 from libcpp.pair cimport pair
 from libcpp.queue cimport priority_queue
 from libcpp.vector cimport vector
 from spacy.cfile cimport CFile
+from preshed.maps cimport PreshMap
+from spacy.strings cimport StringStore, hash_string
 
 from cymem.cymem cimport Pool
 cimport numpy as np
+import numpy
 
 
 ctypedef pair[float, int] Entry
@@ -18,8 +21,40 @@ ctypedef priority_queue[Entry] Queue
 ctypedef float (*do_similarity_t)(const float* v1, const float* v2,
         float nrm1, float nrm2, int nr_dim) nogil
 
+cdef class VectorMap:
+    '''Provide key-based access into the VectorStore. Keys are unicode strings.
+    Also manage freqs.'''
+    cdef readonly Pool mem
+    cdef VectorStore data
+    cdef StringStore strings
+    cdef PreshMap freqs
+    
+    def __init__(self, nr_dim):
+        self.data = VectorStore(nr_dim)
+        self.strings = StringStore()
+        self.freqs = PreshMap()
 
-cdef class Vectors:
+    def __getitem__(self, unicode string):
+        cdef uint64_t hashed = hash_string(string)
+        cdef int32_t freq = self.freqs[hashed]
+        if not freq:
+            raise KeyError(string)
+        else:
+            i = self.strings[string]
+            return freq, self.data[i]
+
+    def __iter__(self):
+        cdef uint64_t hashed
+        for i, string in enumerate(self.strings):
+            hashed = hash_string(string)
+            freq = self.freqs[hashed]
+            yield (string, freq, self.data[i])
+
+cdef class VectorStore:
+    '''Maintain an array of float* pointers for word vectors, which the
+    table may or may not own. Keys and frequencies sold separately --- 
+    we're just a dumb vector of data, that knows how to run linear-scan
+    similarity queries.'''
     cdef readonly Pool mem
     cdef vector[float*] vectors
     cdef vector[float] norms
@@ -28,20 +63,26 @@ cdef class Vectors:
     def __init__(self, int nr_dim):
         self.mem = Pool()
         self.nr_dim = nr_dim 
+        zeros = <float*>self.mem.alloc(self.nr_dim, sizeof(float))
+        self.vectors.push_back(zeros)
+
+    def __getitem__(self, int i):
+        cdef float* ptr = self.vectors.at(i)
+        cv = <float[:self.nr_dim]>ptr
+        return numpy.asarray(cv)
 
     def add(self, float[:] vec):
         assert len(vec) == self.nr_dim
         ptr = <float*>self.mem.alloc(self.nr_dim, sizeof(float))
         memcpy(ptr,
             &vec[0], sizeof(ptr[0]) * self.nr_dim)
-        self.vectors.push_back(ptr)
-        self.norms.push_back(get_l2_norm(ptr, self.nr_dim))
+        self.norms.push_back(get_l2_norm(&ptr[0], self.nr_dim))
+        self.vectors.push_back(&ptr[0])
     
     def borrow(self, float[:] vec):
-        assert len(vec) == self.nr_dim
+        self.norms.push_back(get_l2_norm(&vec[0], self.nr_dim))
         # Danger! User must ensure this is memory contiguous!
         self.vectors.push_back(&vec[0])
-        self.norms.push_back(get_l2_norm(&vec[0], self.nr_dim))
 
     def most_similar(self, float[:] query, int n):
         cdef int[:] indices = np.ndarray(shape=(n,), dtype='int32')
@@ -55,23 +96,27 @@ cdef class Vectors:
     def save(self, loc):
         cdef CFile cfile = CFile(loc, 'w')
         cdef float* vec
+        cdef int32_t nr_vector = self.vectors.size()
+        cfile.write_from(&nr_vector, 1, sizeof(nr_vector))
+        cfile.write_from(&self.nr_dim, 1, sizeof(self.nr_dim))
         for vec in self.vectors:
             cfile.write_from(vec, self.nr_dim, sizeof(vec[0]))
         cfile.close()
 
     def load(self, loc):
         cdef CFile cfile = CFile(loc, 'r')
+        cdef int32_t nr_vector
+        cfile.read_into(&nr_vector, 1, sizeof(nr_vector))
+        cfile.read_into(&self.nr_dim, 1, sizeof(self.nr_dim))
         cdef vector[float] tmp
         tmp.reserve(self.nr_dim)
-        while True:
-            try:
-                cfile.read_into(tmp.data(), self.nr_dim, sizeof(tmp[0]))
-            except IOError:
-                break
-            self.add(tmp)
+        cdef float[:] cv
+        for i in range(nr_vector):
+            cfile.read_into(&tmp[0], self.nr_dim, sizeof(tmp[0]))
+            ptr = &tmp[0]
+            cv = <float[:128]>ptr
+            self.add(cv)
         cfile.close()
-
-
 
 
 cdef void linear_similarity(int* indices, float* scores,
@@ -81,10 +126,8 @@ cdef void linear_similarity(int* indices, float* scores,
     query_norm = get_l2_norm(query, nr_dim)
     # Initialize the partially sorted heap
     cdef priority_queue[pair[float, int]] queue
-    for i in range(nr_out):
+    for i in range(nr_vector):
         score = get_similarity(query, vectors[i], query_norm, norms[i], nr_dim)
-        with gil:
-            print("Score", i, score)
         queue.push(pair[float, int](-score, i))
     # Get the rest of the similarities, maintaining the top N
     for i in range(nr_out, nr_vector):
