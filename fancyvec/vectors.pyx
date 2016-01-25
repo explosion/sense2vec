@@ -175,15 +175,20 @@ cdef void linear_similarity(int* indices, float* scores,
     query_norm = get_l2_norm(query, nr_dim)
     # Initialize the partially sorted heap
     cdef priority_queue[pair[float, int]] queue
+    cdef float cutoff = 0
     for i in range(nr_vector):
         score = get_similarity(query, vectors[i], query_norm, norms[i], nr_dim)
-        queue.push(pair[float, int](score, i))
+        if score > cutoff:
+            queue.push(pair[float, int](-score, i))
+            cutoff = -queue.top().first
+            if queue.size() > nr_out:
+                queue.pop()
     # Fill the outputs
     i = 0
     while i < nr_out and not queue.empty(): 
         entry = queue.top()
-        scores[i] = entry.first
-        indices[i] = entry.second
+        scores[nr_out-(i+1)] = -entry.first
+        indices[nr_out-(i+1)] = entry.second
         queue.pop()
         i += 1
     
