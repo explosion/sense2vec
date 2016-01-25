@@ -36,10 +36,14 @@ cdef class VectorMap:
         self.data = VectorStore(nr_dim)
         self.strings = StringStore()
         self.freqs = PreshMap()
+    
+    def __contains__(self, unicode string):
+        cdef uint64_t hashed = hash_string(string)
+        return bool(self.freqs[hashed])
 
     def __getitem__(self, unicode string):
         cdef uint64_t hashed = hash_string(string)
-        cdef int32_t freq = self.freqs[hashed]
+        freq = self.freqs[hashed]
         if not freq:
             raise KeyError(string)
         else:
@@ -60,14 +64,14 @@ cdef class VectorMap:
     def add(self, unicode string, int freq, float[:] vector):
         idx = self.strings[string]
         cdef uint64_t hashed = hash_string(string)
-        self.freqs[hashed] = idx
+        self.freqs[hashed] = freq
         assert self.data.vectors.size() == idx
         self.data.add(vector)
 
     def borrow(self, unicode string, int freq, float[:] vector):
         idx = self.strings[string]
         cdef uint64_t hashed = hash_string(string)
-        self.freqs[hashed] = idx
+        self.freqs[hashed] = freq
         assert self.data.vectors.size() == idx
         self.data.borrow(vector)
 
@@ -135,7 +139,6 @@ cdef class VectorStore:
             n, &query[0], self.nr_dim,
             &self.vectors[0], &self.norms[0], self.vectors.size(), 
             cosine_similarity)
-        print("Most similar", list(indices), list(scores))
         return indices, scores
 
     def save(self, loc):
@@ -172,21 +175,15 @@ cdef void linear_similarity(int* indices, float* scores,
     query_norm = get_l2_norm(query, nr_dim)
     # Initialize the partially sorted heap
     cdef priority_queue[pair[float, int]] queue
-    for i in range(nr_out):
+    for i in range(nr_vector):
         score = get_similarity(query, vectors[i], query_norm, norms[i], nr_dim)
-        queue.push(pair[float, int](-score, i))
-    # Get the rest of the similarities, maintaining the top N
-    for i in range(nr_out, nr_vector):
-        score = get_similarity(query, vectors[i], query_norm, norms[i], nr_dim)
-        if score >= -queue.top().first:
-            queue.pop()
-            queue.push(pair[float, int](-score, i))
+        queue.push(pair[float, int](score, i))
     # Fill the outputs
     i = 0
     while i < nr_out and not queue.empty(): 
         entry = queue.top()
-        scores[nr_out-(i+1)] = -entry.first
-        indices[nr_out-(i+1)] = entry.second
+        scores[i] = entry.first
+        indices[i] = entry.second
         queue.pop()
         i += 1
     
