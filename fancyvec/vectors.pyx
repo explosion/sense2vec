@@ -1,6 +1,7 @@
 # cython: profile=True
 # cython: cdivision=True
 # cython: infer_types=True
+cimport cython.parallel
 from libc.stdint cimport int32_t
 from libc.stdint cimport uint64_t
 from libc.string cimport memcpy
@@ -105,6 +106,7 @@ cdef class VectorStore:
     cdef readonly Pool mem
     cdef vector[float*] vectors
     cdef vector[float] norms
+    cdef vector[float] _similarities
     cdef readonly int nr_dim
     
     def __init__(self, int nr_dim):
@@ -135,7 +137,8 @@ cdef class VectorStore:
     def most_similar(self, float[:] query, int n):
         cdef int[:] indices = np.ndarray(shape=(n,), dtype='int32')
         cdef float[:] scores = np.ndarray(shape=(n,), dtype='float32')
-        linear_similarity(&indices[0], &scores[0],
+        self._similarities.reserve(self.vectors.size())
+        linear_similarity(&indices[0], &scores[0], &self._similarities[0],
             n, &query[0], self.nr_dim,
             &self.vectors[0], &self.norms[0], self.vectors.size(), 
             cosine_similarity)
@@ -168,16 +171,21 @@ cdef class VectorStore:
         cfile.close()
 
 
-cdef void linear_similarity(int* indices, float* scores,
+cdef void linear_similarity(int* indices, float* scores, float* tmp,
         int nr_out, const float* query, int nr_dim,
         const float* const* vectors, const float* norms, int nr_vector,
         do_similarity_t get_similarity) nogil:
     query_norm = get_l2_norm(query, nr_dim)
     # Initialize the partially sorted heap
+    cdef int i
+    cdef float score
+    for i in cython.parallel.prange(nr_vector, nogil=True):
+        #tmp[i] = cblas_sdot(nr_dim, query, 1, vectors[i], 1) / (query_norm * norms[i])
+        tmp[i] = get_similarity(query, vectors[i], query_norm, norms[i], nr_dim)
     cdef priority_queue[pair[float, int]] queue
     cdef float cutoff = 0
     for i in range(nr_vector):
-        score = get_similarity(query, vectors[i], query_norm, norms[i], nr_dim)
+        score = tmp[i]
         if score > cutoff:
             queue.push(pair[float, int](-score, i))
             cutoff = -queue.top().first
