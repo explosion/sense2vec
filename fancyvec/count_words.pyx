@@ -4,59 +4,41 @@
 # Contributed by Matthew Honnibal <matt@spacy.io>
 # Copyright (C) 2015 ceded to Radim Rehurek <radimrehurek@seznam.cz>
 # Licensed under the GNU LGPL v2.1 - http://www.gnu.org/licenses/lgpl.html
-
-
-from cpython cimport PyUnicode_AS_DATA
-from cpython cimport PyUnicode_GET_DATA_SIZE
-from libc.stdint cimport uint64_t
+# cython: infer_types=True
+from libc.stdint cimport uint64_t, int64_t
 
 from murmurhash.mrmr cimport hash64
 from preshed.maps cimport map_get, map_set
 from preshed.maps cimport PreshMap
-from preshed.counter cimport PreshCounter, count_t
+from preshed.counter cimport count_t
 from spacy.strings cimport StringStore
-
-from collections import defaultdict
-from six import iteritems
+from cpython.exc cimport PyErr_CheckSignals
 
 
-cpdef uint64_t _hash_string(unicode string) except 0:
-    # This code is copied from spacy.strings. The implementation took some thought,
-    # and consultation with Stefan Behnel. Do not change blindly. Interaction
-    # with Python 2/3 is subtle.
-    chars = <char*>PyUnicode_AS_DATA(string)
-    size = PyUnicode_GET_DATA_SIZE(string)
-    return hash64(chars, size, 1)
+def count_words_fast(StringStore vocab, PreshMap counts, bytes text, int min_freq):
+    cdef char* chars = <char*>text
+    cdef char space = ' '
+    cdef char newline = '\n'
+    cdef char c
+    cdef int64_t length = len(text)
+    cdef int64_t i = 0
+    cdef int64_t start = 0
+    for i in range(length):
+        if chars[i] == space or chars[i] == newline:
+            if start < i:
+                count_word(vocab, counts, &chars[start], i-start, min_freq)
+            start = i+1
+    if start < i:
+        count_word(vocab, counts, &chars[start], i-start, min_freq)
+    PyErr_CheckSignals()
 
 
-cpdef uint64_t _hash_bytes(bytes string) except 0:
-    chars = <char*>string
-    return hash64(chars, len(string), 1)
-
-
-def count_words_fast(sentences, count_t min_freq):
-    strings = StringStore()
-    sentence_no = -1
-    total_words = 0
-    cdef uint64_t key
-    cdef count_t count
-    cdef unicode word
-    cdef PreshMap counts = PreshMap()
-    for sentence_no, sentence in enumerate(sentences):
-        for word in sentence:
-            key = _hash_string(word)
-
-            count = <count_t>map_get(counts.c_map, key) + 1
-            map_set(counts.mem, counts.c_map, key, <void*>count)
-            # Remember the string when we hit min count
-            if count == min_freq:
-                _ = strings[word]
-        total_words += len(sentence)
-    
-    # Use defaultdict to match the pure Python version of the function
-    vocab = defaultdict(int)
-    for word in strings:
-        key = _hash_string(word)
-        vocab[word] = counts[key]
-    return vocab, sentence_no
+cdef inline int count_word(StringStore vocab, PreshMap counts, char* word,
+                            int length, int min_freq) except -1:
+    key = hash64(word, length, 1)
+    count = <count_t>map_get(counts.c_map, key) + 1
+    map_set(counts.mem, counts.c_map, key, <void*>count)
+    # Remember the string when we hit min count
+    if count == min_freq:
+        _ = vocab[word[:length]]
 
