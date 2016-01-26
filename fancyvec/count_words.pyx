@@ -11,6 +11,8 @@ from cpython cimport PyUnicode_GET_DATA_SIZE
 from libc.stdint cimport uint64_t
 
 from murmurhash.mrmr cimport hash64
+from preshed.maps cimport map_get, map_set
+from preshed.maps cimport PreshMap
 from preshed.counter cimport PreshCounter, count_t
 from spacy.strings cimport StringStore
 
@@ -33,33 +35,22 @@ cpdef uint64_t _hash_bytes(bytes string) except 0:
 
 
 def count_words_fast(sentences, count_t min_freq):
-    cdef PreshCounter counts = PreshCounter()
     strings = StringStore()
     sentence_no = -1
     total_words = 0
     cdef uint64_t key
     cdef count_t count
+    cdef unicode word
+    cdef PreshMap counts = PreshMap()
     for sentence_no, sentence in enumerate(sentences):
         for word in sentence:
-            # There's a likely bug here: we're going to be maintaining separate
-            # counts for unicode and byte strings, where defaultdict presumably
-            # hashes these the same, right?
-            # 
-            # We could convert to one or the other by default, but the performance
-            # implications are pretty bad. It might be best to merge the counts
-            # when we form up the final vocab.
-            if isinstance(word, unicode):
-                key = _hash_string(word)
-            elif isinstance(word, bytes):
-                key = _hash_bytes(word)
-            else:
-                raise TypeError(type(word))
-            counts.inc(key, 1)
-            # TODO: Why doesn't .inc return this? =/
-            count = counts[key]
-            # Remember the string when we exceed min count
+            key = _hash_string(word)
+
+            count = <count_t>map_get(counts.c_map, key) + 1
+            map_set(counts.mem, counts.c_map, key, <void*>count)
+            # Remember the string when we hit min count
             if count == min_freq:
-                 _ = strings[word]
+                _ = strings[word]
         total_words += len(sentence)
     
     # Use defaultdict to match the pure Python version of the function
