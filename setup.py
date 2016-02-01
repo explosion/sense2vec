@@ -15,10 +15,10 @@ except ImportError:
 
 
 PACKAGES = [
-    'fancyvec'
+    'sense2vec'
 ]
 
-MOD_NAMES = ['fancyvec.vectors']
+MOD_NAMES = ['sense2vec.vectors']
 
 
 if sys.version_info[:2] < (2, 7) or (3, 0) <= sys.version_info[0:2] < (3, 4):
@@ -133,7 +133,7 @@ def setup_package():
 
     with chdir(root):
         about = {}
-        with open(os.path.join(root, "fancyvec", "about.py")) as f:
+        with open(os.path.join(root, "sense2vec", "about.py")) as f:
             exec(f.read(), about)
 
         include_dirs = [
@@ -148,7 +148,7 @@ def setup_package():
                     language='c++', include_dirs=include_dirs))
 
         if not is_source_release(root):
-            generate_cython(root, 'fancyvec')
+            generate_cython(root, 'sense2vec')
             prepare_includes(root)
 
         setup(
