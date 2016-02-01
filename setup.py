@@ -15,10 +15,10 @@ except ImportError:
 
 
 PACKAGES = [
-    'fancyvec'
+    'sense2vec'
 ]
 
-MOD_NAMES = ['fancyvec.vectors']
+MOD_NAMES = ['sense2vec.vectors']
 
 
 if sys.version_info[:2] < (2, 7) or (3, 0) <= sys.version_info[0:2] < (3, 4):
@@ -28,10 +28,13 @@ if sys.version_info[:2] < (2, 7) or (3, 0) <= sys.version_info[0:2] < (3, 4):
 # By subclassing build_extensions we have the actual compiler that will be used which is really known only after finalize_options
 # http://stackoverflow.com/questions/724664/python-distutils-how-to-get-a-compiler-that-is-going-to-be-used
 compile_options =  {'msvc'  : ['/Ox', '/EHsc'],
-                    'other' : ['-O3', '-Wno-strict-prototypes', '-Wno-unused-function', '-fopenmp',
-                                '-fno-stack-protector']}
+                    'other' : ['-O3', '-Wno-unused-function',
+                               '-fopenmp', '-fno-stack-protector']}
 link_options    =  {'msvc'  : [],
-                    'other' : ['-lcblas', '-fopenmp', '-fno-stack-protector']}
+                    'other' : ['-Wl,--no-undefined',
+                               '-fopenmp', '-fno-stack-protector',
+                               '-L/usr/lib64/atlas',  # needed for redhat
+                               '-lcblas']}
 
 if sys.platform.startswith('darwin'):
     compile_options['other'].append('-mmacosx-version-min=10.8')
@@ -130,7 +133,7 @@ def setup_package():
 
     with chdir(root):
         about = {}
-        with open(os.path.join(root, "fancyvec", "about.py")) as f:
+        with open(os.path.join(root, "sense2vec", "about.py")) as f:
             exec(f.read(), about)
 
         include_dirs = [
@@ -145,7 +148,7 @@ def setup_package():
                     language='c++', include_dirs=include_dirs))
 
         if not is_source_release(root):
-            generate_cython(root, 'fancyvec')
+            generate_cython(root, 'sense2vec')
             prepare_includes(root)
 
         setup(

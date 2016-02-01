@@ -1,7 +1,7 @@
 import pytest
 import numpy
 
-from fancyvec.vectors import Vectors
+from sense2vec.vectors import Vectors
 
 
 def test_init():

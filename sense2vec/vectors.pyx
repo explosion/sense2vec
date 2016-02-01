@@ -201,7 +201,7 @@ cdef void linear_similarity(int* indices, float* scores, float* tmp,
         i += 1
     
 
-cdef extern from "cblas.h":
+cdef extern from "cblas_shim.h":
     float cblas_sdot(int N, float  *x, int incX, float  *y, int incY ) nogil
     float cblas_snrm2(int N, float  *x, int incX) nogil
 
