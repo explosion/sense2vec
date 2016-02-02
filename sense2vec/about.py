@@ -11,3 +11,4 @@ __author__ = 'Matthew Honnibal'
 __email__ = 'matt@spacy.io'
 __license__ = 'MIT'
 __release__ = False
+__default_model__ = 'reddit_vectors'
