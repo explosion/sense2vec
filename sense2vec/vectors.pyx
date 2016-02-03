@@ -11,6 +11,7 @@ from libcpp.vector cimport vector
 from spacy.cfile cimport CFile
 from preshed.maps cimport PreshMap
 from spacy.strings cimport StringStore, hash_string
+from murmurhash.mrmr cimport hash64
 
 from cymem.cymem cimport Pool
 cimport numpy as np
@@ -23,6 +24,12 @@ ctypedef pair[float, int] Entry
 ctypedef priority_queue[Entry] Queue
 ctypedef float (*do_similarity_t)(const float* v1, const float* v2,
         float nrm1, float nrm2, int nr_dim) nogil
+
+
+cdef struct _CachedResult:
+    int* indices
+    float* scores
+    int n
 
 
 cdef class VectorMap:
@@ -104,6 +111,7 @@ cdef class VectorStore:
     we're just a dumb vector of data, that knows how to run linear-scan
     similarity queries.'''
     cdef readonly Pool mem
+    cdef readonly PreshMap cache
     cdef vector[float*] vectors
     cdef vector[float] norms
     cdef vector[float] _similarities
@@ -137,11 +145,35 @@ cdef class VectorStore:
     def most_similar(self, float[:] query, int n):
         cdef int[:] indices = np.ndarray(shape=(n,), dtype='int32')
         cdef float[:] scores = np.ndarray(shape=(n,), dtype='float32')
-        self._similarities.reserve(self.vectors.size())
-        linear_similarity(&indices[0], &scores[0], &self._similarities[0],
-            n, &query[0], self.nr_dim,
-            &self.vectors[0], &self.norms[0], self.vectors.size(), 
-            cosine_similarity)
+        cdef uint64_t cache_key = hash64(&query[0], sizeof(query[0]) * n, 0)
+        cached_result = <_CachedResult*>self.cache.get(cache_key)
+        if cached_result is not NULL and cached_result.n == n:
+            memcpy(&indices[0], cached_result.indices, sizeof(indices[0]) * n)
+            memcpy(&scores[0], cached_result.scores, sizeof(scores[0]) * n)
+        else:
+            self._similarities.reserve(self.vectors.size())
+            linear_similarity(&indices[0], &scores[0], &self._similarities[0],
+                n, &query[0], self.nr_dim,
+                &self.vectors[0], &self.norms[0], self.vectors.size(), 
+                cosine_similarity)
+            if cached_result is NULL:
+                cached_result = <_CachedResult*>self.mem.alloc(sizeof(_CachedResult), 1)
+            else:
+                if cached_result.indices is NULL:
+                    cached_result.indices = <int*>self.mem.alloc(
+                        sizeof(cached_result.indices[0]), n)
+                else:
+                    cached_result.indices = <int*>self.mem.realloc(
+                        cached_result.indices, sizeof(cached_result.indices[0]) * n)
+                if cached_result.scores is NULL:
+                    cached_result.scores = <float*>self.mem.alloc(
+                        sizeof(cached_result.scores[0]), n)
+                else:
+                    cached_result.scores = <float*>self.mem.realloc(
+                        cached_result.scores, sizeof(cached_result.scores[0]) * n)
+                memcpy(cached_result.indices, &indices[0], sizeof(indices[0]) * n)
+                memcpy(cached_result.scores, &scores[0], sizeof(scores[0]) * n)
+            self.cache.set(cache_key, cached_result)
         return indices, scores
 
     def save(self, loc):
