@@ -123,6 +123,7 @@ cdef class VectorStore:
         zeros = <float*>self.mem.alloc(self.nr_dim, sizeof(float))
         self.vectors.push_back(zeros)
         self.norms.push_back(0)
+        self.cache = PreshMap(100000)
 
     def __getitem__(self, int i):
         cdef float* ptr = self.vectors.at(i)
@@ -151,29 +152,27 @@ cdef class VectorStore:
             memcpy(&indices[0], cached_result.indices, sizeof(indices[0]) * n)
             memcpy(&scores[0], cached_result.scores, sizeof(scores[0]) * n)
         else:
+            # This shouldn't happen. But handle it if it does
+            if cached_result is not NULL:
+                if cached_result.indices is not NULL:
+                    self.mem.free(cached_result.indices)
+                if cached_result.scores is not NULL:
+                    self.mem.free(cached_result.scores)
+                self.mem.free(cached_result)
             self._similarities.reserve(self.vectors.size())
             linear_similarity(&indices[0], &scores[0], &self._similarities[0],
                 n, &query[0], self.nr_dim,
                 &self.vectors[0], &self.norms[0], self.vectors.size(), 
                 cosine_similarity)
-            if cached_result is NULL:
-                cached_result = <_CachedResult*>self.mem.alloc(sizeof(_CachedResult), 1)
-            else:
-                if cached_result.indices is NULL:
-                    cached_result.indices = <int*>self.mem.alloc(
-                        sizeof(cached_result.indices[0]), n)
-                else:
-                    cached_result.indices = <int*>self.mem.realloc(
-                        cached_result.indices, sizeof(cached_result.indices[0]) * n)
-                if cached_result.scores is NULL:
-                    cached_result.scores = <float*>self.mem.alloc(
-                        sizeof(cached_result.scores[0]), n)
-                else:
-                    cached_result.scores = <float*>self.mem.realloc(
-                        cached_result.scores, sizeof(cached_result.scores[0]) * n)
-                memcpy(cached_result.indices, &indices[0], sizeof(indices[0]) * n)
-                memcpy(cached_result.scores, &scores[0], sizeof(scores[0]) * n)
+            cached_result = <_CachedResult*>self.mem.alloc(sizeof(_CachedResult), 1)
+            cached_result.n = n
+            cached_result.indices = <int*>self.mem.alloc(
+                sizeof(cached_result.indices[0]), n)
+            cached_result.scores = <float*>self.mem.alloc(
+                sizeof(cached_result.scores[0]), n)
             self.cache.set(cache_key, cached_result)
+            memcpy(cached_result.indices, &indices[0], sizeof(indices[0]) * n)
+            memcpy(cached_result.scores, &scores[0], sizeof(scores[0]) * n)
         return indices, scores
 
     def save(self, loc):
