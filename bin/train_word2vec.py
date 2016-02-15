@@ -5,13 +5,13 @@ import logging
 from os import path
 import os
 import random
+from collections import defaultdict
 
 import plac
 import ujson
 from gensim.models import Word2Vec
 from preshed.counter import PreshCounter
 from spacy.strings import hash_string
-from gensim.models.count_words_inner import count_words_fast
 
 logger = logging.getLogger(__name__)
 
@@ -72,14 +72,6 @@ def iter_dir(loc):
 )
 def main(in_dir, out_loc, negative=5, n_workers=4, window=5, size=128, min_count=10, nr_iter=2):
     logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
-    corpus = Corpus(in_dir)
-    #for text_no, text_loc in enumerate(iter_dir(corpus.directory)):
-    #    with io.open(text_loc, 'r', encoding='utf8') as file_:
-    #        text = file_.read()
-    #    total_words += corpus.count_doc(text.split())  
-    #    logger.info("PROGRESS: at batch #%i, processed %i words, keeping %i word types",
-    #                text_no, total_words, len(corpus.strings))
-    
     model = Word2Vec(
         size=size,
         window=window,
@@ -88,7 +80,22 @@ def main(in_dir, out_loc, negative=5, n_workers=4, window=5, size=128, min_count
         sample=1e-5,
         negative=negative
     )
-    model.build_vocab(corpus)
+    corpus = Corpus(in_dir)
+    total_words = 0
+    total_sents = 0
+    for text_no, text_loc in enumerate(iter_dir(corpus.directory)):
+        with io.open(text_loc, 'r', encoding='utf8') as file_:
+            text = file_.read()
+        total_sents += text.count('\n')
+        total_words += corpus.count_doc(text.split())  
+        logger.info("PROGRESS: at batch #%i, processed %i words, keeping %i word types",
+                    text_no, total_words, len(corpus.strings))
+    model.corpus_count = total_sents
+    model.raw_vocab = defaultdict(int)
+    for key, string in corpus.strings.items():
+        model.raw_vocab[string] = corpus.counts[key]
+    model.scale_vocab()
+    model.finalize_vocab()
     model.iter = nr_iter
     model.train(corpus)
 
