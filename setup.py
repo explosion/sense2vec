@@ -21,10 +21,6 @@ PACKAGES = [
 MOD_NAMES = ['sense2vec.vectors']
 
 
-if sys.version_info[:2] < (2, 7) or (3, 0) <= sys.version_info[0:2] < (3, 4):
-    raise RuntimeError('Python version 2.7 or >= 3.4 required.')
-
-
 # By subclassing build_extensions we have the actual compiler that will be used which is really known only after finalize_options
 # http://stackoverflow.com/questions/724664/python-distutils-how-to-get-a-compiler-that-is-going-to-be-used
 compile_options =  {'msvc'  : ['/Ox', '/EHsc'],
@@ -35,11 +31,6 @@ link_options    =  {'msvc'  : [],
                                '-fopenmp', '-fno-stack-protector',
                                '-L/usr/lib64/atlas',  # needed for redhat
                                '-lcblas']}
-
-if sys.platform.startswith('darwin'):
-    compile_options['other'].append('-mmacosx-version-min=10.8')
-    compile_options['other'].append('-stdlib=libc++')
-    link_options['other'].append('-lc++')
 
 
 class build_ext_options:
@@ -152,7 +143,7 @@ def setup_package():
             prepare_includes(root)
 
         setup(
-            name=about['__name__'],
+            name=about['__title__'],
             zip_safe=False,
             packages=PACKAGES,
             package_data={'': ['*.pyx', '*.pxd']},
