@@ -143,7 +143,7 @@ def setup_package():
             prepare_includes(root)
 
         setup(
-            name=about['__name__'],
+            name=about['__title__'],
             zip_safe=False,
             packages=PACKAGES,
             package_data={'': ['*.pyx', '*.pxd']},
