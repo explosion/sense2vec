@@ -231,17 +231,17 @@ cdef void linear_similarity(int* indices, float* scores, float* tmp,
         queue.pop()
         i += 1
     
-
-cdef extern from "cblas_shim.h":
-    float cblas_sdot(int N, float  *x, int incX, float  *y, int incY ) nogil
-    float cblas_snrm2(int N, float  *x, int incX) nogil
-
+#
+#cdef extern from "cblas_shim.h":
+#    float cblas_sdot(int N, float  *x, int incX, float  *y, int incY ) nogil
+#    float cblas_snrm2(int N, float  *x, int incX) nogil
+#
 
 cdef extern from "math.h" nogil:
     float sqrtf(float x)
 
 
-DEF USE_BLAS = True
+DEF USE_BLAS = False
 
 
 cdef float get_l2_norm(const float* vec, int n) nogil:

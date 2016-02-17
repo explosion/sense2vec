@@ -25,12 +25,15 @@ MOD_NAMES = ['sense2vec.vectors']
 # http://stackoverflow.com/questions/724664/python-distutils-how-to-get-a-compiler-that-is-going-to-be-used
 compile_options =  {'msvc'  : ['/Ox', '/EHsc'],
                     'other' : ['-O3', '-Wno-unused-function',
-                               '-fopenmp', '-fno-stack-protector']}
+                               #'-fopenmp',
+                               '-fno-stack-protector']}
 link_options    =  {'msvc'  : [],
-                    'other' : ['-Wl,--no-undefined',
-                               '-fopenmp', '-fno-stack-protector',
-                               '-L/usr/lib64/atlas',  # needed for redhat
-                               '-lcblas']}
+                    'other' : [
+                               #'-fopenmp',
+                               '-fno-stack-protector',
+                               #'-L/usr/lib64/atlas',  # needed for redhat
+                               #'-lcblas'
+                               ]}
 
 
 class build_ext_options:
