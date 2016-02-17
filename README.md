@@ -33,3 +33,21 @@ unicode strings.
 Similarity queries could be faster, if we had made all vectors contiguous in memory, instead of holding them
 as an array of pointers. However, we wanted to allow a `.borrow()` method, so that vectors can be added to the store
 by reference, without copying the data.
+
+# Downloading the model
+
+The easiest way to download and install the model is by calling python -m sense2vec.download after installing sense2vec, e.g., via pip install -e git+git://github.com/spacy-io/sense2vec.git#egg=sense2vec. Please note that you'll need Blas/Atlas packages installed. On RedHad those are atlas and atlas-devel. You can then load the model as follows:
+
+    import sputnik
+    from sense2vec import about
+    from sense2vec.vectors import VectorMap
+
+    package = sputnik.package(about.__title__, about.__version__, about.__default_model__)
+    vector_map = VectorMap(128)
+    vector_map.load(package.path)
+
+# Use on OSX
+
+The code in the master branch was optimized for our Ubuntu servers, and doesn't support OSX, due to usage of OpenMP, and details about which BLAS library to link against.
+
+The `osx` branch contains a version of the library without these optimizations, that compiles on OSX. Full support for OSX and Windows platforms will be available when we release the package on PyPi.
