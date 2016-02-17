@@ -154,7 +154,7 @@ def setup_package():
             url=about['__uri__'],
             license=about['__license__'],
             ext_modules=ext_modules,
-            install_requires=['numpy', 'murmurhash>=0.26,<0.27', 'cymem>=1.30,<1.31'],
+            install_requires=['numpy', 'murmurhash>=0.26,<0.27', 'cymem>=1.30,<1.31', 'ujson>=1.34'],
             cmdclass = {
                 'build_ext': build_ext_subclass},
         )
