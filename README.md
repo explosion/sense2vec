@@ -36,15 +36,17 @@ by reference, without copying the data.
 
 # Downloading the model
 
-The easiest way to download and install the model is by calling python -m sense2vec.download after installing sense2vec, e.g., via pip install -e git+git://github.com/spacy-io/sense2vec.git#egg=sense2vec. Please note that you'll need Blas/Atlas packages installed. On RedHad those are atlas and atlas-devel. You can then load the model as follows:
+The easiest way to download and install the model is by calling ```python -m sense2vec.download``` after installing sense2vec, e.g., via ```pip install -e git+git://github.com/spacy-io/sense2vec.git#egg=sense2vec```. Please note that you'll need Blas/Atlas packages installed. On RedHad those are ```atlas``` and ```atlas-devel```. You can then load the model as follows:
 
-    import sputnik
-    from sense2vec import about
-    from sense2vec.vectors import VectorMap
+```
+import sputnik
+from sense2vec import about
+from sense2vec.vectors import VectorMap
 
-    package = sputnik.package(about.__title__, about.__version__, about.__default_model__)
-    vector_map = VectorMap(128)
-    vector_map.load(package.path)
+package = sputnik.package(about.__title__, about.__version__, about.__default_model__)
+vector_map = VectorMap(128)
+vector_map.load(package.path)
+```
 
 # Use on OSX
 
