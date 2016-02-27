@@ -29,8 +29,8 @@ compile_options =  {'msvc'  : ['/Ox', '/EHsc'],
 link_options    =  {'msvc'  : [],
                     'other' : ['-Wl,--no-undefined',
                                '-fopenmp', '-fno-stack-protector',
-                               '-L/usr/lib64/atlas',  # needed for redhat
-                               '-lcblas']}
+                               '-L/opt/openblas/lib',
+                               '-lopenblas']}
 
 
 class build_ext_options:
