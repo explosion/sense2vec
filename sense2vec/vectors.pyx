@@ -195,15 +195,14 @@ cdef class VectorStore:
         cdef int32_t nr_vector
         cfile.read_into(&nr_vector, 1, sizeof(nr_vector))
         cfile.read_into(&self.nr_dim, 1, sizeof(self.nr_dim))
-        cdef vector[float] tmp
-        tmp.reserve(self.nr_dim)
+        tmp = <float*>self.mem.alloc(self.nr_dim, sizeof(float))
         cdef float[:] cv
         for i in range(nr_vector):
-            cfile.read_into(&tmp[0], self.nr_dim, sizeof(tmp[0]))
-            ptr = &tmp[0]
-            cv = <float[:128]>ptr
+            cfile.read_into(tmp, self.nr_dim, sizeof(tmp[0]))
+            cv = <float[:128]>tmp
             if i >= 1:
                 self.add(cv)
+        self.mem.free(tmp)
         cfile.close()
 
 
