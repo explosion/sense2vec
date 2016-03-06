@@ -18,19 +18,28 @@ PACKAGES = [
     'sense2vec'
 ]
 
-MOD_NAMES = ['sense2vec.vectors']
+MOD_NAMES = [
+    'sense2vec.vectors'
+]
 
 
 # By subclassing build_extensions we have the actual compiler that will be used which is really known only after finalize_options
 # http://stackoverflow.com/questions/724664/python-distutils-how-to-get-a-compiler-that-is-going-to-be-used
 compile_options =  {'msvc'  : ['/Ox', '/EHsc'],
                     'other' : ['-O3', '-Wno-unused-function',
-                               '-fopenmp', '-fno-stack-protector']}
+                               '-fno-stack-protector']}
 link_options    =  {'msvc'  : [],
-                    'other' : ['-Wl,--no-undefined',
-                               '-fopenmp', '-fno-stack-protector',
-                               '-L/usr/lib64/atlas',  # needed for redhat
-                               '-lcblas']}
+                    'other' : ['-fno-stack-protector']}
+
+
+if os.environ.get('USE_BLAS') == '1':
+    compile_options['other'].extend([
+        '-DUSE_BLAS=1',
+        '-fopenmp'])
+    link_options['other'].extend([
+        '-fopenmp',
+        '-L/usr/lib64/atlas',  # needed for redhat
+        '-lcblas'])
 
 
 class build_ext_options:
