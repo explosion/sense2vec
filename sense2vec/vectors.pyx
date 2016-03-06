@@ -181,7 +181,7 @@ cdef class VectorStore:
         return indices, scores
 
     def save(self, loc):
-        cdef CFile cfile = CFile(loc, 'w')
+        cdef CFile cfile = CFile(loc, 'wb')
         cdef float* vec
         cdef int32_t nr_vector = self.vectors.size()
         cfile.write_from(&nr_vector, 1, sizeof(nr_vector))
@@ -191,7 +191,7 @@ cdef class VectorStore:
         cfile.close()
 
     def load(self, loc):
-        cdef CFile cfile = CFile(loc, 'r')
+        cdef CFile cfile = CFile(loc, 'rb')
         cdef int32_t nr_vector
         cfile.read_into(&nr_vector, 1, sizeof(nr_vector))
         cfile.read_into(&self.nr_dim, 1, sizeof(self.nr_dim))
