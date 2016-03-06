@@ -160,7 +160,8 @@ def setup_package():
                 'spacy>=0.100,<0.101',
                 'preshed>=0.46,<0.47',
                 'murmurhash>=0.26,<0.27',
-                'cymem>=1.30,<1.31'],
+                'cymem>=1.30,<1.31',
+                'sputnik>=0.9.0,<0.10.0'],
             cmdclass = {
                 'build_ext': build_ext_subclass},
         )
