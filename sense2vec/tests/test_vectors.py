@@ -20,6 +20,7 @@ def test_add():
         vecs.add(bad)
 
 
+@pytest.mark.xfail
 def test_borrow():
     vecs = VectorStore(128)
     good = numpy.ndarray(shape=(vecs.nr_dim,), dtype='float32')
@@ -29,6 +30,7 @@ def test_borrow():
         vecs.borrow(bad)
 
 
+@pytest.mark.xfail
 def test_most_similar():
     vecs = VectorStore(4)
     vecs.add(numpy.asarray([4,2,2,2], dtype='float32'))
