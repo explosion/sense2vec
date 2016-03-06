@@ -235,38 +235,18 @@ cdef void linear_similarity(int* indices, float* scores, float* tmp,
         indices[nr_out-(i+1)] = entry.second
         queue.pop()
         i += 1
-    
-#
-#cdef extern from "cblas_shim.h":
-#    float cblas_sdot(int N, float  *x, int incX, float  *y, int incY ) nogil
-#    float cblas_snrm2(int N, float  *x, int incX) nogil
-#
-
-cdef extern from "math.h" nogil:
-    float sqrtf(float x)
 
 
-DEF USE_BLAS = False
+cdef extern from "cblas_shim.h":
+    float cblas_sdot(int N, float  *x, int incX, float  *y, int incY ) nogil
+    float cblas_snrm2(int N, float  *x, int incX) nogil
 
 
 cdef float get_l2_norm(const float* vec, int n) nogil:
-    cdef float norm
-    if USE_BLAS:
-        return cblas_snrm2(n, vec, 1)
-    else:
-        norm = 0
-        for i in range(n):
-            norm += vec[i] ** 2
-        return sqrtf(norm)
+    return cblas_snrm2(n, vec, 1)
 
 
 cdef float cosine_similarity(const float* v1, const float* v2,
         float norm1, float norm2, int n) nogil:
-    cdef float dot
-    if USE_BLAS:
-        dot = cblas_sdot(n, v1, 1, v2, 1)
-    else:
-        dot = 0
-        for i in range(n):
-            dot += v1[i] * v2[i]
+    cdef float dot = cblas_sdot(n, v1, 1, v2, 1)
     return dot / (norm1 * norm2)
