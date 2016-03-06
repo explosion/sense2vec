@@ -15,7 +15,8 @@ except ImportError:
 
 
 PACKAGES = [
-    'sense2vec'
+    'sense2vec',
+    'sense2vec.tests'
 ]
 
 MOD_NAMES = [
