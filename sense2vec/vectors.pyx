@@ -240,6 +240,11 @@ cdef void linear_similarity(int* indices, float* scores, float* tmp,
 cdef extern from "cblas_shim.h":
     float cblas_sdot(int N, float  *x, int incX, float  *y, int incY ) nogil
     float cblas_snrm2(int N, float  *x, int incX) nogil
+    int _use_blas()
+
+
+cpdef bint use_blas():
+    return _use_blas()
 
 
 cdef float get_l2_norm(const float* vec, int n) nogil:

@@ -4,6 +4,11 @@ extern "C"
 #endif // __cplusplus
 #ifdef USE_BLAS
 #include <cblas.h>
+
+int _use_blas()
+{
+    return 1;
+}
 #else // USE_BLAS
 #include <math.h>
 
@@ -24,6 +29,11 @@ float cblas_sdot(const int N, const float *X, const int incX,
         dot += X[i] * Y[i];
     }
     return dot;
+}
+
+int _use_blas()
+{
+    return 0;
 }
 #endif // USE_BLAS
 #ifdef __cplusplus
