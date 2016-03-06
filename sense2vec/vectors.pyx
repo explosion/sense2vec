@@ -164,7 +164,7 @@ cdef class VectorStore:
                 if cached_result.scores is not NULL:
                     self.mem.free(cached_result.scores)
                 self.mem.free(cached_result)
-            self._similarities.reserve(self.vectors.size())
+            self._similarities.resize(self.vectors.size())
             linear_similarity(&indices[0], &scores[0], &self._similarities[0],
                 n, &query[0], self.nr_dim,
                 &self.vectors[0], &self.norms[0], self.vectors.size(), 
@@ -195,14 +195,15 @@ cdef class VectorStore:
         cdef int32_t nr_vector
         cfile.read_into(&nr_vector, 1, sizeof(nr_vector))
         cfile.read_into(&self.nr_dim, 1, sizeof(self.nr_dim))
-        tmp = <float*>self.mem.alloc(self.nr_dim, sizeof(float))
+        cdef vector[float] tmp
+        tmp.resize(self.nr_dim)
         cdef float[:] cv
         for i in range(nr_vector):
-            cfile.read_into(tmp, self.nr_dim, sizeof(tmp[0]))
-            cv = <float[:128]>tmp
+            cfile.read_into(&tmp[0], self.nr_dim, sizeof(tmp[0]))
+            ptr = &tmp[0]
+            cv = <float[:128]>ptr
             if i >= 1:
                 self.add(cv)
-        self.mem.free(tmp)
         cfile.close()
 
 
