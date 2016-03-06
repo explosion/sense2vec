@@ -89,8 +89,12 @@ cdef class VectorMap:
         self.data.save(path.join(data_dir, 'vectors.bin'))
         freqs = []
         cdef uint64_t hashed
-        for hashed, freq in self.freqs.items():
-            freqs.append([hashed, freq])
+        for string in self.strings:
+            hashed = hash_string(string)
+            freq = self.freqs[hashed]
+            if not freq:
+                continue
+            freqs.append([string, freq])
         with open(path.join(data_dir, 'freqs.json'), 'w') as file_:
             json.dump(freqs, file_)
 
@@ -101,7 +105,8 @@ cdef class VectorMap:
         with open(path.join(data_dir, 'freqs.json')) as file_:
             freqs = json.load(file_)
         cdef uint64_t hashed
-        for hashed, freq in freqs:
+        for string, freq in freqs:
+            hashed = hash_string(string)
             self.freqs[hashed] = freq
 
 
