@@ -5,6 +5,7 @@ import shutil
 import subprocess
 import sys
 import contextlib
+from configparser import ConfigParser
 from distutils.command.build_ext import build_ext
 from distutils.sysconfig import get_python_inc
 
@@ -28,13 +29,18 @@ compile_options =  {'msvc'  : ['/Ox', '/EHsc'],
                                '-fopenmp', '-fno-stack-protector']}
 link_options    =  {'msvc'  : [],
                     'other' : ['-Wl,--no-undefined',
-                               '-fopenmp', '-fno-stack-protector',
-                               '-L/usr/lib64/atlas',  # needed for redhat
-                               '-lcblas']}
+                               '-fopenmp', '-fno-stack-protector']}
 
 
 class build_ext_options:
     def build_options(self):
+        cfg = ConfigParser()
+        cfg.read('setup.cfg')
+        if cfg.has_section('link_options'):
+            link_dir = cfg.get('link_options', 'link_dir')
+            if link_dir is not None: link_options['other'].append('-L' + link_dir) 
+            link_library = cfg.get('link_options', 'link_library')
+            if link_library is not None: link_options['other'].append('-l' + link_library) 
         for e in self.extensions:
             e.extra_compile_args = compile_options.get(
                 self.compiler.compiler_type, compile_options['other'])
