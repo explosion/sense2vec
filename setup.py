@@ -37,10 +37,10 @@ if os.environ.get('USE_BLAS') == '1':
     compile_options['other'].extend([
         '-DUSE_BLAS=1',
         '-fopenmp'])
+else:
     link_options['other'].extend([
         '-fopenmp',
-        '-L/usr/lib64/atlas',  # needed for redhat
-        '-lcblas'])
+        '-Ithird_party/Eigen']) # relative path to Eigen
 
 
 class build_ext_options:

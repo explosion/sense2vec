@@ -1,3 +1,6 @@
+#ifndef USE_BLAS
+#include "third_party/Eigen/Core"
+#endif
 #ifdef __cplusplus
 extern "C"
 {
@@ -10,7 +13,6 @@ int _use_blas()
     return 1;
 }
 #else // USE_BLAS
-#include <math.h>
 
 float cblas_snrm2(const int N, const float *X, const int incX)
 {
@@ -24,18 +26,21 @@ float cblas_snrm2(const int N, const float *X, const int incX)
 float cblas_sdot(const int N, const float *X, const int incX,
                  const float *Y, const int incY)
 {
-    float dot = 0;
-    for (int i=0; i<N; i++) {
-        dot += X[i] * Y[i];
-    }
-    return dot;
+    // need non-const for vector
+    float *pX = (float*)X;
+    float *pY = (float*)Y;
+    Eigen::Map<Eigen::VectorXf> a(pX, N);
+    Eigen::Map<Eigen::VectorXf> b(pY, N);
+    return -1.; //a.dot(b);
 }
 
 int _use_blas()
 {
     return 0;
 }
+
 #endif // USE_BLAS
 #ifdef __cplusplus
 }
 #endif // __cplusplus
+
