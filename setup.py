@@ -45,6 +45,10 @@ if os.environ.get('USE_BLAS') == '1':
 
 class build_ext_options:
     def build_options(self):
+        for mod_name in ['numpy', 'murmurhash']:
+            mod = import_include(mod_name)
+            if mod:
+                self.compiler.add_include_dir(mod.get_include())
         for e in self.extensions:
             e.extra_compile_args = compile_options.get(
                 self.compiler.compiler_type, compile_options['other'])
@@ -75,30 +79,7 @@ def import_include(module_name):
     try:
         return __import__(module_name, globals(), locals(), [], 0)
     except ImportError:
-        raise ImportError('Unable to import %s. Create a virtual environment '
-                          'and install all dependencies from requirements.txt, '
-                          'e.g., run "pip install -r requirements.txt".' % module_name)
-
-
-def copy_include(src, dst, path):
-    assert os.path.isdir(src)
-    assert os.path.isdir(dst)
-    shutil.copytree(
-        os.path.join(src, path),
-        os.path.join(dst, path))
-
-
-def prepare_includes(path):
-    include_dir = os.path.join(path, 'include')
-    if os.path.exists(include_dir):
-        shutil.rmtree(include_dir)
-    os.mkdir(include_dir)
-
-    numpy = import_include('numpy')
-    copy_include(numpy.get_include(), include_dir, 'numpy')
-
-    murmurhash = import_include('murmurhash')
-    copy_include(murmurhash.get_include(), include_dir, 'murmurhash')
+        pass
 
 
 def is_source_release(path):
@@ -153,13 +134,12 @@ def setup_package():
 
         if not is_source_release(root):
             generate_cython(root, 'sense2vec')
-            prepare_includes(root)
 
         setup(
             name=about['__title__'],
             zip_safe=False,
             packages=PACKAGES,
-            package_data={'': ['*.pyx', '*.pxd', '*.h']},
+            package_data={'': ['*.pyx', '*.pxd']},
             description=about['__summary__'],
             long_description=readme,
             author=about['__author__'],
@@ -174,7 +154,7 @@ def setup_package():
                 'spacy>=0.100,<0.101',
                 'preshed>=0.46,<0.47',
                 'murmurhash>=0.26,<0.27',
-                'cymem>=1.30,<1.31',
+                'cymem>=1.30,<1.32',
                 'sputnik>=0.9.0,<0.10.0'],
             classifiers=[
                 'Development Status :: 4 - Beta',
