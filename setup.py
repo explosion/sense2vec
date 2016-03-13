@@ -133,9 +133,12 @@ def setup_package():
         return clean(root)
 
     with chdir(root):
-        about = {}
-        with open(os.path.join(root, "sense2vec", "about.py")) as f:
+        with open(os.path.join(root, 'sense2vec', 'about.py')) as f:
+            about = {}
             exec(f.read(), about)
+
+        with open(os.path.join(root, 'README.rst')) as f:
+            readme = f.read()
 
         include_dirs = [
             get_python_inc(plat_specific=True),
@@ -158,6 +161,7 @@ def setup_package():
             packages=PACKAGES,
             package_data={'': ['*.pyx', '*.pxd', '*.h']},
             description=about['__summary__'],
+            long_description=readme,
             author=about['__author__'],
             author_email=about['__email__'],
             version=about['__version__'],
@@ -172,6 +176,22 @@ def setup_package():
                 'murmurhash>=0.26,<0.27',
                 'cymem>=1.30,<1.31',
                 'sputnik>=0.9.0,<0.10.0'],
+            classifiers=[
+                'Development Status :: 4 - Beta',
+                'Environment :: Console',
+                'Intended Audience :: Developers',
+                'Intended Audience :: Science/Research',
+                'License :: OSI Approved :: MIT License',
+                'Operating System :: POSIX :: Linux',
+                'Operating System :: MacOS :: MacOS X',
+                'Operating System :: Microsoft :: Windows',
+                'Programming Language :: Cython',
+                'Programming Language :: Python :: 2.6',
+                'Programming Language :: Python :: 2.7',
+                'Programming Language :: Python :: 3.3',
+                'Programming Language :: Python :: 3.4',
+                'Programming Language :: Python :: 3.5',
+                'Topic :: Scientific/Engineering'],
             cmdclass = {
                 'build_ext': build_ext_subclass},
         )

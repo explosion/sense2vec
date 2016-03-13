@@ -10,5 +10,4 @@ __uri__ = 'https://spacy.io'
 __author__ = 'Matthew Honnibal'
 __email__ = 'matt@spacy.io'
 __license__ = 'MIT'
-__release__ = False
 __default_model__ = 'reddit_vectors>=1.1.0,<1.2.0'
