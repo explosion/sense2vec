@@ -8,6 +8,7 @@ python:
   - "3.5"
 
 install:
+  - pip unstall -U numpy
   - pip install -r requirements.txt
   - pip install -e .
 

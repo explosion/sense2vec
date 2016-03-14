@@ -43,8 +43,8 @@ if os.environ.get('USE_BLAS') == '1':
         '-lcblas'])
 
 
-class build_ext_options:
-    def build_options(self):
+class build_ext_subclass(build_ext):
+    def build_extensions(self):
         for mod_name in ['numpy', 'murmurhash']:
             mod = import_include(mod_name)
             if mod:
@@ -55,11 +55,6 @@ class build_ext_options:
         for e in self.extensions:
             e.extra_link_args = link_options.get(
                 self.compiler.compiler_type, link_options['other'])
-
-
-class build_ext_subclass(build_ext, build_ext_options):
-    def build_extensions(self):
-        build_ext_options.build_options(self)
         build_ext.build_extensions(self)
 
 
