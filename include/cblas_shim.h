@@ -10,12 +10,12 @@ int _use_blas()
     return 1;
 }
 #else // USE_BLAS
+#include <xmmintrin.h>
+
 #if defined(_MSC_VER)
-/* Microsoft C/C++-compatible compiler */
-#include <intrin.h>
-#elif defined(__GNUC__) && (defined(__x86_64__) || defined(__i386__))
-/* GCC-compatible compiler, targeting x86/x86-64 */
-#include <x86intrin.h>
+#define ALIGNAS(byte_alignment) __declspec(align(byte_alignment))
+#elif defined(__GNUC__)
+#define ALIGNAS(byte_alignment) __attribute__((aligned(byte_alignment)))
 #endif
 
 float cblas_snrm2(const int N, const float *m1, const int incX)
@@ -26,6 +26,7 @@ float cblas_snrm2(const int N, const float *m1, const int incX)
     }
 
     float norm = 0;
+    ALIGNAS(16) float z[4];
     __m128 X;
     __m128 Z = _mm_setzero_ps();
 
@@ -35,7 +36,8 @@ float cblas_snrm2(const int N, const float *m1, const int incX)
         Z = _mm_add_ps(X, Z);
     }
 
-    norm += Z[0] + Z[1] + Z[2] + Z[3];
+    _mm_store_ps(z, Z);
+    norm += z[0] + z[1] + z[2] + z[3];
     return sqrtf(norm);
 }
 
@@ -48,6 +50,7 @@ float cblas_sdot(const int N, const float *m1, const int incX,
     }
 
     float dot = 0;
+    ALIGNAS(16) float z[4];
     __m128 X, Y;
     __m128 Z = _mm_setzero_ps();
 
@@ -58,7 +61,8 @@ float cblas_sdot(const int N, const float *m1, const int incX,
         Z = _mm_add_ps(X, Z);
     }
 
-    dot += Z[0] + Z[1] + Z[2] + Z[3];
+    _mm_store_ps(z, Z);
+    dot += z[0] + z[1] + z[2] + z[3];
     return dot;
 }
 
