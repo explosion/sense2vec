@@ -40,12 +40,17 @@ Similarity queries could be faster, if we had made all vectors contiguous in mem
 as an array of pointers. However, we wanted to allow a ``.borrow()`` method, so that vectors can be added to the store
 by reference, without copying the data.
 
+Installation
+------------
+
+**WARNING**: sense2vec is still work-in-progress. There is no official release yet. The content of the repository might change  at any time and could be in a non-working state.
+
+Until there is a PyPI release you can install sense2vec by 1) cloning the repository 2) run ``pip install -r requirements.txt`` 3) ``pip install -e .`` and 4) install the latest model via ``python -m sense2vec.download``
+
+You might also be tempted to simply run ``pip install -e git+git://github.com/spacy-io/sense2vec.git#egg=sense2vec`` instead of steps 1-3, but it expects cython to be present.
+
 Usage
 -----
-
-WARNING: sense2vec is still work-in-progress. There is no official release yet. The content of the repository might change  at any time and could be in a non-working state.
-
-The easiest way to download and install the model is by calling ``python -m sense2vec.download`` after installing sense2vec, e.g., via ``pip install cython -e git+git://github.com/spacy-io/sense2vec.git#egg=sense2vec``:
 
 .. code:: python
 
