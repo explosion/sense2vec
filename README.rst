@@ -43,7 +43,9 @@ by reference, without copying the data.
 Usage
 -----
 
-The easiest way to download and install the model is by calling ``python -m sense2vec.download`` after installing sense2vec, e.g., via ``pip install -e git+git://github.com/spacy-io/sense2vec.git#egg=sense2vec``:
+WARNING: sense2vec is still work-in-progress. There is no official release yet. The content of the repository might change  at any time and could be in a non-working state.
+
+The easiest way to download and install the model is by calling ``python -m sense2vec.download`` after installing sense2vec, e.g., via ``pip install cython -e git+git://github.com/spacy-io/sense2vec.git#egg=sense2vec``:
 
 .. code:: python
 
