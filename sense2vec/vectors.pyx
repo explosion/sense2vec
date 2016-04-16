@@ -17,7 +17,10 @@ from cymem.cymem cimport Pool
 cimport numpy as np
 import numpy
 from os import path
-import ujson as json
+try:
+    import ujson as json
+except ImportError:
+    import json
 
 
 ctypedef pair[float, int] Entry

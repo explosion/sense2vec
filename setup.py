@@ -145,7 +145,6 @@ def setup_package():
             ext_modules=ext_modules,
             install_requires=[
                 'numpy',
-                'ujson>=1.34',
                 'spacy>=0.100,<0.101',
                 'preshed>=0.46,<0.47',
                 'murmurhash>=0.26,<0.27',

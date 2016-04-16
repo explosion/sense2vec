@@ -9,8 +9,8 @@ python:
 
 install:
   - pip install -U numpy
-  - pip install -r requirements.txt
-  - pip install -e .
+  - python setup.py sdist
+  - pip install dist/*.tar.gz
 
 script:
   - python -m pytest sense2vec
