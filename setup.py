@@ -53,6 +53,7 @@ class build_ext_subclass(build_ext):
             if mod:
                 self.compiler.add_include_dir(resource_filename(
                     mod_name, os.path.relpath(mod.get_include(), mod.__path__[0])))
+
         for e in self.extensions:
             e.extra_compile_args = compile_options.get(
                 self.compiler.compiler_type, compile_options['other'])
@@ -68,9 +69,6 @@ def generate_cython(root, source):
                          os.path.join(root, 'bin', 'cythonize.py'),
                          source])
     if p != 0:
-        print(sys.executable)
-        print(os.path.join(root, 'bin', 'cythonize.py'))
-        print(source)
         raise RuntimeError('Running cythonize failed')
 
 
@@ -108,12 +106,13 @@ def chdir(new_dir):
 
 def setup_package():
     root = os.path.abspath(os.path.dirname(__file__))
+    src_path = 'sense2vec'
 
     if len(sys.argv) > 1 and sys.argv[1] == 'clean':
         return clean(root)
 
     with chdir(root):
-        with open(os.path.join(root, 'sense2vec', 'about.py')) as f:
+        with open(os.path.join(root, src_path, 'about.py')) as f:
             about = {}
             exec(f.read(), about)
 
@@ -132,13 +131,13 @@ def setup_package():
                     language='c++', include_dirs=include_dirs))
 
         if not is_source_release(root):
-            generate_cython(root, 'sense2vec')
+            generate_cython(root, src_path)
 
         setup(
             name=about['__title__'],
             zip_safe=False,
             packages=PACKAGES,
-            package_data={'': ['*.pyx', '*.pxd']},
+            package_data={'': ['*.pyx', '*.pxd', '*.pxi']},
             description=about['__summary__'],
             long_description=readme,
             author=about['__author__'],
