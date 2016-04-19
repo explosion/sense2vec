@@ -48,11 +48,11 @@ if os.environ.get('USE_BLAS') == '1':
 
 class build_ext_subclass(build_ext):
     def build_extensions(self):
-        for mod_name in ['numpy', 'murmurhash']:
-            mod = import_include(mod_name)
-            if mod:
-                self.compiler.add_include_dir(resource_filename(
-                    mod_name, os.path.relpath(mod.get_include(), mod.__path__[0])))
+        # for mod_name in ['numpy', 'murmurhash']:
+        #     mod = import_include(mod_name)
+        #     if mod:
+        #         self.compiler.add_include_dir(resource_filename(
+        #             mod_name, os.path.relpath(mod.get_include(), mod.__path__[0])))
 
         for e in self.extensions:
             e.extra_compile_args = compile_options.get(
