@@ -8,7 +8,10 @@ import random
 from collections import defaultdict
 
 import plac
-import ujson
+try:
+    import ujson as json
+except ImportError:
+    import json
 from gensim.models import Word2Vec
 from preshed.counter import PreshCounter
 from spacy.strings import hash_string

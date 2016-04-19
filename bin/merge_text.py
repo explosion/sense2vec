@@ -13,7 +13,10 @@ from spacy.tokens.doc import Doc
 
 from joblib import Parallel, delayed
 import plac
-import ujson
+try:
+    import ujson as json
+except ImportError:
+    import json
 
 
 LABELS = {
