@@ -212,20 +212,6 @@ typedef struct _tagPyUFuncObject {
          * A function which returns a masked inner loop for the ufunc.
          */
         PyUFunc_MaskedInnerLoopSelectionFunc *masked_inner_loop_selector;
-
-        /*
-         * List of flags for each operand when ufunc is called by nditer object.
-         * These flags will be used in addition to the default flags for each
-         * operand set by nditer object.
-         */
-        npy_uint32 *op_flags;
-
-        /*
-         * List of global flags used when ufunc is called by nditer object.
-         * These flags will be used in addition to the default global flags
-         * set by nditer object.
-         */
-        npy_uint32 iter_flags;
 } PyUFuncObject;
 
 #include "arrayobject.h"
@@ -319,8 +305,6 @@ typedef struct _loop1d_info {
         void *data;
         int *arg_types;
         struct _loop1d_info *next;
-        int nargs;
-        PyArray_Descr **arg_dtypes;
 } PyUFunc_Loop1d;
 
 
@@ -365,12 +349,11 @@ typedef struct _loop1d_info {
 
 #include <float.h>
 
-/* Clear the floating point exception default of Borland C++ */
+  /* Clear the floating point exception default of Borland C++ */
 #if defined(__BORLANDC__)
 #define UFUNC_NOFPE _control87(MCW_EM, MCW_EM);
 #endif
 
-#if defined(_WIN64)
 #define UFUNC_CHECK_STATUS(ret) { \
         int fpstatus = (int) _clearfp(); \
          \
@@ -379,20 +362,6 @@ typedef struct _loop1d_info {
                 | ((SW_UNDERFLOW & fpstatus) ? UFUNC_FPE_UNDERFLOW : 0) \
                 | ((SW_INVALID & fpstatus) ? UFUNC_FPE_INVALID : 0); \
         }
-#else
-/* windows enables sse on 32 bit, so check both flags */
-#define UFUNC_CHECK_STATUS(ret) { \
-        int fpstatus, fpstatus2; \
-        _statusfp2(&fpstatus, &fpstatus2); \
-        _clearfp(); \
-        fpstatus |= fpstatus2; \
-         \
-        ret = ((SW_ZERODIVIDE & fpstatus) ? UFUNC_FPE_DIVIDEBYZERO : 0) \
-                | ((SW_OVERFLOW & fpstatus) ? UFUNC_FPE_OVERFLOW : 0) \
-                | ((SW_UNDERFLOW & fpstatus) ? UFUNC_FPE_UNDERFLOW : 0) \
-                | ((SW_INVALID & fpstatus) ? UFUNC_FPE_INVALID : 0); \
-        }
-#endif
 
 /* Solaris --------------------------------------------------------*/
 /* --------ignoring SunOS ieee_flags approach, someone else can
@@ -421,7 +390,7 @@ typedef struct _loop1d_info {
     defined(__MINGW32__) || defined(__FreeBSD__)
 #include <fenv.h>
 #elif defined(__CYGWIN__)
-#include "numpy/fenv/fenv.h"
+#include "fenv/fenv.c"
 #endif
 
 #define UFUNC_CHECK_STATUS(ret) { \

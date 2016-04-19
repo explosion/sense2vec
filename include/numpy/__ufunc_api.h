@@ -93,8 +93,6 @@ NPY_NO_EXPORT int PyUFunc_DefaultTypeResolver \
        (PyUFuncObject *, NPY_CASTING, PyArrayObject **, PyObject *, PyArray_Descr **);
 NPY_NO_EXPORT int PyUFunc_ValidateCasting \
        (PyUFuncObject *, NPY_CASTING, PyArrayObject **, PyArray_Descr **);
-NPY_NO_EXPORT int PyUFunc_RegisterLoopForDescr \
-       (PyUFuncObject *, PyArray_Descr *, PyUFuncGenericFunction, PyArray_Descr **, void *);
 
 #else
 
@@ -233,9 +231,6 @@ static void **PyUFunc_API=NULL;
 #define PyUFunc_ValidateCasting \
         (*(int (*)(PyUFuncObject *, NPY_CASTING, PyArrayObject **, PyArray_Descr **)) \
          PyUFunc_API[40])
-#define PyUFunc_RegisterLoopForDescr \
-        (*(int (*)(PyUFuncObject *, PyArray_Descr *, PyUFuncGenericFunction, PyArray_Descr **, void *)) \
-         PyUFunc_API[41])
 
 static int
 _import_umath(void)

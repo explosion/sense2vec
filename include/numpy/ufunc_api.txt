@@ -310,12 +310,3 @@ the output operands where provided.
 
 Returns 0 on success, -1 (with exception raised) on validation failure.
 
-::
-
-  int
-  PyUFunc_RegisterLoopForDescr(PyUFuncObject *ufunc, PyArray_Descr
-                               *user_dtype, PyUFuncGenericFunction
-                               function, PyArray_Descr
-                               **arg_dtypes, void *data)
-
-

@@ -782,20 +782,6 @@ NPY_NO_EXPORT PyDataMem_EventHookFunc * PyDataMem_SetEventHook \
     NPY_NO_EXPORT NPY_CASTING NPY_DEFAULT_ASSIGN_CASTING;
 #endif
 
-NPY_NO_EXPORT void PyArray_MapIterSwapAxes \
-       (PyArrayMapIterObject *, PyArrayObject **, int);
-NPY_NO_EXPORT PyObject * PyArray_MapIterArray \
-       (PyArrayObject *, PyObject *);
-NPY_NO_EXPORT void PyArray_MapIterNext \
-       (PyArrayMapIterObject *);
-NPY_NO_EXPORT int PyArray_Partition \
-       (PyArrayObject *, PyArrayObject *, int, NPY_SELECTKIND);
-NPY_NO_EXPORT PyObject * PyArray_ArgPartition \
-       (PyArrayObject *, PyArrayObject *, int, NPY_SELECTKIND);
-NPY_NO_EXPORT int PyArray_SelectkindConverter \
-       (PyObject *, NPY_SELECTKIND *);
-NPY_NO_EXPORT void * PyDataMem_NEW_ZEROED \
-       (size_t, size_t);
 
 #else
 
@@ -1602,27 +1588,6 @@ static void **PyArray_API=NULL;
         (*(PyDataMem_EventHookFunc * (*)(PyDataMem_EventHookFunc *, void *, void **)) \
          PyArray_API[291])
 #define NPY_DEFAULT_ASSIGN_CASTING (*(NPY_CASTING *)PyArray_API[292])
-#define PyArray_MapIterSwapAxes \
-        (*(void (*)(PyArrayMapIterObject *, PyArrayObject **, int)) \
-         PyArray_API[293])
-#define PyArray_MapIterArray \
-        (*(PyObject * (*)(PyArrayObject *, PyObject *)) \
-         PyArray_API[294])
-#define PyArray_MapIterNext \
-        (*(void (*)(PyArrayMapIterObject *)) \
-         PyArray_API[295])
-#define PyArray_Partition \
-        (*(int (*)(PyArrayObject *, PyArrayObject *, int, NPY_SELECTKIND)) \
-         PyArray_API[296])
-#define PyArray_ArgPartition \
-        (*(PyObject * (*)(PyArrayObject *, PyArrayObject *, int, NPY_SELECTKIND)) \
-         PyArray_API[297])
-#define PyArray_SelectkindConverter \
-        (*(int (*)(PyObject *, NPY_SELECTKIND *)) \
-         PyArray_API[298])
-#define PyDataMem_NEW_ZEROED \
-        (*(void * (*)(size_t, size_t)) \
-         PyArray_API[299])
 
 #if !defined(NO_IMPORT_ARRAY) && !defined(NO_IMPORT)
 static int

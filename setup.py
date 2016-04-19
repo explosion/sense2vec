@@ -147,7 +147,7 @@ def setup_package():
             license=about['__license__'],
             ext_modules=ext_modules,
             install_requires=[
-                'numpy>=1.8',
+                'numpy>=1.7',
                 'spacy>=0.100,<0.101',
                 'preshed>=0.46,<0.47',
                 'murmurhash>=0.26,<0.27',

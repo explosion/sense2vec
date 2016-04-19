@@ -1,19 +1,11 @@
 #ifndef __NPY_MATH_C99_H_
 #define __NPY_MATH_C99_H_
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 #include <math.h>
 #ifdef __SUNPRO_CC
 #include <sunmath.h>
 #endif
-#ifdef HAVE_NPY_CONFIG_H
-#include <npy_config.h>
-#endif
 #include <numpy/npy_common.h>
-
 
 /*
  * NAN and INFINITY like macros (same behavior as glibc for NAN, same as C99
@@ -155,51 +147,33 @@ double npy_spacing(double x);
 /*
  * IEEE 754 fpu handling. Those are guaranteed to be macros
  */
-
-/* use builtins to avoid function calls in tight loops
- * only available if npy_config.h is available (= numpys own build) */
-#if HAVE___BUILTIN_ISNAN
-    #define npy_isnan(x) __builtin_isnan(x)
+#ifndef NPY_HAVE_DECL_ISNAN
+    #define npy_isnan(x) ((x) != (x))
 #else
-    #ifndef NPY_HAVE_DECL_ISNAN
-        #define npy_isnan(x) ((x) != (x))
+    #ifdef _MSC_VER
+        #define npy_isnan(x) _isnan((x))
     #else
-        #ifdef _MSC_VER
-            #define npy_isnan(x) _isnan((x))
-        #else
-            #define npy_isnan(x) isnan(x)
-        #endif
+        #define npy_isnan(x) isnan((x))
     #endif
 #endif
 
-
-/* only available if npy_config.h is available (= numpys own build) */
-#if HAVE___BUILTIN_ISFINITE
-    #define npy_isfinite(x) __builtin_isfinite(x)
-#else
-    #ifndef NPY_HAVE_DECL_ISFINITE
-        #ifdef _MSC_VER
-            #define npy_isfinite(x) _finite((x))
-        #else
-            #define npy_isfinite(x) !npy_isnan((x) + (-x))
-        #endif
+#ifndef NPY_HAVE_DECL_ISFINITE
+    #ifdef _MSC_VER
+        #define npy_isfinite(x) _finite((x))
     #else
-        #define npy_isfinite(x) isfinite((x))
+        #define npy_isfinite(x) !npy_isnan((x) + (-x))
     #endif
+#else
+    #define npy_isfinite(x) isfinite((x))
 #endif
 
-/* only available if npy_config.h is available (= numpys own build) */
-#if HAVE___BUILTIN_ISINF
-    #define npy_isinf(x) __builtin_isinf(x)
+#ifndef NPY_HAVE_DECL_ISINF
+    #define npy_isinf(x) (!npy_isfinite(x) && !npy_isnan(x))
 #else
-    #ifndef NPY_HAVE_DECL_ISINF
-        #define npy_isinf(x) (!npy_isfinite(x) && !npy_isnan(x))
+    #ifdef _MSC_VER
+        #define npy_isinf(x) (!_finite((x)) && !_isnan((x)))
     #else
-        #ifdef _MSC_VER
-            #define npy_isinf(x) (!_finite((x)) && !_isnan((x)))
-        #else
-            #define npy_isinf(x) isinf((x))
-        #endif
+        #define npy_isinf(x) isinf((x))
     #endif
 #endif
 
@@ -460,9 +434,5 @@ void npy_set_floatstatus_divbyzero(void);
 void npy_set_floatstatus_overflow(void);
 void npy_set_floatstatus_underflow(void);
 void npy_set_floatstatus_invalid(void);
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif
