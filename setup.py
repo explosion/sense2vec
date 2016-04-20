@@ -10,11 +10,8 @@ from distutils.sysconfig import get_python_inc
 
 try:
     from setuptools import Extension, setup
-    from pkg_resources import resource_filename
 except ImportError:
     from distutils.core import Extension, setup
-    def resource_filename(package, _):
-        return import_include(package).get_include()
 
 
 PACKAGES = [
@@ -48,12 +45,6 @@ if os.environ.get('USE_BLAS') == '1':
 
 class build_ext_subclass(build_ext):
     def build_extensions(self):
-        # for mod_name in ['numpy', 'murmurhash']:
-        #     mod = import_include(mod_name)
-        #     if mod:
-        #         self.compiler.add_include_dir(resource_filename(
-        #             mod_name, os.path.relpath(mod.get_include(), mod.__path__[0])))
-
         for e in self.extensions:
             e.extra_compile_args = compile_options.get(
                 self.compiler.compiler_type, compile_options['other'])
@@ -70,13 +61,6 @@ def generate_cython(root, source):
                          source])
     if p != 0:
         raise RuntimeError('Running cythonize failed')
-
-
-def import_include(module_name):
-    try:
-        return __import__(module_name, globals(), locals(), [], 0)
-    except ImportError:
-        pass
 
 
 def is_source_release(path):
