@@ -12,6 +12,7 @@ from spacy.cfile cimport CFile
 from preshed.maps cimport PreshMap
 from spacy.strings cimport StringStore, hash_string
 from murmurhash.mrmr cimport hash64
+from blis cimport blis
 
 from cymem.cymem cimport Pool
 cimport numpy as np
@@ -35,41 +36,125 @@ cdef struct _CachedResult:
 cdef class VectorMap:
     '''Provide key-based access into the VectorStore. Keys are unicode strings.
     Also manage freqs.'''
-    cdef readonly Pool mem
-    cdef VectorStore data
-    cdef readonly StringStore strings
-    cdef PreshMap freqs
-    
     def __init__(self, nr_dim):
         self.data = VectorStore(nr_dim)
         self.strings = StringStore()
         self.freqs = PreshMap()
+
+    @property
+    def nr_dim(self):
+        return self.data.nr_dim
+
+    def __len__(self):
+        '''Number of entries in the map.
+
+        Returns: length int >= 0
+        '''
+        return self.data.vectors.size()
     
     def __contains__(self, unicode string):
+        '''Check whether the VectorMap has a given key.
+
+        Returns: has_key bool
+        '''
         cdef uint64_t hashed = hash_string(string)
         return bool(self.freqs[hashed])
 
-    def __getitem__(self, unicode string):
-        cdef uint64_t hashed = hash_string(string)
+    def __getitem__(self, unicode key):
+        '''Retrieve a (frequency, vector) tuple from the vector map, or
+        raise KeyError if the key is not found.
+
+        Arguments:
+            key unicode
+
+        Returns:
+            tuple[int,numpy.ndarray[float32, ndim=1]]
+        '''
+        cdef uint64_t hashed = hash_string(key)
         freq = self.freqs[hashed]
         if not freq:
-            raise KeyError(string)
+            raise KeyError(key)
         else:
-            i = self.strings[string]
+            i = self.strings[key]
             return freq, self.data[i]
 
+    def __setitem__(self, unicode key, value):
+        cdef int freq
+        cdef float[:] vector
+        freq, vector = value
+        idx = self.strings[key]
+        cdef uint64_t hashed = hash_string(key)
+        self.freqs[hashed] = freq
+        assert self.data.vectors.size() == idx
+        self.data.add(vector)
+
     def __iter__(self):
+        '''Iterate over the keys in the map, in order of insertion.
+
+        Generates:
+            key unicode
+        '''
+        yield from self.strings
+
+    def keys(self):
+        '''Iterate over the keys in the map, in order of insertion.
+
+        Generates:
+            key unicode
+        '''
+        yield from self.strings
+
+    def values(self):
+        '''Iterate over the values in the map, in order of insertion.
+
+        Generates:
+            (freq,vector) tuple[int,numpy.ndarray[float32, ndim=1]]
+        '''
+        for key, value in self.items():
+            yield value
+
+    def items(self):
+        '''Iterate over the items in the map, in order of insertion.
+
+        Generates:
+            (key, (freq,vector)): tuple[unicode, tuple[int, numpy.ndarray[float32, ndim=1]]]
+        '''
         cdef uint64_t hashed
         for i, string in enumerate(self.strings):
             hashed = hash_string(string)
             freq = self.freqs[hashed]
             yield (string, freq, self.data[i])
 
-    def most_similar(self, float[:] vector, int n):
+    def similarity(self, float[:] v1, float[:] v2):
+        '''Measure the similarity between two vectors, using cosine.
+        
+        Arguments:
+            v1 float[:]
+            v2 float[:]
+
+        Returns:
+            similarity_score -1<float<=1
+        '''
+        norm1 = get_l2_norm(&v1[0], len(v1))
+        norm2 = get_l2_norm(&v2[0], len(v2))
+        return cosine_similarity(&v1[0], &v2[0], norm1, norm2, len(v1))
+
+    def most_similar(self, float[:] vector, int n=10):
+        '''Find the keys of the N most similar entries, given a vector.
+
+        Arguments:
+            vector float[:]
+            n int default=10
+
+        Returns:
+            list[unicode] length<=n
+        '''
         indices, scores = self.data.most_similar(vector, n)
         return [self.strings[idx] for idx in indices], scores
 
     def add(self, unicode string, int freq, float[:] vector):
+        '''Insert a vector into the map by value. Makes a copy of the vector.
+        '''
         idx = self.strings[string]
         cdef uint64_t hashed = hash_string(string)
         self.freqs[hashed] = freq
@@ -77,6 +162,13 @@ cdef class VectorMap:
         self.data.add(vector)
 
     def borrow(self, unicode string, int freq, float[:] vector):
+        '''Insert a vector into the map by reference. Does not copy the data, and
+        changes to the vector will be reflected in the VectorMap.
+
+        The user is responsible for ensuring that another reference to the vector
+        is maintained --- otherwise, the Python interpreter will free the memory,
+        potentially resulting in an invalid read.
+        '''
         idx = self.strings[string]
         cdef uint64_t hashed = hash_string(string)
         self.freqs[hashed] = freq
@@ -84,6 +176,12 @@ cdef class VectorMap:
         self.data.borrow(vector)
 
     def save(self, data_dir):
+        '''Serialize to a directory.
+
+        * data_dir/strings.json --- The keys, in insertion order.
+        * data_dir/freqs.json --- The frequencies.
+        * data_dir/vectors.bin --- The vectors.
+        '''
         with open(path.join(data_dir, 'strings.json'), 'w') as file_:
             self.strings.dump(file_)
         self.data.save(path.join(data_dir, 'vectors.bin'))
@@ -99,6 +197,12 @@ cdef class VectorMap:
             json.dump(freqs, file_)
 
     def load(self, data_dir):
+        '''Load from a directory:
+
+        * data_dir/strings.json --- The keys, in insertion order.
+        * data_dir/freqs.json --- The frequencies.
+        * data_dir/vectors.bin --- The vectors.
+        '''
         self.data.load(path.join(data_dir, 'vectors.bin'))
         with open(path.join(data_dir, 'strings.json')) as file_:
             self.strings.load(file_)
@@ -115,13 +219,6 @@ cdef class VectorStore:
     table may or may not own. Keys and frequencies sold separately --- 
     we're just a dumb vector of data, that knows how to run linear-scan
     similarity queries.'''
-    cdef readonly Pool mem
-    cdef readonly PreshMap cache
-    cdef vector[float*] vectors
-    cdef vector[float] norms
-    cdef vector[float] _similarities
-    cdef readonly int nr_dim
-    
     def __init__(self, int nr_dim):
         self.mem = Pool()
         self.nr_dim = nr_dim 
@@ -216,7 +313,6 @@ cdef void linear_similarity(int* indices, float* scores, float* tmp,
     cdef int i
     cdef float score
     for i in cython.parallel.prange(nr_vector, nogil=True):
-        #tmp[i] = cblas_sdot(nr_dim, query, 1, vectors[i], 1) / (query_norm * norms[i])
         tmp[i] = get_similarity(query, vectors[i], query_norm, norms[i], nr_dim)
     cdef priority_queue[pair[float, int]] queue
     cdef float cutoff = 0
@@ -237,21 +333,12 @@ cdef void linear_similarity(int* indices, float* scores, float* tmp,
         i += 1
 
 
-cdef extern from "cblas_shim.h":
-    float cblas_sdot(int N, float  *x, int incX, float  *y, int incY ) nogil
-    float cblas_snrm2(int N, float  *x, int incX) nogil
-    int _use_blas()
-
-
-cpdef bint use_blas():
-    return _use_blas()
-
-
 cdef float get_l2_norm(const float* vec, int n) nogil:
-    return cblas_snrm2(n, vec, 1)
+    return blis.norm_L2(n, <float*>vec, 1)
 
 
 cdef float cosine_similarity(const float* v1, const float* v2,
         float norm1, float norm2, int n) nogil:
-    cdef float dot = cblas_sdot(n, v1, 1, v2, 1)
+    cdef float dot = blis.dotv(blis.NO_CONJUGATE, blis.NO_CONJUGATE,
+                               n, <float*>v1, <float*>v2, 1, 1)
     return dot / (norm1 * norm2)
