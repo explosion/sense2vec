@@ -134,7 +134,7 @@ cdef class VectorMap:
         for i, string in enumerate(self.strings):
             hashed = hash_string(string)
             freq = self.freqs[hashed]
-            yield (string, freq, self.data[i])
+            yield string, (freq, self.data[i])
 
     
     def most_similar(self, float[:] vector, int n=10):
