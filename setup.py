@@ -40,11 +40,10 @@ if os.environ.get('USE_BLAS') == '1':
     compile_options['other'].extend([
         '-DUSE_BLAS=1',
         '-fopenmp'])
-    link_options['other'].extend([
-        '-fopenmp',
-        '-L/usr/lib64/atlas',  # needed for redhat
-        '-lcblas'])
-
+#else:
+#    link_options['other'].extend([
+#        '-fopenmp']) 
+#
 
 class build_ext_subclass(build_ext):
     def build_extensions(self):
@@ -134,17 +133,16 @@ def setup_package():
             generate_cython(root, src_path)
 
         setup(
-            name=about['__title__'],
+            name=about['title'],
             zip_safe=False,
             packages=PACKAGES,
-            package_data={'': ['*.pyx', '*.pxd', '*.pxi']},
-            description=about['__summary__'],
-            long_description=readme,
-            author=about['__author__'],
-            author_email=about['__email__'],
-            version=about['__version__'],
-            url=about['__uri__'],
-            license=about['__license__'],
+            package_data={'': ['*.pyx', '*.pxd', '*.h']},
+            description=about['summary'],
+            author=about['author'],
+            author_email=about['email'],
+            version=about['version'],
+            url=about['uri'],
+            license=about['license'],
             ext_modules=ext_modules,
             install_requires=[
                 'numpy>=1.7',

@@ -14,8 +14,8 @@ def get_package(data_dir):
 
 def get_package_by_name(name=None, via=None):
     try:
-        return sputnik.package(about.__title__, about.__version__,
-                               name or about.__default_model__, data_path=via)
+        return sputnik.package(about.title, about.version,
+                               name or about.default_model, data_path=via)
     except PackageNotFoundException as e:
         raise RuntimeError("Model not installed. Please run 'python -m "
                            "sense2vec.download' to install latest compatible "
