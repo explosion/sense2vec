@@ -4,11 +4,11 @@
 # https://github.com/pypa/warehouse/blob/master/warehouse/__about__.py
 
 title = 'sense2vec'
-version = '0.3.0'
+version = '0.4.0'
 summary = 'word2vec with NLP-specific tokens'
 uri = 'https://spacy.io'
 author = 'Matthew Honnibal'
 email = 'matt@spacy.io'
 license = 'MIT'
-release = False
+release = True
 default_model = 'reddit_vectors>=1.1.0,<1.2.0'
