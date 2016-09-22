@@ -45,7 +45,7 @@ Installation
 
 **WARNING**: sense2vec is still work-in-progress. There is no official release yet. The content of the repository might change  at any time and could be in a non-working state.
 
-Until there is a PyPI release you can install sense2vec by 1) cloning the repository 2) run ``pip install -r requirements.txt`` 3) ``pip install -e .`` and 4) install the latest model via ``python -m sense2vec.download``
+Until there is a PyPI release you can install sense2vec by 1) cloning the repository 2) run ``pip install -r requirements.txt`` 3) ``pip install -e .`` and 4) install the latest model via ``sputnik --name sense2vec --repository-url http://index.spacy.io install reddit_vectors``
 
 You might also be tempted to simply run ``pip install -e git+git://github.com/spacy-io/sense2vec.git#egg=sense2vec`` instead of steps 1-3, but it expects cython to be present.
 

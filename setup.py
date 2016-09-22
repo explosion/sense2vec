@@ -7,14 +7,12 @@ import sys
 import contextlib
 from distutils.command.build_ext import build_ext
 from distutils.sysconfig import get_python_inc
+from distutils import ccompiler, msvccompiler
 
 try:
     from setuptools import Extension, setup
-    from pkg_resources import resource_filename
 except ImportError:
     from distutils.core import Extension, setup
-    def resource_filename(package, _):
-        return import_include(package).get_include()
 
 
 PACKAGES = [
@@ -47,12 +45,6 @@ if os.environ.get('USE_BLAS') == '1':
 
 class build_ext_subclass(build_ext):
     def build_extensions(self):
-        # for mod_name in ['numpy', 'murmurhash']:
-        #     mod = import_include(mod_name)
-        #     if mod:
-        #         self.compiler.add_include_dir(resource_filename(
-        #             mod_name, os.path.relpath(mod.get_include(), mod.__path__[0])))
-
         for e in self.extensions:
             e.extra_compile_args = compile_options.get(
                 self.compiler.compiler_type, compile_options['other'])
@@ -69,13 +61,6 @@ def generate_cython(root, source):
                          source])
     if p != 0:
         raise RuntimeError('Running cythonize failed')
-
-
-def import_include(module_name):
-    try:
-        return __import__(module_name, globals(), locals(), [], 0)
-    except ImportError:
-        pass
 
 
 def is_source_release(path):
@@ -121,6 +106,10 @@ def setup_package():
         include_dirs = [
             get_python_inc(plat_specific=True),
             os.path.join(root, 'include')]
+
+        if (ccompiler.new_compiler().compiler_type == 'msvc'
+            and msvccompiler.get_build_version() == 9):
+            include_dirs.append(os.path.join(root, 'include', 'msvc9'))
 
         ext_modules = []
         for mod_name in MOD_NAMES:
