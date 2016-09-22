@@ -37,11 +37,10 @@ if os.environ.get('USE_BLAS') == '1':
     compile_options['other'].extend([
         '-DUSE_BLAS=1',
         '-fopenmp'])
-else:
-    link_options['other'].extend([
-        '-fopenmp',
-        '-Ithird_party/Eigen']) # relative path to Eigen
-
+#else:
+#    link_options['other'].extend([
+#        '-fopenmp']) 
+#
 
 class build_ext_options:
     def build_options(self):
@@ -153,16 +152,16 @@ def setup_package():
             prepare_includes(root)
 
         setup(
-            name=about['__title__'],
+            name=about['title'],
             zip_safe=False,
             packages=PACKAGES,
             package_data={'': ['*.pyx', '*.pxd', '*.h']},
-            description=about['__summary__'],
-            author=about['__author__'],
-            author_email=about['__email__'],
-            version=about['__version__'],
-            url=about['__uri__'],
-            license=about['__license__'],
+            description=about['summary'],
+            author=about['author'],
+            author_email=about['email'],
+            version=about['version'],
+            url=about['uri'],
+            license=about['license'],
             ext_modules=ext_modules,
             install_requires=[
                 'numpy',
