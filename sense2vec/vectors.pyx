@@ -2,6 +2,8 @@
 # cython: cdivision=True
 # cython: infer_types=True
 cimport cython.parallel
+cimport cpython.array
+
 from libc.stdint cimport int32_t
 from libc.stdint cimport uint64_t
 from libc.string cimport memcpy
@@ -68,7 +70,7 @@ cdef class VectorMap:
             key unicode
 
         Returns:
-            tuple[int,numpy.ndarray[float32, ndim=1]]
+            tuple[int, float32[:self.nr_dim]]
         '''
         cdef uint64_t hashed = hash_string(key)
         freq = self.freqs[hashed]
@@ -79,6 +81,15 @@ cdef class VectorMap:
             return freq, self.data[i]
 
     def __setitem__(self, unicode key, value):
+        '''Assign a (frequency, vector) tuple to the vector map.
+
+        Arguments:
+            key unicode
+            value tuple[int, float32[:self.nr_dim]]
+        Returns:
+            None
+        '''
+            
         cdef int freq
         cdef float[:] vector
         freq, vector = value
@@ -108,7 +119,7 @@ cdef class VectorMap:
         '''Iterate over the values in the map, in order of insertion.
 
         Generates:
-            (freq,vector) tuple[int,numpy.ndarray[float32, ndim=1]]
+            (freq,vector) tuple[int, float32[:self.nr_dim]]
         '''
         for key, value in self.items():
             yield value
@@ -117,7 +128,7 @@ cdef class VectorMap:
         '''Iterate over the items in the map, in order of insertion.
 
         Generates:
-            (key, (freq,vector)): tuple[unicode, tuple[int, numpy.ndarray[float32, ndim=1]]]
+            (key, (freq,vector)): tuple[int, float32[:self.nr_dim]]
         '''
         cdef uint64_t hashed
         for i, string in enumerate(self.strings):
@@ -125,20 +136,7 @@ cdef class VectorMap:
             freq = self.freqs[hashed]
             yield (string, freq, self.data[i])
 
-    def similarity(self, float[:] v1, float[:] v2):
-        '''Measure the similarity between two vectors, using cosine.
-        
-        Arguments:
-            v1 float[:]
-            v2 float[:]
-
-        Returns:
-            similarity_score -1<float<=1
-        '''
-        norm1 = get_l2_norm(&v1[0], len(v1))
-        norm2 = get_l2_norm(&v2[0], len(v2))
-        return cosine_similarity(&v1[0], &v2[0], norm1, norm2, len(v1))
-
+    
     def most_similar(self, float[:] vector, int n=10):
         '''Find the keys of the N most similar entries, given a vector.
 
@@ -245,6 +243,20 @@ cdef class VectorStore:
         # Danger! User must ensure this is memory contiguous!
         self.vectors.push_back(&vec[0])
 
+    def similarity(self, float[:] v1, float[:] v2):
+        '''Measure the similarity between two vectors, using cosine.
+        
+        Arguments:
+            v1 float[:]
+            v2 float[:]
+
+        Returns:
+            similarity_score -1<float<=1
+        '''
+        norm1 = get_l2_norm(&v1[0], len(v1))
+        norm2 = get_l2_norm(&v2[0], len(v2))
+        return cosine_similarity(&v1[0], &v2[0], norm1, norm2, len(v1))
+
     def most_similar(self, float[:] query, int n):
         cdef int[:] indices = np.ndarray(shape=(n,), dtype='int32')
         cdef float[:] scores = np.ndarray(shape=(n,), dtype='float32')
@@ -292,15 +304,13 @@ cdef class VectorStore:
         cdef int32_t nr_vector
         cfile.read_into(&nr_vector, 1, sizeof(nr_vector))
         cfile.read_into(&self.nr_dim, 1, sizeof(self.nr_dim))
-        cdef vector[float] tmp
-        tmp.resize(self.nr_dim)
-        cdef float[:] cv
+        cdef cpython.array.array[float] arr
+        cdef cpython.array.array[float] template = cpython.array.array('f')
         for i in range(nr_vector):
-            cfile.read_into(&tmp[0], self.nr_dim, sizeof(tmp[0]))
-            ptr = &tmp[0]
-            cv = <float[:128]>ptr
+            arr = cpython.array.clone(template, self.nr_dim, False)
+            cfile.read_into(arr.data.as_floats, self.nr_dim, sizeof(float))
             if i >= 1:
-                self.add(cv)
+                self.add(arr)
         cfile.close()
 
 
