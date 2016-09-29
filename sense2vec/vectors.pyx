@@ -7,6 +7,8 @@ cimport cpython.array
 from libc.stdint cimport int32_t
 from libc.stdint cimport uint64_t
 from libc.string cimport memcpy
+from libc.math cimport sqrt
+
 from libcpp.pair cimport pair
 from libcpp.queue cimport priority_queue
 from libcpp.vector cimport vector
@@ -14,7 +16,6 @@ from spacy.cfile cimport CFile
 from preshed.maps cimport PreshMap
 from spacy.strings cimport StringStore, hash_string
 from murmurhash.mrmr cimport hash64
-from blis cimport blis
 
 from cymem.cymem cimport Pool
 cimport numpy as np
@@ -92,7 +93,7 @@ cdef class VectorMap:
         Returns:
             None
         '''
-            
+        # TODO: Handle case where we're over-writing an existing entry.
         cdef int freq
         cdef float[:] vector
         freq, vector = value
@@ -307,13 +308,15 @@ cdef class VectorStore:
         cdef int32_t nr_vector
         cfile.read_into(&nr_vector, 1, sizeof(nr_vector))
         cfile.read_into(&self.nr_dim, 1, sizeof(self.nr_dim))
-        cdef cpython.array.array[float] arr
-        cdef cpython.array.array[float] template = cpython.array.array('f')
+        cdef vector[float] tmp
+        tmp.resize(self.nr_dim)
+        cdef float[:] cv
         for i in range(nr_vector):
-            arr = cpython.array.clone(template, self.nr_dim, False)
-            cfile.read_into(arr.data.as_floats, self.nr_dim, sizeof(float))
+            cfile.read_into(&tmp[0], self.nr_dim, sizeof(tmp[0]))
+            ptr = &tmp[0]
+            cv = <float[:128]>ptr
             if i >= 1:
-                self.add(arr)
+                self.add(cv)
         cfile.close()
 
 
@@ -347,11 +350,15 @@ cdef void linear_similarity(int* indices, float* scores, float* tmp,
 
 
 cdef float get_l2_norm(const float* vec, int n) nogil:
-    return blis.norm_L2(n, <float*>vec, 1)
+    norm = 0.0
+    for i in range(n):
+        norm += vec[i] ** 2
+    return sqrt(norm)
 
 
 cdef float cosine_similarity(const float* v1, const float* v2,
         float norm1, float norm2, int n) nogil:
-    cdef float dot = blis.dotv(blis.NO_CONJUGATE, blis.NO_CONJUGATE,
-                               n, <float*>v1, <float*>v2, 1, 1)
+    dot = 0.0
+    for i in range(n):
+        dot += v1[i] * v2[i]
     return dot / (norm1 * norm2)
