@@ -6,9 +6,9 @@
 title = 'sense2vec'
 version = '0.6.0'
 summary = 'word2vec with NLP-specific tokens'
-uri = 'https://spacy.io'
+uri = 'https://github.com/explosion/sense2vec'
 author = 'Matthew Honnibal'
-email = 'matt@spacy.io'
+email = 'matt@explosion.ai'
 license = 'MIT'
 release = True
 default_model = 'reddit_vectors>=1.1.0,<1.2.0'
