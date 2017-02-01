@@ -3,8 +3,14 @@ sense2vec: Use spaCy to go beyond vanilla word2vec
 
 Read about sense2vec in our `blog post <https://spacy.io/blog/sense2vec-with-spacy>`_. You can try an online demo of the technology `here <https://demos.explosion.ai/sense2vec>`_ and use the open-source `REST server <https://github.com/explosion/spacy-services>`_. 
 
-.. image:: https://travis-ci.org/spacy-io/sense2vec.svg?branch=master
-    :target: https://travis-ci.org/spacy-io/sense2vec
+.. image:: https://travis-ci.org/explosion/sense2vec.svg?branch=master
+    :target: https://travis-ci.org/explosion/sense2vec
+    :alt: Build Status
+
+.. image:: https://img.shields.io/pypi/v/sense2vec.svg   
+    :target: https://pypi.python.org/pypi/sense2vec
+    :alt: pypi Version
+
 
 Overview
 ========
