@@ -58,6 +58,7 @@ Usage
 
  import sense2vec
  model = sense2vec.load()
+ from __future__ import unicode_literals
  freq, query_vector = model["natural_language_processing|NOUN"]
  model.most_similar(query_vector, n=3)
 
