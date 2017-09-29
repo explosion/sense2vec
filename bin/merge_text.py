@@ -120,7 +120,7 @@ def represent_word(word):
 
 @plac.annotations(
     in_loc=("Location of input file"),
-    out_dir=("Location of input file"),
+    out_dir=("Output directory"),
     n_workers=("Number of workers", "option", "n", int),
     load_parses=("Load parses from binary", "flag", "b"),
 )
