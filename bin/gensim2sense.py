@@ -16,12 +16,12 @@ def main(gensim_model_path, out_dir, min_count=None):
     if min_count is None:
         min_count = gensim_model.min_count
         
-    for string in gensim_model.vocab:
-        vocab = gensim_model.vocab[string]
+    for string in gensim_model.wv.vocab:
+        vocab = gensim_model.wv.vocab[string]
         freq, idx = vocab.count, vocab.index
         if freq < min_count:
             continue
-        vector = gensim_model.syn0[idx]
+        vector = gensim_model.wv.syn0[idx]
         vector_map.borrow(string, freq, vector)
     
     vector_map.save(out_dir)
