@@ -57,7 +57,7 @@ cdef class VectorMap:
         Returns: length int >= 0
         '''
         return self.data.vectors.size()
-    
+
     def __contains__(self, unicode string):
         '''Check whether the VectorMap has a given key.
 
@@ -140,7 +140,7 @@ cdef class VectorMap:
             freq = self.freqs[hashed]
             yield string, (freq, self.data[i])
 
-    
+
     def most_similar(self, float[:] vector, int n=10):
         '''Find the keys of the N most similar entries, given a vector.
 
@@ -218,7 +218,7 @@ cdef class VectorMap:
 
 cdef class VectorStore:
     '''Maintain an array of float* pointers for word vectors, which the
-    table may or may not own. Keys and frequencies sold separately --- 
+    table may or may not own. Keys and frequencies sold separately ---
     we're just a dumb vector of data, that knows how to run linear-scan
     similarity queries.'''
     def __init__(self, int nr_dim):
@@ -241,7 +241,7 @@ cdef class VectorStore:
             &vec[0], sizeof(ptr[0]) * self.nr_dim)
         self.norms.push_back(get_l2_norm(&ptr[0], self.nr_dim))
         self.vectors.push_back(ptr)
-    
+
     def borrow(self, float[:] vec):
         self.norms.push_back(get_l2_norm(&vec[0], self.nr_dim))
         # Danger! User must ensure this is memory contiguous!
@@ -249,7 +249,7 @@ cdef class VectorStore:
 
     def similarity(self, float[:] v1, float[:] v2):
         '''Measure the similarity between two vectors, using cosine.
-        
+
         Arguments:
             v1 float[:]
             v2 float[:]
@@ -280,7 +280,7 @@ cdef class VectorStore:
             self._similarities.resize(self.vectors.size())
             linear_similarity(&indices[0], &scores[0], &self._similarities[0],
                 n, &query[0], self.nr_dim,
-                &self.vectors[0], &self.norms[0], self.vectors.size(), 
+                &self.vectors[0], &self.norms[0], self.vectors.size(),
                 cosine_similarity)
             cached_result = <_CachedResult*>self.mem.alloc(sizeof(_CachedResult), 1)
             cached_result.n = n
@@ -341,7 +341,7 @@ cdef void linear_similarity(int* indices, float* scores, float* tmp,
                 queue.pop()
     # Fill the outputs
     i = 0
-    while i < nr_out and not queue.empty(): 
+    while i < nr_out and not queue.empty():
         entry = queue.top()
         scores[nr_out-(i+1)] = -entry.first
         indices[nr_out-(i+1)] = entry.second

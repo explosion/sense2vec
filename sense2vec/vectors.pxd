@@ -2,7 +2,6 @@ from libcpp.vector cimport vector
 from preshed.maps cimport PreshMap
 from spacy.strings cimport StringStore, hash_string
 from murmurhash.mrmr cimport hash64
-
 from cymem.cymem cimport Pool
 
 
@@ -11,7 +10,7 @@ cdef class VectorMap:
     cdef readonly VectorStore data
     cdef readonly StringStore strings
     cdef readonly PreshMap freqs
- 
+
 
 cdef class VectorStore:
     cdef readonly Pool mem
@@ -20,7 +19,7 @@ cdef class VectorStore:
     cdef vector[float] norms
     cdef vector[float] _similarities
     cdef readonly int nr_dim
- 
+
 
 cdef float get_l2_norm(const float* vec, int n) nogil
 

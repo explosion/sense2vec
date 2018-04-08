@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 from __future__ import print_function
+
 import os
 import shutil
 import subprocess
@@ -40,7 +41,7 @@ if os.environ.get('USE_BLAS') == '1':
         '-fopenmp'])
 #else:
 #    link_options['other'].extend([
-#        '-fopenmp']) 
+#        '-fopenmp'])
 #
 
 class build_ext_subclass(build_ext):
@@ -150,11 +151,12 @@ def setup_package():
                 'Operating System :: MacOS :: MacOS X',
                 'Operating System :: Microsoft :: Windows',
                 'Programming Language :: Cython',
-                'Programming Language :: Python :: 2.6',
+                'Programming Language :: Python :: 2',
                 'Programming Language :: Python :: 2.7',
-                'Programming Language :: Python :: 3.3',
+                'Programming Language :: Python :: 3',
                 'Programming Language :: Python :: 3.4',
                 'Programming Language :: Python :: 3.5',
+                'Programming Language :: Python :: 3.6',
                 'Topic :: Scientific/Engineering'],
             cmdclass = {
                 'build_ext': build_ext_subclass},

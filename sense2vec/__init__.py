@@ -1,4 +1,7 @@
 from . import util
+# coding: utf8
+from __future__ import unicode_literals
+
 from .vectors import VectorMap
 
 
