@@ -64,9 +64,9 @@ Standalone usage without spaCy
     freq, vector = s2v[query]
     words, scores = s2v.most_similar(vector, 3)
     most_similar = list(zip(words, scores))
-    # [('natural language processing|NOUN', 1.0),
-    #  ('machine learning|NOUN', 0.8986966609954834),
-    #  ('computer vision|NOUN', 0.8636297583580017)]
+    # [('natural_language_processing|NOUN', 1.0),
+    #  ('machine_learning|NOUN', 0.8986966609954834),
+    #  ('computer_vision|NOUN', 0.8636297583580017)]
 
 Installation & Setup
 ====================
@@ -186,7 +186,13 @@ its ``load()`` method to load in the vectors.
     s2v = sense2vec.load('/path/to/reddit_vectors-1.1.0')
 
 ``sense2vec.load`` returns an instance of the ``VectorMap`` class, which you
-can interact with via the following methods:
+can interact with via the following methods.
+
+⚠️ **Important note:** When interacting with the ``VectorMap`` directly, the
+keys need to follow the scheme of ``phrase_text|SENSE`` (note the ``_`` instead
+of spaces and the ``|`` before the tag or label) – for example,
+``machine_learning|NOUN``. Also note that the underlying vector table is
+case-sensitive.
 
 ``VectorMap.__len__``
 ^^^^^^^^^^^^^^^^^^^^^
