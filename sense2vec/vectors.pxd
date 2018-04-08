@@ -1,8 +1,8 @@
 from libcpp.vector cimport vector
 from preshed.maps cimport PreshMap
-from spacy.strings cimport StringStore, hash_string
 from murmurhash.mrmr cimport hash64
 from cymem.cymem cimport Pool
+from ._strings cimport StringStore, hash_string
 
 
 cdef class VectorMap:

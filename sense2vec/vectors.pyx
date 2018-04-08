@@ -12,9 +12,7 @@ from libc.math cimport sqrt
 from libcpp.pair cimport pair
 from libcpp.queue cimport priority_queue
 from libcpp.vector cimport vector
-from spacy.cfile cimport CFile
 from preshed.maps cimport PreshMap
-from spacy.strings cimport StringStore, hash_string
 from murmurhash.mrmr cimport hash64
 
 from cymem.cymem cimport Pool
@@ -25,6 +23,9 @@ try:
     import ujson as json
 except ImportError:
     import json
+
+from .cfile cimport CFile
+from ._strings cimport StringStore, hash_string
 
 
 ctypedef pair[float, int] Entry
@@ -184,8 +185,7 @@ cdef class VectorMap:
         * data_dir/freqs.json --- The frequencies.
         * data_dir/vectors.bin --- The vectors.
         '''
-        with open(path.join(data_dir, 'strings.json'), 'w') as file_:
-            self.strings.dump(file_)
+        self.strings.to_disk(path.join(data_dir, 'strings.json'))
         self.data.save(path.join(data_dir, 'vectors.bin'))
         freqs = []
         cdef uint64_t hashed
@@ -206,8 +206,7 @@ cdef class VectorMap:
         * data_dir/vectors.bin --- The vectors.
         '''
         self.data.load(path.join(data_dir, 'vectors.bin'))
-        with open(path.join(data_dir, 'strings.json')) as file_:
-            self.strings.load(file_)
+        self.strings.from_disk(path.join(data_dir, 'strings.json'))
         with open(path.join(data_dir, 'freqs.json')) as file_:
             freqs = json.load(file_)
         cdef uint64_t hashed
@@ -232,7 +231,7 @@ cdef class VectorStore:
     def __getitem__(self, int i):
         cdef float* ptr = self.vectors.at(i)
         cv = <float[:self.nr_dim]>ptr
-        return numpy.asarray(cv)
+        return numpy.asarray(cv, dtype='float32')
 
     def add(self, float[:] vec):
         assert len(vec) == self.nr_dim
