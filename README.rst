@@ -19,7 +19,7 @@ and can also be used as a standalone module. See below for usage details.
     :target: https://travis-ci.org/explosion/sense2vec
     :alt: Build Status
 
-.. image:: https://img.shields.io/github/release/explosion/sense2vec.svg?style=flat-square
+.. image:: https://img.shields.io/github/release/explosion/sense2vec/all.svg?style=flat-square
     :target: https://github.com/explosion/sense2vec/releases
     :alt: Current Release Version
 
