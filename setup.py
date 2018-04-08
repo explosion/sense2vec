@@ -22,7 +22,9 @@ PACKAGES = [
 ]
 
 MOD_NAMES = [
-    'sense2vec.vectors'
+    'sense2vec.vectors',
+    'sense2vec.cfile',
+    'sense2vec._strings'
 ]
 
 
