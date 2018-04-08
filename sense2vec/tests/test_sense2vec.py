@@ -2,13 +2,18 @@
 from __future__ import unicode_literals
 
 import pytest
+from os import path
 
-import sense2vec
+from .. import load
+
+
+data_path = path.join(path.dirname(__file__), '..', '..', 'data')
 
 
 @pytest.mark.models
-def test_sample():
-    s2v = sense2vec.load('reddit_vectors')
+@pytest.mark.parametrize('model', ['reddit_vectors-1.1.0'])
+def test_sample(model):
+    s2v = load(path.join(data_path, model))
     freq, query_vector = s2v[u"beekeepers|NOUN"]
     assert freq is not None
     assert s2v.most_similar(query_vector, 3)[0] == \
