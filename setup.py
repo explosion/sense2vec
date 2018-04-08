@@ -110,10 +110,6 @@ def setup_package():
             get_python_inc(plat_specific=True),
             os.path.join(root, 'include')]
 
-        # Read in requirements and split into packages and URLs
-        with open(os.path.join(root, 'requirements.txt')) as f:
-            requirements = [line.strip() for line in f]
-
         if (ccompiler.new_compiler().compiler_type == 'msvc'
             and msvccompiler.get_build_version() == 9):
             include_dirs.append(os.path.join(root, 'include', 'msvc9'))
@@ -140,7 +136,13 @@ def setup_package():
             url=about['__uri__'],
             license=about['__license__'],
             ext_modules=ext_modules,
-            install_requires=requirements,
+            install_requires=[
+                'numpy>=1.7',
+                'ujson>=1.35',
+                'preshed>=1.0.0,<2.0.0',
+                'murmurhash>=0.28,<0.29',
+                'cymem>=1.30,<1.32'
+            ],
             classifiers=[
                 'Development Status :: 4 - Beta',
                 'Environment :: Console',
