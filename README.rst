@@ -43,7 +43,7 @@ Usage with spaCy
     nlp.add_pipe(s2v)
 
     doc = nlp(u"A sentence about natural language processing.")
-    assert doc[3].text == u"natural language processing"
+    assert doc[3].text == u'natural language processing'
     freq = doc[3]._.s2v_freq
     vector = doc[3]._.s2v_vec
     most_similar = doc[3]._.s2v_most_similar(3)
@@ -59,7 +59,7 @@ Standalone usage without spaCy
     import sense2vec
 
     s2v = sense2vec.load('/path/to/reddit_vectors-1.1.0')
-    query = 'natural_language_processing|NOUN'
+    query = u'natural_language_processing|NOUN'
     assert query in s2v
     freq, vector = s2v[query]
     words, scores = s2v.most_similar(vector, 3)
@@ -135,7 +135,7 @@ frequencies, as well as most similar terms.
 .. code:: python
 
     doc = nlp(u"A sentence about natural language processing.")
-    assert doc[3].text == u"natural language processing"
+    assert doc[3].text == u'natural language processing'
     assert doc[3]._.in_s2v
     freq = doc[3]._.s2v_freq
     vector = doc[3]._.s2v_vec
@@ -222,9 +222,9 @@ Argument    Type    Description
 
 .. code:: python
 
-    assert 'duck|NOUN' in s2v
-    assert 'duck|VERB' in s2v
-    assert 'dkdksl|VERB' not in s2v
+    assert u'duck|NOUN' in s2v
+    assert u'duck|VERB' in s2v
+    assert u'dkdksl|VERB' not in s2v
 
 ``VectorMap.__getitem__``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -242,7 +242,7 @@ Argument    Type    Description
 
 .. code:: python
 
-    freq, vector = s2v['duck|NOUN']
+    freq, vector = s2v[u'duck|NOUN']
 
 ``VectorMap.__setitem__``
 ^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -259,8 +259,8 @@ Argument    Type    Description
 
 .. code:: python
 
-    freq, vector = s2v['avocado|NOUN']
-    s2v['🥑|NOUN'] = (freq, vector)
+    freq, vector = s2v[u'avocado|NOUN']
+    s2v[u'🥑|NOUN'] = (freq, vector)
 
 ``VectorMap.__iter__``, ``VectorMap.keys``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -315,7 +315,7 @@ Argument    Type                               Description
 
 .. code:: python
 
-    freq, vector = s2v['avocado|NOUN']
+    freq, vector = s2v[u'avocado|NOUN']
     words, scores = s2v.most_similar(vector, n=3)
     for word, score in zip(words, scores):
         print(word, score)
