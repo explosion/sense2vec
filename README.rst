@@ -13,6 +13,8 @@ sense2vec models. While it's best used in combination with
 `spaCy <http://spacy.io>`_, the ``sense2vec`` library itself is very lightweight
 and can also be used as a standalone module. See below for usage details.
 
+🦆 **Version 1.0 alpha out now!** `Read the release notes here. <https://github.com/explosion/sense2vec/releases/>`_
+
 .. image:: https://img.shields.io/travis/explosion/sense2vec/master.svg?style=flat-square
     :target: https://travis-ci.org/explosion/sense2vec
     :alt: Build Status
