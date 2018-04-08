@@ -8,9 +8,10 @@ interactive example of the technology, see our
 `sense2vec demo <https://demos.explosion.ai/sense2vec>`_ that lets you explore
 semantic similarities across all Reddit comments of 2015.
 
-This library is a simple Python/Cython implementation that lets you load
-and query sense2vec vectors. While it's best used in combination with `spaCy <http://spacy.io>`_, the ``sense2vec`` library itself is very lightweight
-and can be used as a standalone module. See below for usage details.
+This library is a simple Python/Cython implementation for loading and querying
+sense2vec models. While it's best used in combination with
+`spaCy <http://spacy.io>`_, the ``sense2vec`` library itself is very lightweight
+and can also be used as a standalone module. See below for usage details.
 
 .. image:: https://img.shields.io/travis/explosion/sense2vec/master.svg?style=flat-square
     :target: https://travis-ci.org/explosion/sense2vec
