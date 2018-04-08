@@ -127,16 +127,16 @@ def setup_package():
             generate_cython(root, src_path)
 
         setup(
-            name=about['title'],
+            name=about['__title__'],
             zip_safe=False,
             packages=PACKAGES,
             package_data={'': ['*.pyx', '*.pxd', '*.h']},
-            description=about['summary'],
-            author=about['author'],
-            author_email=about['email'],
-            version=about['version'],
-            url=about['uri'],
-            license=about['license'],
+            description=about['__summary__'],
+            author=about['__author__'],
+            author_email=about['__email__'],
+            version=about['__version__'],
+            url=about['__uri__'],
+            license=about['__license__'],
             ext_modules=ext_modules,
             install_requires=requirements,
             classifiers=[

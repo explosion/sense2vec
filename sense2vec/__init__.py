@@ -3,6 +3,7 @@ from . import util
 from __future__ import unicode_literals
 
 from .vectors import VectorMap
+from .about import __version__
 
 
 def load(name=None, via=None):
