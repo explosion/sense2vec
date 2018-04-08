@@ -223,7 +223,7 @@ cdef class VectorStore:
     similarity queries.'''
     def __init__(self, int nr_dim):
         self.mem = Pool()
-        self.nr_dim = nr_dim 
+        self.nr_dim = nr_dim
         zeros = <float*>self.mem.alloc(self.nr_dim, sizeof(float))
         self.vectors.push_back(zeros)
         self.norms.push_back(0)
