@@ -81,7 +81,7 @@ sense2vec releases are available as source packages on pip:
 
 .. code:: bash
 
-    pip install sense2vec
+    pip install sense2vec==1.0.0a0
 
 The Reddit vectors model is attached to the
 `latest release <https://github.com/explosion/sense2vec/releases>`_. To load it
