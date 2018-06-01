@@ -58,14 +58,14 @@ class Sense2VecComponent(object):
         # even if the component is only created and not added
         Token = doc[0].__class__
         Span = doc[:1].__class__
-        Token.set_extension('in_s2v', getter=lambda t: self.in_s2v(t))
-        Token.set_extension('s2v_freq', getter=lambda t: self.s2v_freq(t))
-        Token.set_extension('s2v_vec', getter=lambda t: self.s2v_vec(t))
-        Token.set_extension('s2v_most_similar', method=lambda t, n: self.s2v_most_sim(t, n))
-        Span.set_extension('in_s2v', getter=lambda s: self.in_s2v(s, 'ent'))
-        Span.set_extension('s2v_freq', getter=lambda s: self.s2v_freq(s, 'ent'))
-        Span.set_extension('s2v_vec', getter=lambda s: self.s2v_vec(s, 'ent'))
-        Span.set_extension('s2v_most_similar', method=lambda s, n: self.s2v_most_sim(s, n, 'ent'))
+        Token.set_extension('in_s2v', getter=lambda t: self.in_s2v(t), force=True)
+        Token.set_extension('s2v_freq', getter=lambda t: self.s2v_freq(t), force=True)
+        Token.set_extension('s2v_vec', getter=lambda t: self.s2v_vec(t), force=True)
+        Token.set_extension('s2v_most_similar', method=lambda t, n: self.s2v_most_sim(t, n), force=True)
+        Span.set_extension('in_s2v', getter=lambda s: self.in_s2v(s, 'ent'), force=True)
+        Span.set_extension('s2v_freq', getter=lambda s: self.s2v_freq(s, 'ent'), force=True)
+        Span.set_extension('s2v_vec', getter=lambda s: self.s2v_vec(s, 'ent'), force=True)
+        Span.set_extension('s2v_most_similar', method=lambda s, n: self.s2v_most_sim(s, n, 'ent'), force=True)
 
     def in_s2v(self, obj, attr='pos'):
         return self._get_query(obj, attr) in self.s2v
