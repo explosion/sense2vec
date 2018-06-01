@@ -1,3 +1,4 @@
+tmp/
 data/
 cythonize.dat
 *.cpp
