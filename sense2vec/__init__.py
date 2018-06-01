@@ -15,6 +15,24 @@ def load(vectors_path):
     return vector_map
 
 
+def transform_doc(doc):
+    """
+    Transform a spaCy Doc to match the sense2vec format: merge entities
+    into one token and merge noun chunks without determiners.
+    """
+    #if not doc.is_tagged:
+    #    raise ValueError("Can't run sense2vec: document not tagged.")
+    for ent in doc.ents:
+        ent.merge(tag=ent.root.tag_, lemma=ent.root.lemma_,
+                  ent_type=ent.label_)
+    for np in doc.noun_chunks:
+        while len(np) > 1 and np[0].dep_ not in ('advmod', 'amod', 'compound'):
+            np = np[1:]
+        np.merge(tag=np.root.tag_, lemma=np.root.lemma_,
+                ent_type=np.root.ent_type_)
+    return doc
+
+
 class Sense2VecComponent(object):
     """
     spaCy v2.0 pipeline component.
@@ -40,16 +58,7 @@ class Sense2VecComponent(object):
         if self.first_run:
             self.init_component(doc)
             self.first_run = False
-        if not doc.is_tagged:
-            raise ValueError("Can't run sense2vec: document not tagged.")
-        for ent in doc.ents:
-            ent.merge(tag=ent.root.tag_, lemma=ent.root.lemma_,
-                      ent_type=ent.label_)
-        for np in doc.noun_chunks:
-            while len(np) > 1 and np[0].dep_ not in ('advmod', 'amod', 'compound'):
-                np = np[1:]
-            np.merge(tag=np.root.tag_, lemma=np.root.lemma_,
-                     ent_type=np.root.ent_type_)
+        doc = transform_doc(doc)
         return doc
 
     def init_component(self, doc):
