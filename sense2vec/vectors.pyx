@@ -313,7 +313,7 @@ cdef class VectorStore:
         for i in range(nr_vector):
             cfile.read_into(&tmp[0], self.nr_dim, sizeof(tmp[0]))
             ptr = &tmp[0]
-            cv = <float[:128]>ptr
+            cv = <float[:nr_dim]>ptr
             if i >= 1:
                 self.add(cv)
         cfile.close()
