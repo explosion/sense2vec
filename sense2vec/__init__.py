@@ -62,10 +62,12 @@ class Sense2VecComponent(object):
         Token.set_extension('s2v_freq', getter=lambda t: self.s2v_freq(t))
         Token.set_extension('s2v_vec', getter=lambda t: self.s2v_vec(t))
         Token.set_extension('s2v_most_similar', method=lambda t, n: self.s2v_most_sim(t, n))
+        Token.set_extension('s2v_similarity', method=lambda t, n: self.s2v_similarity(t, n), force=True)
         Span.set_extension('in_s2v', getter=lambda s: self.in_s2v(s, 'ent'))
         Span.set_extension('s2v_freq', getter=lambda s: self.s2v_freq(s, 'ent'))
         Span.set_extension('s2v_vec', getter=lambda s: self.s2v_vec(s, 'ent'))
         Span.set_extension('s2v_most_similar', method=lambda s, n: self.s2v_most_sim(s, n, 'ent'))
+        Token.set_extension('s2v_similarity', method=lambda s, n: self.s2v_similarity(s, n), force=True)
 
     def in_s2v(self, obj, attr='pos'):
         return self._get_query(obj, attr) in self.s2v
@@ -84,6 +86,11 @@ class Sense2VecComponent(object):
         words = [word.replace('_', ' ') for word in words]
         words = [tuple(word.rsplit('|', 1)) for word in words]
         return list(zip(words, scores))
+
+    def s2v_similarity(self, obj1, obj2):
+        _, vector1 = self.s2v[self._get_query(obj1)]
+        _, vector2 = self.s2v[self._get_query(obj2)]
+        return self.s2v.similarity(vector1, vector2)
 
     def _get_query(self, obj, attr='pos'):
         # no pos_ and label_ shouldn't happen – unless it's an unmerged
