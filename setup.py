@@ -124,7 +124,7 @@ def setup_package():
             generate_cython(root, src_path)
 
         setup(
-            name=about["__title__"],
+            name="sense2vec",
             zip_safe=False,
             packages=PACKAGES,
             package_data={"": ["*.pyx", "*.pxd", "*.h"]},
