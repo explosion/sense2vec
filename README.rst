@@ -105,7 +105,7 @@ install it separately and download the English model.
 
 .. code:: bash
 
-    pip install -U spacy
+    pip install -U spacy==2.0.0
     python -m spacy download en
 
 The ``sense2vec`` package exposes a ``Sense2VecComponent``, which can be
