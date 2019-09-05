@@ -136,11 +136,11 @@ def setup_package():
             license=about["__license__"],
             ext_modules=ext_modules,
             install_requires=[
-                "numpy>=1.7",
-                "ujson>=1.35",
-                "preshed>=1.0.0,<2.0.0",
-                "murmurhash>=0.28,<0.29",
-                "cymem>=1.30,<1.32",
+                "numpy>=1.15.0",
+                "srsly>=0.1.0,<1.1.0",
+                "preshed>=2.0.1,<2.1.0",
+                "murmurhash>=0.28.0,<1.1.0",
+                "cymem>=2.0.2,<2.1.0",
             ],
             classifiers=[
                 "Development Status :: 4 - Beta",
