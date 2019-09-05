@@ -18,11 +18,8 @@ from murmurhash.mrmr cimport hash64
 from cymem.cymem cimport Pool
 cimport numpy as np
 import numpy
+import srsly
 from os import path
-try:
-    import ujson as json
-except ImportError:
-    import json
 
 from .cfile cimport CFile
 from ._strings cimport StringStore, hash_string
@@ -195,8 +192,7 @@ cdef class VectorMap:
             if not freq:
                 continue
             freqs.append([string, freq])
-        with open(path.join(data_dir, 'freqs.json'), 'w') as file_:
-            json.dump(freqs, file_)
+        srsly.write_json(path.join(data_dir, "freqs.json"))
 
     def load(self, data_dir):
         '''Load from a directory:
@@ -207,8 +203,7 @@ cdef class VectorMap:
         '''
         self.data.load(path.join(data_dir, 'vectors.bin'))
         self.strings.from_disk(path.join(data_dir, 'strings.json'))
-        with open(path.join(data_dir, 'freqs.json')) as file_:
-            freqs = json.load(file_)
+        freqs = srsly.read_json(path.join(data_dir, "freqs.json"))
         cdef uint64_t hashed
         for string, freq in freqs:
             hashed = hash_string(string)

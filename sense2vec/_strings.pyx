@@ -3,11 +3,11 @@
 from __future__ import unicode_literals, absolute_import
 
 cimport cython
+import srsly
 from libc.string cimport memcpy
 from libc.stdint cimport uint64_t, uint32_t
 from murmurhash.mrmr cimport hash64, hash32
 from preshed.maps cimport map_iter, key_t
-import ujson
 import os
 
 
@@ -242,7 +242,7 @@ cdef class StringStore:
             None
         """
         with open(path, 'w') as file_:
-            string_data = ujson.dumps(list(self))
+            string_data = srsly.json_dumps(list(self))
             if not isinstance(string_data, unicode):
                 string_data = string_data.decode('utf8')
             file_.write(string_data)
@@ -256,8 +256,7 @@ cdef class StringStore:
         Returns:
             None
         """
-        with open(path) as file_:
-            strings = ujson.load(file_)
+        strings = srsly.read_json(path)
         if strings == ['']:
             return None
         cdef unicode string
