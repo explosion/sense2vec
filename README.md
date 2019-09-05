@@ -341,7 +341,7 @@ part-of-speech tags or entity labels. For more details, see spaCy's
 | `WORK_OF_ART` | Titles of books, songs, etc.                         |
 | `LANGUAGE`    | Any named language.                                  |
 
-# Training a sense2vec model
+## Training a sense2vec model
 
 > **🚧 Under construction:** We're currently updating the training scripts for
 > spaCy v2.x.
