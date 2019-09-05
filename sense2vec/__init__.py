@@ -4,7 +4,8 @@ from __future__ import unicode_literals
 from os import path
 
 from .vectors import VectorMap
-from .about import __version__
+from .util import transform_doc
+from .about import __version__  # noqa: F401
 
 
 def load(vectors_path):
@@ -13,22 +14,6 @@ def load(vectors_path):
     vector_map = VectorMap(128)
     vector_map.load(vectors_path)
     return vector_map
-
-
-def transform_doc(doc):
-    """
-    Transform a spaCy Doc to match the sense2vec format: merge entities
-    into one token and merge noun chunks without determiners.
-    """
-    # if not doc.is_tagged:
-    #    raise ValueError("Can't run sense2vec: document not tagged.")
-    for ent in doc.ents:
-        ent.merge(tag=ent.root.tag_, lemma=ent.root.lemma_, ent_type=ent.label_)
-    for np in doc.noun_chunks:
-        while len(np) > 1 and np[0].dep_ not in ("advmod", "amod", "compound"):
-            np = np[1:]
-        np.merge(tag=np.root.tag_, lemma=np.root.lemma_, ent_type=np.root.ent_type_)
-    return doc
 
 
 class Sense2VecComponent(object):
