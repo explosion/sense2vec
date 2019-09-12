@@ -63,7 +63,7 @@ most_similar = list(zip(words, scores))
 sense2vec releases are available on pip:
 
 ```bash
-pip install sense2vec==1.0.0a0
+pip install sense2vec==1.0.0a1
 ```
 
 The Reddit vectors model is attached to the
