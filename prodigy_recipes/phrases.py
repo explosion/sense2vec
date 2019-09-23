@@ -19,19 +19,20 @@ import srsly
     vectors_path=("Path to pretrained sense2vec vectors"),
     seeds=("One or more comma-separated seed terms", "option", "se", split_string),
     threshold=("Similarity threshold for sense2vec", "option", "t", float),
+    batch_size=("Batch size for submitting annotations", "option", "bs", int),
     resume=("Resume from existing phrases dataset", "flag", "R", bool)
 )
-def phrases_teach(dataset, vectors_path, seeds, threshold=0.85, resume=False):
+def phrases_teach(dataset, vectors_path, seeds, threshold=0.85, batch_size=5, resume=False):
     """
-    Bootstrap a terminology list with word vectors and seeds terms. Prodigy
-    will suggest similar terms based on the word vectors, and update the
-    target vector accordingly.
+    Bootstrap a terminology list sense2vec. Prodigy
+    will suggest similar terms based on the the most similar
+    phrases from sense2vec
     """
     SENSES = ["auto", "ADJ", "ADP", "ADV", "AUX", "CONJ", "DET", "INTJ", "NOUN",
             "NUM", "PART", "PERSON", "PRON", "PROPN", "PUNCT", "SCONJ", "SYM",
             "VERB", "NORP", "FACILITY", "ORG", "GPE", "LOC", "PRODUCT", "EVENT",
             "WORK_OF_ART", "LANGUAGE"]
-
+    
     print("Loading")
     LEMMATIZER = English().vocab.morphology.lemmatizer
     S2V = sense2vec.load(vectors_path)
@@ -123,15 +124,18 @@ def phrases_teach(dataset, vectors_path, seeds, threshold=0.85, resume=False):
                     for score, phrase in find_similar(p):
                         if phrase.lower() not in seen:
                             seen.add(phrase.lower())
-                            yield score, {"text": phrase, 'meta': {'score': score}}
+                            yield {"text": phrase, 'meta': {'score': score}}
 
-    stream = Probability(get_stream())
+    stream = get_stream()
 
     return {
         'view_id': 'text',
         'dataset': dataset,
         'stream': stream,
-        'update': update
+        'update': update,
+        'config': {
+            'batch_size': batch_size
+        }
     }
 
 
