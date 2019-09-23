@@ -6,9 +6,7 @@ from pathlib import Path
 import prodigy
 from prodigy.core import recipe_args
 from prodigy.components.db import connect
-from prodigy.components.sorters import Probability
 from prodigy.util import log, prints, split_string, set_hashes
-import requests
 import sense2vec
 from spacy.lang.en import English
 import srsly
@@ -33,10 +31,10 @@ def phrases_teach(dataset, vectors_path, seeds, threshold=0.85, batch_size=5, re
             "VERB", "NORP", "FACILITY", "ORG", "GPE", "LOC", "PRODUCT", "EVENT",
             "WORK_OF_ART", "LANGUAGE"]
     
-    print("Loading")
+    log("RECIPE: Starting recipe phrases.to-patterns", locals())
     LEMMATIZER = English().vocab.morphology.lemmatizer
     S2V = sense2vec.load(vectors_path)
-    print("Loaded!")
+    log("RECIPE: Finished loading sense2vec", locals())
 
     DB = connect()
     seed_tasks = [set_hashes({"text": s, "answer": "accept"}) for s in seeds]
@@ -57,6 +55,7 @@ def phrases_teach(dataset, vectors_path, seeds, threshold=0.85, batch_size=5, re
 
         seen.update(set(accept_phrases))
         seen.update(set(reject_phrases))
+        log(f"RECIPE: Resuming from {len(prev)} previous examples in dataset {dataset}")
 
     def format_for_s2v(word, sense):
         return word.replace(" ", "_") + "|" + sense
@@ -175,7 +174,7 @@ def to_patterns(dataset=None, label=None, output_file=None):
     def get_pattern(term, label):
         return {"label": label, "pattern": [{"lower": t.lower()} for t in term["text"].split()]}
 
-    log("RECIPE: Starting recipe terms.to-patterns", locals())
+    log("RECIPE: Starting recipe phrases.to-patterns", locals())
     if dataset is None:
         log("RECIPE: Reading input terms from sys.stdin")
         terms = (srsly.json_loads(line) for line in sys.stdin)
@@ -184,7 +183,7 @@ def to_patterns(dataset=None, label=None, output_file=None):
             prints("Can't find dataset '{}'".format(dataset), exits=1, error=True)
         terms = DB.get_dataset(dataset)
         log(
-            "RECIPE: Reading {} input terms from dataset {}".format(len(terms), dataset)
+            "RECIPE: Reading {} input phrases from dataset {}".format(len(terms), dataset)
         )
     if output_file:
         patterns = [
