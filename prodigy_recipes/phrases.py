@@ -17,10 +17,11 @@ import srsly
     vectors_path=("Path to pretrained sense2vec vectors"),
     seeds=("One or more comma-separated seed terms", "option", "se", split_string),
     threshold=("Similarity threshold for sense2vec", "option", "t", float),
+    top_n=("Only get the top n results for each accepted sense2vec term", "option", "n", int),
     batch_size=("Batch size for submitting annotations", "option", "bs", int),
     resume=("Resume from existing phrases dataset", "flag", "R", bool)
 )
-def phrases_teach(dataset, vectors_path, seeds, threshold=0.85, batch_size=5, resume=False):
+def phrases_teach(dataset, vectors_path, seeds, threshold=0.85, top_n=200, batch_size=5, resume=False):
     """
     Bootstrap a terminology list sense2vec. Prodigy
     will suggest similar terms based on the the most similar
@@ -35,6 +36,10 @@ def phrases_teach(dataset, vectors_path, seeds, threshold=0.85, batch_size=5, re
     LEMMATIZER = English().vocab.morphology.lemmatizer
     S2V = sense2vec.load(vectors_path)
     log("RECIPE: Finished loading sense2vec", locals())
+
+    # Seems to be a bug in sense2vec which gets < n similar senses not <= n
+    batch_size = min(batch_size, top_n * len(seeds))
+    top_n = top_n + 1
 
     DB = connect()
     seed_tasks = [set_hashes({"text": s, "answer": "accept"}) for s in seeds]
@@ -55,7 +60,7 @@ def phrases_teach(dataset, vectors_path, seeds, threshold=0.85, batch_size=5, re
 
         seen.update(set(accept_phrases))
         seen.update(set(reject_phrases))
-        log(f"RECIPE: Resuming from {len(prev)} previous examples in dataset {dataset}")
+        log("RECIPE: Resuming from {} previous examples in dataset {}".format(len(prev), dataset))
 
     def format_for_s2v(word, sense):
         return word.replace(" ", "_") + "|" + sense
@@ -86,7 +91,7 @@ def phrases_teach(dataset, vectors_path, seeds, threshold=0.85, batch_size=5, re
         words = [(word.replace("_", " "), sense) for word, sense in words]
         return zip(words, scores)
     
-    def find_similar(word: str, sense: str = "auto", n_results: int = 200):
+    def find_similar(word: str, sense: str = "auto", n_results: int = top_n):
         """Find similar terms for a given term and optional sense."""
         best_word, best_sense = get_best(word, sense)
         results = []
