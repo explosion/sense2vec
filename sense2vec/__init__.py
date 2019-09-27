@@ -56,6 +56,8 @@ class Sense2Vec(object):
         yield from self.vectors.values()
 
     def most_similar(self, keys, n_similar=10):
+        if not isinstance(keys, (list, tuple)):
+            raise ValueError("Expected iterable of keys. Got: {}".format(type(keys)))
         vecs = [self[key] for key in keys if key in self]
         arr = numpy.asarray(vecs, dtype=numpy.float32)
         result_keys, _, scores = self.vectors.most_similar(arr)
