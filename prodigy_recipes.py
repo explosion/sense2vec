@@ -12,7 +12,7 @@ from spacy.lang.en import English
 import srsly
 
 
-@prodigy.recipe('phrases.teach',
+@prodigy.recipe('sense2vec.teach',
     dataset=recipe_args["dataset"],
     vectors_path=("Path to pretrained sense2vec vectors"),
     seeds=("One or more comma-separated seed terms", "option", "se", split_string),
@@ -21,7 +21,7 @@ import srsly
     batch_size=("Batch size for submitting annotations", "option", "bs", int),
     resume=("Resume from existing phrases dataset", "flag", "R", bool)
 )
-def phrases_teach(dataset, vectors_path, seeds, threshold=0.85, top_n=200, batch_size=5, resume=False):
+def teach(dataset, vectors_path, seeds, threshold=0.85, top_n=200, batch_size=5, resume=False):
     """
     Bootstrap a terminology list sense2vec. Prodigy
     will suggest similar terms based on the the most similar
@@ -144,7 +144,7 @@ def phrases_teach(dataset, vectors_path, seeds, threshold=0.85, top_n=200, batch
 
 
 @prodigy.recipe(
-    "phrases.to-patterns",
+    "sense2vec.to-patterns",
     dataset=recipe_args["dataset"],
     label=recipe_args["label"],
     output_file=recipe_args["output_file"],
