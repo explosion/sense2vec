@@ -57,5 +57,5 @@ jobs:
   - script: pip install -e .
     displayName: 'Build and install'
 
-  - script: python -m pytest sense2vec
+  - script: python -m pytest tests
     displayName: 'Run tests'
