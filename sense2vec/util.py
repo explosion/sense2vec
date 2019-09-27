@@ -1,11 +1,13 @@
-# coding: utf8
-from __future__ import unicode_literals
-
-from spacy.tokens import Token, Span
+from typing import Union, Callable, List, Tuple
+import re
+from spacy.tokens import Doc, Token, Span
 from spacy.util import filter_spans
 
 
-def transform_doc(doc):
+DEFAULT_SENSE = "?"
+
+
+def merge_phrases(doc: Doc) -> Doc:
     """
     Transform a spaCy Doc to match the sense2vec format: merge entities
     into one token and merge noun chunks without determiners.
@@ -20,33 +22,32 @@ def transform_doc(doc):
     return doc
 
 
-def make_key(obj):
-    text = obj.text.replace(" ", "_")
+def make_key(word: str, sense: str) -> str:
+    text = re.sub(r"\s", "_", word)
+    return text + "|" + sense
+
+
+def split_key(key: str) -> Tuple[str, str]:
+    word, sense = key.replace("_", " ").rsplit("|", 1)
+    return word, sense
+
+
+def make_spacy_key(
+    obj: Union[Token, Span], make_key: Callable[[str, str], str] = make_key
+) -> str:
+    text = obj.text
     if isinstance(obj, Token):
-        return text + "|" + obj.pos_
+        if obj.like_url:
+            text = "%%URL"
+            sense = "X"
+        else:
+            sense = obj.pos_
     elif isinstance(obj, Span):
-        if obj.label_:
-            return text + "|" + obj.label_
-        return text + "|" + obj.root.pos_
-    return text
+        sense = obj.label_ or obj.root.pos_
+    return make_key(text, sense or DEFAULT_SENSE)
 
 
-def split_key(key):
-    return tuple(key.replace("_", " ").rsplit("|", 1))
-
-
-def make_token_key(token):
-    return token.text.replace(" ", "_") + "|" + token.pos_
-
-
-def make_span_key(span):
-    text = span.text.replace(" ", "_")
-    if span.label_:
-        return text + "|" + span.label_
-    return text + "|" + span.root.pos_
-
-
-def get_phrases(doc):
+def get_phrases(doc: Doc) -> List[Span]:
     spans = list(doc.ents)
     if doc.is_parsed:
         for np in doc.noun_chunks:

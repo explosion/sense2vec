@@ -32,7 +32,7 @@ def setup_package():
         version=about["__version__"],
         license=about["__license__"],
         packages=find_packages(),
-        install_requires=["spacy>=2.1.0", "numpy>=1.15.0", "srsly>=0.1.0,<1.1.0"],
+        install_requires=["spacy>=2.1.0", "numpy>=1.15.0", "srsly>=0.1.0"],
         python_requires=">=3.6",
         entry_points={
             "spacy_factories": ["sense2vec = sense2vec:Sense2VecComponent.from_nlp"]

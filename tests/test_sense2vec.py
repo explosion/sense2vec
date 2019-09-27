@@ -24,6 +24,19 @@ def test_sense2vec_object():
     assert sorted(list(s2v.keys())) == ["test", "test2"]
 
 
+def test_sense2vec_other_senses():
+    s2v = Sense2Vec(shape=(6, 4))
+    s2v.cfg["senses"] = ["A", "B", "C", "D"]
+    for key in ["a|A", "a|B", "a|C", "b|A", "b|C", "c|A"]:
+        s2v.add(key, numpy.asarray([4, 2, 2, 2], dtype=numpy.float32))
+    others = s2v.get_other_senses("a|A")
+    assert sorted(others) == ["a|B", "a|C"]
+    others = s2v.get_other_senses("b|C")
+    assert others == ["b|A"]
+    others = s2v.get_other_senses("c|A")
+    assert others == []
+
+
 def test_sense2vec_most_similar():
     s2v = Sense2Vec(shape=(6, 4))
     s2v.add("a", numpy.asarray([4, 2, 2, 2], dtype=numpy.float32))

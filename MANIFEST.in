@@ -1,3 +1,2 @@
-recursive-include include *.h
 include LICENSE
 include README.md
