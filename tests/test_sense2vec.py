@@ -21,6 +21,20 @@ def test_sense2vec_object():
     assert sorted(list(s2v.keys())) == ["test", "test2"]
 
 
+def test_sense2vec_freqs():
+    s2v = Sense2Vec(shape=(10, 4))
+    vector = numpy.asarray([4, 2, 2, 2], dtype=numpy.float32)
+    s2v.add("test1", vector, 123)
+    s2v.add("test2", vector, 456)
+    assert len(s2v.freqs) == 2
+    assert s2v.get_freq("test1") == 123
+    assert s2v.get_freq("test2") == 456
+    assert s2v.get_freq("test3") is None
+    assert s2v.get_freq("test3", 100) == 100
+    s2v.set_freq("test3", 200)
+    assert s2v.get_freq("test3") == 200
+
+
 def test_sense2vec_other_senses():
     s2v = Sense2Vec(shape=(6, 4))
     s2v.cfg["senses"] = ["A", "B", "C", "D"]
@@ -32,6 +46,19 @@ def test_sense2vec_other_senses():
     assert others == ["b|A"]
     others = s2v.get_other_senses("c|A")
     assert others == []
+
+
+def test_sense2vec_best_sense():
+    s2v = Sense2Vec(shape=(5, 4))
+    s2v.cfg["senses"] = ["A", "B", "C"]
+    for key, freq in [("a|A", 100), ("a|B", 50), ("a|C", 10), ("b|A", 1), ("B|C", 2)]:
+        s2v.add(key, numpy.asarray([4, 2, 2, 2], dtype=numpy.float32), freq)
+    assert s2v.get_best_sense("a") == "a|A"
+    assert s2v.get_best_sense("b") == "B|C"
+    assert s2v.get_best_sense("b", ignore_case=False) == "b|A"
+    assert s2v.get_best_sense("c") is None
+    s2v.cfg["senses"] = []
+    assert s2v.get_best_sense("a") is None
 
 
 def test_sense2vec_most_similar():
@@ -54,14 +81,16 @@ def test_sense2vec_to_from_bytes():
     s2v = Sense2Vec(shape=(2, 4))
     test_vector1 = numpy.asarray([1, 2, 3, 4], dtype=numpy.float32)
     test_vector2 = numpy.asarray([5, 6, 7, 8], dtype=numpy.float32)
-    s2v.add("test1", test_vector1)
-    s2v.add("test2", test_vector2)
+    s2v.add("test1", test_vector1, 123)
+    s2v.add("test2", test_vector2, 456)
     s2v_bytes = s2v.to_bytes()
     new_s2v = Sense2Vec().from_bytes(s2v_bytes)
     assert len(new_s2v) == 2
     assert new_s2v.vectors.shape == (2, 4)
     assert "test1" in new_s2v
     assert "test2" in new_s2v
+    assert new_s2v.get_freq("test1") == 123
+    assert new_s2v.get_freq("test2") == 456
     assert numpy.array_equal(new_s2v["test1"], test_vector1)
     assert numpy.array_equal(new_s2v["test2"], test_vector2)
     assert s2v_bytes == new_s2v.to_bytes()
