@@ -59,8 +59,8 @@ class Sense2Vec(object):
         if not isinstance(keys, (list, tuple)):
             raise ValueError("Expected iterable of keys. Got: {}".format(type(keys)))
         vecs = [self[key] for key in keys if key in self]
-        arr = numpy.asarray(vecs, dtype=numpy.float32)
-        result_keys, _, scores = self.vectors.most_similar(arr)
+        queries = numpy.asarray(vecs, dtype=numpy.float32)
+        result_keys, _, scores = self.vectors.most_similar(queries)
         result = zip(result_keys, scores)
         result = [(self.strings[key], score) for key, score in result if key]
         result = [(key, score) for key, score in result if key not in keys]
@@ -115,7 +115,7 @@ class Sense2VecComponent(object):
         self.split_key = split_key
 
     @classmethod
-    def from_nlp(cls, nlp):
+    def from_nlp(cls, nlp, **kwargs):
         return cls(vocab=nlp.vocab)
 
     def __call__(self, doc):
