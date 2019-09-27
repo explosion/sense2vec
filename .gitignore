@@ -1,5 +1,4 @@
 tmp/
-data/
 cythonize.dat
 *.cpp
 .pytest_cache
