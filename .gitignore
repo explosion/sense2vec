@@ -4,6 +4,7 @@ cythonize.dat
 .pytest_cache
 .vscode
 .mypy_cache
+.prettierrc
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
