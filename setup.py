@@ -35,7 +35,11 @@ def setup_package():
         install_requires=["spacy>=2.1.0", "numpy>=1.15.0", "srsly>=0.1.0"],
         python_requires=">=3.6",
         entry_points={
-            "spacy_factories": ["sense2vec = sense2vec:Sense2VecComponent.from_nlp"]
+            "spacy_factories": ["sense2vec = sense2vec:Sense2VecComponent.from_nlp"],
+            "prodigy_recipes": [
+                "sense2vec_teach = prodigy_recipes:teach",
+                "sens2vec_to_patterns = prodigy_recipes:to_patterns",
+            ],
         },
         classifiers=[
             "Development Status :: 5 - Production/Stable",
