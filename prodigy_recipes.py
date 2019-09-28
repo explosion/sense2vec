@@ -27,14 +27,17 @@ def teach(
     s2v = Sense2Vec().from_disk(vectors_path)
     log("RECIPE: Loaded sense2vec", locals())
     seed_keys = []
+    seed_tasks = []
     for seed in seeds:
         best_word, best_sense = s2v.get_best_sense(seed)
         if best_sense is None:
             raise ValueError(f"Can't find seed term '{seed}' in vectors")
-        seed_keys.append(s2v.make_key(best_word, best_sense))
+        key = s2v.make_key(best_word, best_sense)
+        seed_keys.append(key)
+        task = {"text": key, "word": best_word, "sense": best_sense, "answer": "accept"}
+        seed_tasks.append(set_hashes(task))
     print(f"Starting with seed keys: {seed_keys}")
     DB = connect()
-    seed_tasks = [set_hashes({"text": s, "answer": "accept"}) for s in seed_keys]
     DB.add_examples(seed_tasks, datasets=[dataset])
     accept_keys = seed_keys
     reject_keys = []
@@ -71,12 +74,8 @@ def teach(
                 if key not in seen and score > threshold:
                     seen.add(key)
                     word, sense = s2v.split_key(key)
-                    yield {
-                        "text": key,
-                        "word": word,
-                        "sense": sense,
-                        "meta": {"score": score},
-                    }
+                    meta = {"score": score}
+                    yield {"text": key, "word": word, "sense": sense, "meta": meta}
 
     stream = get_stream()
 
