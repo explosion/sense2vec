@@ -7,27 +7,23 @@ from spacy.util import filter_spans
 DEFAULT_SENSE = "?"
 
 
-def merge_phrases(doc: Doc) -> Doc:
-    """
-    Transform a spaCy Doc to match the sense2vec format: merge entities
-    into one token and merge noun chunks without determiners.
-    """
-    spans = get_phrases(doc)
-    spans = filter_spans(spans)
-    with doc.retokenize() as retokenizer:
-        for span in spans:
-            root = span.root
-            attrs = {"tag": root.tag_, "lemma": root.lemma_, "ent_type": root.ent_type_}
-            retokenizer.merge(span, attrs=attrs)
-    return doc
-
-
 def make_key(word: str, sense: str) -> str:
+    """Create a key from a word and sense, e.g. "usage_example|NOUN".
+
+    word (unicode): The word.
+    sense (unicode): The sense.
+    RETURNS (unicode): The key.
+    """
     text = re.sub(r"\s", "_", word)
     return text + "|" + sense
 
 
 def split_key(key: str) -> Tuple[str, str]:
+    """Split a key into word and sense, e.g. ("usage example", "NOUN").
+
+    key (unicode): The key to split.
+    RETURNS (tuple): The split (word, sense) tuple.
+    """
     word, sense = key.replace("_", " ").rsplit("|", 1)
     return word, sense
 
@@ -35,6 +31,17 @@ def split_key(key: str) -> Tuple[str, str]:
 def make_spacy_key(
     obj: Union[Token, Span], make_key: Callable[[str, str], str] = make_key
 ) -> str:
+    """Create a key from a spaCy object, i.e. a Token or Span. If the object
+    is a token, the part-of-speech tag (Token.pos_) is used for the sense
+    and a special string is created for URLs. If the object is a Span and
+    has a label (i.e. is an entity span), the label is used. Otherwise, the
+    span's root part-of-speech tag becomes the sense.
+
+    obj (Token / Span): The spaCy object to create the key for.
+    make_key (callable): function that takes a word and sense string and
+        creates the key (e.g. "word|sense").
+    RETURNS (unicode): The key.
+    """
     text = obj.text
     if isinstance(obj, Token):
         if obj.like_url:
@@ -48,6 +55,12 @@ def make_spacy_key(
 
 
 def get_phrases(doc: Doc) -> List[Span]:
+    """Compile a list of sense2vec phrases based on a processed Doc: named
+    entities and noun chunks without determiners.
+
+    doc (Doc): The Doc to get phrases from.
+    RETURNS (list): The phrases as a list of Span objects.
+    """
     spans = list(doc.ents)
     if doc.is_parsed:
         for np in doc.noun_chunks:
@@ -55,3 +68,18 @@ def get_phrases(doc: Doc) -> List[Span]:
                 np = np[1:]
             spans.append(np)
     return spans
+
+
+def merge_phrases(doc: Doc) -> Doc:
+    """Transform a spaCy Doc to match the sense2vec format: merge entities
+    into one token and merge noun chunks without determiners.
+
+    doc (Doc): The document to merge phrases in.
+    RETURNS (Doc): The Doc with merged tokens.
+    """
+    spans = get_phrases(doc)
+    spans = filter_spans(spans)
+    with doc.retokenize() as retokenizer:
+        for span in spans:
+            retokenizer.merge(span)
+    return doc
