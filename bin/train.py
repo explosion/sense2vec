@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 from gensim.models import Word2Vec
 from gensim.models.word2vec import PathLineSentences
 from sense2vec import Sense2Vec
