@@ -37,8 +37,8 @@ def setup_package():
         entry_points={
             "spacy_factories": ["sense2vec = sense2vec:Sense2VecComponent.from_nlp"],
             "prodigy_recipes": [
-                "sense2vec_teach = prodigy_recipes:teach",
-                "sens2vec_to_patterns = prodigy_recipes:to_patterns",
+                "sense2vec_teach = sense2vec:prodigy_recipes.teach",
+                "sens2vec_to_patterns = sense2vec:prodigy_recipes.to_patterns",
             ],
         },
         classifiers=[
