@@ -17,12 +17,14 @@ def doc():
 def test_component_attributes(doc):
     s2v = Sense2VecComponent(doc.vocab, shape=(10, 4))
     vector = numpy.asarray([4, 2, 2, 2], dtype=numpy.float32)
-    s2v.s2v.add("world|NOUN", vector)
+    s2v.s2v.add("world|NOUN", vector, 123)
     doc = s2v(doc)
     assert doc[0]._.s2v_key == "hello|INTJ"
     assert doc[1]._.s2v_key == "world|NOUN"
     assert doc[0]._.in_s2v is False
     assert doc[1]._.in_s2v is True
+    assert doc[0]._.s2v_freq is None
+    assert doc[1]._.s2v_freq == 123
     assert numpy.array_equal(doc[1]._.s2v_vec, vector)
 
 
