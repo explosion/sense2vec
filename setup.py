@@ -144,6 +144,12 @@ def setup_package():
                 "murmurhash>=0.28.0,<1.1.0",
                 "cymem>=2.0.2,<2.1.0",
             ],
+            entry_points={
+                "prodigy_recipes": [
+                    "teach = prodigy_recipes:teach",
+                    "to_patterns = prodigy_recipes:to_patterns"
+                ]
+            },
             classifiers=[
                 "Development Status :: 4 - Beta",
                 "Environment :: Console",
