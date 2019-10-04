@@ -3,59 +3,57 @@
 # sense2vec: Use NLP to go beyond vanilla word2vec
 
 sense2vec [Trask et. al](https://arxiv.org/abs/1511.06388), 2015) is a nice
-twist on [word2vec](https://en.wikipedia.org/wiki/Word2vec) that lets you
-learn more interesting, detailed and context-sensitive word vectors. For an
+twist on [word2vec](https://en.wikipedia.org/wiki/Word2vec) that lets you learn
+more interesting, detailed and context-sensitive word vectors. For an
 interactive example of the technology, see our
 [sense2vec demo](https://demos.explosion.ai/sense2vec) that lets you explore
-semantic similarities across all Reddit comments of 2015.
+semantic similarities across all Reddit comments of 2015. This library is a
+simple Python implementation for loading and querying sense2vec models.
 
-This library is a simple Python/Cython implementation for loading and querying
-sense2vec models. While it's best used in combination with
-[spaCy](https://spacy.io), the `sense2vec` library itself is very lightweight
-and can also be used as a standalone module. See below for usage details.
+🦆 **Version 1.0 out now!**
+[Read the release notes here.](https://github.com/explosion/sense2vec/releases/)
 
-🦆 **Version 1.0 alpha out now!** [Read the release notes here.](https://github.com/explosion/sense2vec/releases/)
-
-[![Azure Pipelines](https://img.shields.io/azure-devops/build/explosion-ai/public/12/master.svg?logo=azure-devops&style=flat-square)](https://dev.azure.com/explosion-ai/public/_build?definitionId=12)
-[![Current Release Version](https://img.shields.io/github/v/release/explosion/sense2vec.svg?style=flat-square&include_prereleases)](https://github.com/explosion/sense2vec/releases)
-[![pypi Version](https://img.shields.io/pypi/v/sense2vec.svg?style=flat-square)](https://pypi.org/project/sense2vec/)
+[![Azure Pipelines](https://img.shields.io/azure-devops/build/explosion-ai/public/12/master.svg?logo=azure-pipelines&style=flat-square&label=build)](https://dev.azure.com/explosion-ai/public/_build?definitionId=12)
+[![Current Release Version](https://img.shields.io/github/v/release/explosion/sense2vec.svg?style=flat-square&include_prereleases&logo=github)](https://github.com/explosion/sense2vec/releases)
+[![pypi Version](https://img.shields.io/pypi/v/sense2vec.svg?style=flat-square&logo=pypi&logoColor=white)](https://pypi.org/project/sense2vec/)
+[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg?style=flat-square)](https://github.com/ambv/black)
 
 ## Usage Examples
 
-### Usage with spaCy
+### Standalone usage
+
+```python
+from sense2vec import Sense2Vec
+
+s2v = Sense2Vec().from_disk("/path/to/reddit_vectors-1.1.0")
+query = "natural_language_processing|NOUN"
+assert query in s2v
+vector = s2v[query]
+freq = s2v.get_freq(query)
+most_similar = s2v.most_similar(query, 3)
+# [('natural_language_processing|NOUN', 1.0),
+#  ('machine_learning|NOUN', 0.8986966609954834),
+#  ('computer_vision|NOUN', 0.8636297583580017)]
+```
+
+### Usage as a spaCy pipeline component
 
 ```python
 import spacy
 from sense2vec import Sense2VecComponent
 
 nlp = spacy.load("en_core_web_sm")
-s2v = Sense2VecComponent("/path/to/reddit_vectors-1.1.0")
+s2v = Sense2VecComponent(nlp.vocab).from_disk("/path/to/reddit_vectors-1.1.0")
 nlp.add_pipe(s2v)
 
 doc = nlp("A sentence about natural language processing.")
-assert doc[3].text == "natural language processing"
-freq = doc[3]._.s2v_freq
-vector = doc[3]._.s2v_vec
-most_similar = doc[3]._.s2v_most_similar(3)
+assert doc[3:6].text == "natural language processing"
+freq = doc[3:6]._.s2v_freq
+vector = doc[3:6]._.s2v_vec
+most_similar = doc[3:6]._.s2v_most_similar(3)
 # [(('natural language processing', 'NOUN'), 1.0),
 #  (('machine learning', 'NOUN'), 0.8986966609954834),
 #  (('computer vision', 'NOUN'), 0.8636297583580017)]
-```
-
-### Standalone usage without spaCy
-
-```python
-import sense2vec
-
-s2v = sense2vec.load("/path/to/reddit_vectors-1.1.0")
-query = "natural_language_processing|NOUN"
-assert query in s2v
-freq, vector = s2v[query]
-words, scores = s2v.most_similar(vector, 3)
-most_similar = list(zip(words, scores))
-# [('natural_language_processing|NOUN', 1.0),
-#  ('machine_learning|NOUN', 0.8986966609954834),
-#  ('computer_vision|NOUN', 0.8636297583580017)]
 ```
 
 ## Installation & Setup
@@ -63,17 +61,17 @@ most_similar = list(zip(words, scores))
 sense2vec releases are available on pip:
 
 ```bash
-pip install sense2vec==1.0.0a1
+pip install sense2vec
 ```
 
 The Reddit vectors model is attached to the
 [latest release](https://github.com/explosion/sense2vec/releases). To load it
-in, download the `.tar.gz` archive, unpack it and point `sense2vec.load` to
-the extracted data directory:
+in, download the `.tar.gz` archive, unpack it and point `from_disk` to the
+extracted data directory:
 
 ```python
-import sense2vec
-s2v = sense2vec.load("/path/to/reddit_vectors-1.1.0")
+from sense2vec import Sense2Vec
+s2v = Sense2Vec.from_disk("/path/to/reddit_vectors-1.1.0")
 ```
 
 ## Usage
@@ -85,12 +83,12 @@ pipeline. Note that `sense2vec` doesn't depend on spaCy, so you'll have to
 install it separately and download the English model.
 
 ```bash
-pip install -U spacy==2.0.0
+pip install -U spacy
 python -m spacy download en_core_web_sm
 ```
 
-The `sense2vec` package exposes a `Sense2VecComponent`, which can be
-initialised with the data path and added to your spaCy pipeline as a
+The `sense2vec` package exposes a `Sense2VecComponent`, which can be initialised
+with the shared vocab and added to your spaCy pipeline as a
 [custom pipeline component](https://spacy.io/usage/processing-pipelines#custom-components).
 By default, components are added to the _end of the pipeline_, which is the
 recommended position for this component, since it needs access to the dependency
@@ -101,29 +99,28 @@ import spacy
 from sense2vec import Sense2VecComponent
 
 nlp = spacy.load("en_core_web_sm")
-s2v = Sense2VecComponent("/path/to/reddit_vectors-1.1.0")
+s2v = Sense2VecComponent(nlp.vocab).from_disk("/path/to/reddit_vectors-1.1.0")
 nlp.add_pipe(s2v)
 ```
 
-The pipeline component will **merge noun phrases and entities** according to
-the same schema used when training the sense2vec models (e.g. noun chunks
-without determiners like "the"). This ensures that you'll be able to retrieve
-meaningful vectors for phrases in your text. The component will also add
-serveral [extension attributes and methods](https://spacy.io/usage/processing-pipelines#custom-components-attributes)
+The pipeline component will **merge noun phrases and entities** according to the
+same schema used when training the sense2vec models (e.g. noun chunks without
+determiners like "the"). This ensures that you'll be able to retrieve meaningful
+vectors for phrases in your text. The component will also add serveral
+[extension attributes and methods](https://spacy.io/usage/processing-pipelines#custom-components-attributes)
 to spaCy's `Token` and `Span` objects that let you retrieve vectors and
 frequencies, as well as most similar terms.
 
 ```python
 doc = nlp("A sentence about natural language processing.")
-assert doc[3].text == "natural language processing"
-assert doc[3]._.in_s2v
-freq = doc[3]._.s2v_freq
-vector = doc[3]._.s2v_vec
-most_similar = doc[3]._.s2v_most_similar(10)
+assert doc[3:6].text == "natural language processing"
+freq = doc[3:6]._.s2v_freq
+vector = doc[3:6]._.s2v_vec
+most_similar = doc[3:6]._.s2v_most_similar(3)
 ```
 
-For entities, the entity labels are used as the "sense" (instead of the
-token's part-of-speech tag):
+For entities, the entity labels are used as the "sense" (instead of the token's
+part-of-speech tag):
 
 ```python
 doc = nlp("A sentence about Facebook and Google.")
@@ -147,10 +144,10 @@ The following attributes are available via the `._` property – for example
 > ⚠️ **A note on span attributes:** Under the hood, entities in `doc.ents` are
 > `Span` objects. This is why the pipeline component also adds attributes and
 > methods to spans and not just tokens. However, it's not recommended to use the
-> sense2vec attributes on arbitrary slices of the document, since the model likely
-> won't have a key for the respective text. `Span` objects also don't have a
-> part-of-speech tag, so if no entity label is present, the "sense" defaults to
-> the root's part-of-speech tag.
+> sense2vec attributes on arbitrary slices of the document, since the model
+> likely won't have a key for the respective text. `Span` objects also don't
+> have a part-of-speech tag, so if no entity label is present, the "sense"
+> defaults to the root's part-of-speech tag.
 
 ### Standalone usage
 
@@ -162,12 +159,12 @@ import sense2vec
 s2v = sense2vec.load("/path/to/reddit_vectors-1.1.0")
 ```
 
-`sense2vec.load` returns an instance of the `VectorMap` class, which you
-can interact with via the following methods.
+`sense2vec.load` returns an instance of the `VectorMap` class, which you can
+interact with via the following methods.
 
 > ⚠️ **Important note:** When interacting with the `VectorMap` directly, the
-> keys need to follow the scheme of `phrase_text|SENSE` (note the `_` instead
-> of spaces and the `|` before the tag or label) – for example,
+> keys need to follow the scheme of `phrase_text|SENSE` (note the `_` instead of
+> spaces and the `|` before the tag or label) – for example,
 > `machine_learning|NOUN`. Also note that the underlying vector table is
 > case-sensitive.
 
@@ -186,11 +183,10 @@ assert len(s2v) == 1195261
 
 #### <kbd>method</kbd> `VectorMap.__contains__`
 
-Check whether the `VectorMap` has a given key. Keys consist of the word
-string, a pipe and the "sense", i.e. the part-of-speech tag or entity label.
-For example: `'duck|NOUN'` or `'duck|VERB'`. See the section on "Senses"
-below for more details. Also note that the underlying vector table is
-**case-sensitive**.
+Check whether the `VectorMap` has a given key. Keys consist of the word string,
+a pipe and the "sense", i.e. the part-of-speech tag or entity label. For
+example: `'duck|NOUN'` or `'duck|VERB'`. See the section on "Senses" below for
+more details. Also note that the underlying vector table is **case-sensitive**.
 
 | Argument    | Type    | Description                         |
 | ----------- | ------- | ----------------------------------- |
@@ -205,9 +201,9 @@ assert "dkdksl|VERB" not in s2v
 
 #### <kbd>method</kbd> `VectorMap.__getitem__`
 
-Retrieve a `(frequency, vector)` tuple from the vector map. The frequency is
-an integer, the vector a `numpy.ndarray(dtype='float32')`. If the key is not
-found, a `KeyError` is raised.
+Retrieve a `(frequency, vector)` tuple from the vector map. The frequency is an
+integer, the vector a `numpy.ndarray(dtype='float32')`. If the key is not found,
+a `KeyError` is raised.
 
 | Argument    | Type    | Description                                       |
 | ----------- | ------- | ------------------------------------------------- |
@@ -220,8 +216,8 @@ freq, vector = s2v["duck|NOUN"]
 
 #### <kbd>method</kbd> `VectorMap.__setitem__`
 
-Assign a `(frequency, vector)` tuple to the vector map. The frequency should
-be an integer, the vector a `numpy.ndarray(dtype='float32')`.
+Assign a `(frequency, vector)` tuple to the vector map. The frequency should be
+an integer, the vector a `numpy.ndarray(dtype='float32')`.
 
 | Argument | Type    | Description                                    |
 | -------- | ------- | ---------------------------------------------- |
@@ -263,9 +259,9 @@ integer, the vector a `numpy.ndarray(dtype='float32')`
 
 #### <kbd>method</kbd> `VectorMap.most_similar`
 
-Find the keys of the `n` most similar entries, given a vector. Note that
-the _most_ similar entry with a score of `1.0` will be the key of the query
-vector itself.
+Find the keys of the `n` most similar entries, given a vector. Note that the
+_most_ similar entry with a score of `1.0` will be the key of the query vector
+itself.
 
 | Argument    | Type                             | Description                                        |
 | ----------- | -------------------------------- | -------------------------------------------------- |
