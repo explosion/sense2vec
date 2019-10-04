@@ -105,16 +105,16 @@ class Sense2VecComponent(object):
         return make_spacy_key(obj, obj.doc._._s2v.make_key)
 
     def s2v_most_similar(
-        self, obj: Union[Token, Span], n_similar: int = 10
+        self, obj: Union[Token, Span], n: int = 10
     ) -> List[Tuple[Tuple[str, str], float]]:
         """Extension attribute method. Get the most similar entries.
 
-        n_similar (int): The number of similar entries to return.
+        n (int): The number of similar entries to return.
         RETURNS (list): The most similar entries as a list of
             ((word, sense), score) tuples.
         """
         key = self.s2v_key(obj)
-        results = obj.doc._._s2v.most_similar([key], n_similar=n_similar)
+        results = obj.doc._._s2v.most_similar([key], n=n)
         return [(self.s2v.split_key(result), score) for result, score in results]
 
     def s2v_other_senses(self, obj: Union[Token, Span]) -> List[str]:

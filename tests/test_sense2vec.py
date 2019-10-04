@@ -69,12 +69,22 @@ def test_sense2vec_most_similar():
     s2v.add("d", numpy.asarray([4, 4, 4, 4], dtype=numpy.float32))
     s2v.add("x", numpy.asarray([4, 2, 2, 2], dtype=numpy.float32))
     s2v.add("y", numpy.asarray([0.1, 1, 1, 1], dtype=numpy.float32))
-    result1 = s2v.most_similar(["x"])
-    assert len(result1)
+    result1 = s2v.most_similar(["x"], n=2)
+    assert len(result1) == 2
     assert result1[0][0] == "a"
-    # assert result1[0][1] == 1.0
-    result2 = s2v.most_similar(["y"])
-    assert len(result2) == 0
+    # TODO: assert result1[0][1] == 1.0
+    assert result1[0][1] == pytest.approx(1.0)
+    assert result1[1][0] == "b"
+    result2 = s2v.most_similar(["a", "x"], n=2)
+    assert len(result2) == 2
+    assert sorted([key for key, _ in result2]) == ["b", "d"]
+    result3 = s2v.most_similar(["a", "b"], n=3)
+    assert len(result3) == 3
+    assert "y" not in [key for key, _ in result3]
+    with pytest.raises(ValueError):
+        s2v.most_similar(["a", "b"], n=10)  # not enough keys left in the table
+    with pytest.raises(ValueError):
+        s2v.most_similar(["z"], n=1)  # key not in table
 
 
 def test_sense2vec_to_from_bytes():

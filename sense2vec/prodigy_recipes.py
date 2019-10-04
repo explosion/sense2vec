@@ -69,7 +69,7 @@ def teach(
         parameter."""
         while True:
             log(f"RECIPE: Getting {top_n} similar phrases")
-            most_similar = s2v.most_similar(accept_keys, n_similar=top_n)
+            most_similar = s2v.most_similar(accept_keys, n=top_n)
             for key, score in most_similar:
                 if key not in seen and score > threshold:
                     seen.add(key)

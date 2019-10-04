@@ -1,4 +1,5 @@
 from typing import Callable, Tuple, List, Union, Iterable, Dict
+from collections import OrderedDict
 from pathlib import Path
 from spacy.vectors import Vectors
 from spacy.strings import StringStore
@@ -124,24 +125,38 @@ class Sense2Vec(object):
         return key if isinstance(key, int) else self.strings[key]
 
     def most_similar(
-        self, keys: Iterable[Union[str, int]], n_similar: int = 10
+        self,
+        keys: Union[Iterable[Union[str, int]], str, int],
+        n: int = 10,
+        batch_size: int = 16,
     ) -> List[Tuple[str, float]]:
         """Get the most similar entries in the table.
 
         key (iterable): The string or integer keys to compare to.
-        n_similar (int): The number of similar keys to return.
+        n (int): The number of similar keys to return.
+        batch_size (int): The batch size to use.
         RETURNS (list): The keys of the most similar vectors.
         """
-        if not isinstance(keys, (list, tuple)):
-            raise ValueError(f"Expected iterable of keys. Got: {type(keys)}")
-        vecs = [self[key] for key in keys if key in self]
-        queries = numpy.asarray(vecs, dtype=numpy.float32)
-        result_keys, _, scores = self.vectors.most_similar(queries)
-        result = list(zip(result_keys, scores))
-        result = [(self.strings[key], score) for key, score in result if key]
+        if isinstance(keys, (str, int)):
+            keys = [keys]
+        # Always ask for more because we'll always get the keys themselves
+        n_similar = n + len(keys)
+        for key in keys:
+            if key not in self:
+                raise ValueError(f"Can't find key {key} in table")
+        if len(self.vectors) < n_similar:
+            raise ValueError(
+                f"Can't get {n} most similar out of {len(self.vectors)} total "
+                f"entries in the table while excluding the {len(keys)} keys"
+            )
+        vecs = [self[key] for key in keys]
+        result_keys, _, scores = self.vectors.most_similar(
+            numpy.vstack(vecs), n=n_similar, batch_size=batch_size
+        )
+        result = OrderedDict(zip(result_keys.flatten(), scores.flatten()))
+        result = [(self.strings[key], score) for key, score in result.items() if key]
         result = [(key, score) for key, score in result if key not in keys]
-        # TODO: handle this better?
-        return result[:n_similar]
+        return result
 
     def get_other_senses(
         self, key: Union[str, int], ignore_case: bool = True
