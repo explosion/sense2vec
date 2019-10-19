@@ -96,6 +96,7 @@ class Sense2Vec(object):
         self.vectors.add(key, vector=vector)
         if freq is not None:
             self.set_freq(key, freq)
+        # TODO: add sense to senses?
 
     def get_freq(self, key: Union[str, int], default=None) -> Union[int, None]:
         """Get the frequency count for a given key.
