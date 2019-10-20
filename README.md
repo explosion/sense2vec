@@ -18,7 +18,20 @@ simple Python implementation for loading and querying sense2vec models.
 [![pypi Version](https://img.shields.io/pypi/v/sense2vec.svg?style=flat-square&logo=pypi&logoColor=white)](https://pypi.org/project/sense2vec/)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg?style=flat-square)](https://github.com/ambv/black)
 
-## Usage Examples
+## ✨ Features
+
+- Query **context-sensitive vectors** for **multi-word phrases** based on
+  part-of-speech tags and entity labels.
+- spaCy **pipeline component** and **extension attributes**.
+- Fully **serializable** so you can easily ship your sense2vec vectors with your
+  spaCy model packages.
+- **Train your own vectors** using a pre-trained spaCy model and raw text of
+  your choice.
+- [Prodigy](https://prodi.gy) annotation recipes for creating lists of similar
+  multi-word phrases and converting them to match patterns, e.g. for rule-based
+  NER or to boostrap NER annotation ([details & examples](#prodigy-recipes)).
+
+## 🚀 Usage Examples
 
 ### Standalone usage
 
@@ -56,7 +69,7 @@ most_similar = doc[3:6]._.s2v_most_similar(3)
 #  (('deep learning', 'NOUN'), 0.8573361)]
 ```
 
-## Installation & Setup
+## ⏳ Installation & Setup
 
 sense2vec releases are available on pip:
 
@@ -74,9 +87,9 @@ from sense2vec import Sense2Vec
 s2v = Sense2Vec().from_disk("/path/to/reddit_vectors-1.1.0")
 ```
 
-## Usage
+## 👩‍💻 Usage
 
-## Usage with spaCy v2.x
+### Usage with spaCy v2.x
 
 The easiest way to use the library and vectors is to plug it into your spaCy
 pipeline. Note that `sense2vec` doesn't depend on spaCy, so you'll have to
@@ -129,7 +142,7 @@ for ent in doc.ents:
     most_similar = ent._.s2v_most_similar(3)
 ```
 
-### Available attributes
+#### Available attributes
 
 The following extension attributes are exposed on the `Doc` object via the `._`
 property:
@@ -452,6 +465,10 @@ Load a `Sense2Vec` object from a directory.
 s2v.to_disk("/path/to/sense2vec")
 new_s2v = Sense2Vec().from_disk("/path/to/sense2vec")
 ```
+
+## 🍳 Prodigy recipes
+
+TODO
 
 ## Pre-trained vectors
 
