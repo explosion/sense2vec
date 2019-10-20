@@ -19,6 +19,9 @@ def test_sense2vec_object():
     s2v.add("test2", test_vector)
     assert "test2" in s2v
     assert sorted(list(s2v.keys())) == ["test", "test2"]
+    with pytest.raises(ValueError):
+        s2v["test3"] = test_vector
+    s2v["test2"] = test_vector
 
 
 def test_sense2vec_freqs():

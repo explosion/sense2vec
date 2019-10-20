@@ -66,6 +66,18 @@ class Sense2Vec(object):
         if key in self.vectors:
             return self.vectors[key]
 
+    def __setitem__(self, key: Union[str, int], vector: numpy.ndarray):
+        """Set a vector for a given key. Will raise an error if the key
+        doesn't exist.
+
+        key (unicode / int): The key.
+        vector (numpy.ndarray): The vector to set.
+        """
+        key = self.ensure_int_key(key)
+        if key not in self.vectors:
+            raise ValueError(f"Can't find key {key} in table")
+        self.vectors[key] = vector
+
     def __iter__(self):
         """YIELDS (tuple): String key and vector pairs in the table."""
         yield from self.items()
