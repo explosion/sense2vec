@@ -25,8 +25,8 @@ simple Python implementation for loading and querying sense2vec models.
 - spaCy **pipeline component** and **extension attributes**.
 - Fully **serializable** so you can easily ship your sense2vec vectors with your
   spaCy model packages.
-- **Train your own vectors** using a pre-trained spaCy model and raw text of
-  your choice.
+- **Train your own vectors** using a pretrained spaCy model and raw text of your
+  choice.
 - [Prodigy](https://prodi.gy) annotation recipes for creating lists of similar
   multi-word phrases and converting them to match patterns, e.g. for rule-based
   NER or to boostrap NER annotation ([details & examples](#prodigy-recipes)).
@@ -468,11 +468,75 @@ new_s2v = Sense2Vec().from_disk("/path/to/sense2vec")
 
 ## 🍳 Prodigy recipes
 
-TODO
+This package also seamlessly integrates with the [Prodigy](https://prodi.gy)
+annotation tool and exposes recipes for using sense2vec vectors to quickly
+generate lists of multi-word phrases and bootstrap NER annotations. To use a
+recipe, `sense2vec` needs to be installed in the same environment as Prodigy.
+The following recipes are available:
 
-## Pre-trained vectors
+### <kbd>recipe</kbd> `sense2vec.teach`
 
-The pre-trained Reddit vectors support the following "senses", either
+Bootstrap a terminology list using sense2vec. Prodigy will suggest similar terms
+based on the the most similar phrases from sense2vec, and the suggestions will
+be adjusted as you annotate and accept similar phrases. For each seed term, the
+best matching sense according to the sense2vec vectors will be used.
+
+```bash
+prodigy sense2vec.teach [dataset] [vectors_path] [--seeds] [--threshold]
+[--n-similar] [--batch-size] [--resume]
+```
+
+| Argument             | Type       | Description                               |
+| -------------------- | ---------- | ----------------------------------------- |
+| `dataset`            | positional | Dataset to save annotations to.           |
+| `vectors_path`       | positional | Path to pretrained sense2vec vectors.     |
+| `--seeds`, `-s`      | option     | One or more comma-separated seed phrases. |
+| `--threshold`, `-t`  | option     | Similarity threshold. Defaults to `0.85`. |
+| `--n-similar`, `-n`  | option     | Number of similar items to get at once.   |
+| `--batch-size`, `-b` | option     | Batch size for submitting annotations.    |
+| `--resume`, `-R`     | flag       | Resume from an existing phrases dataset.  |
+
+#### Example
+
+```bash
+prodigy sense2vec.teach tech_phrases /path/to/reddit_vectors-1.1.0
+--seeds "natural language processing, machine learning, artificial intelligence"
+```
+
+### <kbd>recipe</kbd> `sense2vec.to-patterns`
+
+Convert a list of seed phrases to a list of token-based match patterns that can
+be used with
+[spaCy's `EntityRuler`](https://spacy.io/usage/rule-based-matching#entityruler)
+or recipes like `ner.match`. If no output file is specified, the patterns are
+written to stdout. The examples are tokenized so that multi-token terms are
+represented correctly, e.g.:
+`{"label": "SHOE_BRAND", "pattern": [{ "LOWER": "new" }, { "LOWER": "balance" }]}`.
+
+```bash
+prodigy sense2vec.to-patterns [dataset] [spacy_model] [label] [--output-file]
+[--case-sensitive] [--dry]
+```
+
+| Argument                  | Type       | Description                                  |
+| ------------------------- | ---------- | -------------------------------------------- |
+| `dataset`                 | positional | Phrase dataset to convert.                   |
+| `spacy_model`             | positional | spaCy model for tokenization.                |
+| `label`                   | positional | Label to apply to all patterns.              |
+| `--output-file`, `-o`     | option     | Optional output file. Defaults to stdout.    |
+| `--case-sensitive`, `-CS` | flag       | Make patterns case-sensitive.                |
+| `--dry`, `-D`             | flag       | Perform a dry run and don't output anything. |
+
+#### Example
+
+```bash
+prodigy sense2vec.to-patterns tech_phrases en_core_web_sm TECHNOLOGY
+--output-file /path/to/patterns.jsonl
+```
+
+## Pretrained vectors
+
+The pretrained Reddit vectors support the following "senses", either
 part-of-speech tags or entity labels. For more details, see spaCy's
 [annotation scheme overview](https://spacy.io/api/annotation).
 
