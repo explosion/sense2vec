@@ -1,9 +1,15 @@
 import prodigy
 from prodigy.components.db import connect
-from prodigy.util import log, split_string, set_hashes
+from prodigy.util import log, split_string, set_hashes, TASK_HASH_ATTR
 from sense2vec import Sense2Vec
 import srsly
 import spacy
+
+
+HTML_TEMPLATE = """
+<span style="font-size: {{theme.largeText}}px">{{word}}</span>
+<strong style="opacity: 0.75">{{sense}}</strong>
+"""
 
 
 @prodigy.recipe(
@@ -17,7 +23,7 @@ import spacy
     resume=("Resume from existing phrases dataset", "flag", "R", bool),
 )
 def teach(
-    dataset, vectors_path, seeds, threshold=0.85, top_n=200, batch_size=5, resume=False
+    dataset, vectors_path, seeds, threshold=0.85, top_n=20, batch_size=5, resume=False
 ):
     """
     Bootstrap a terminology list sense2vec. Prodigy will suggest similar terms
@@ -25,23 +31,34 @@ def teach(
     """
     log("RECIPE: Starting recipe sense2vec.teach", locals())
     s2v = Sense2Vec().from_disk(vectors_path)
-    log("RECIPE: Loaded sense2vec", locals())
-    seed_keys = []
-    seed_tasks = []
-    for seed in seeds:
-        best_word, best_sense = s2v.get_best_sense(seed)
-        if best_sense is None:
-            raise ValueError(f"Can't find seed term '{seed}' in vectors")
-        key = s2v.make_key(best_word, best_sense)
-        seed_keys.append(key)
-        task = {"text": key, "word": best_word, "sense": best_sense, "answer": "accept"}
-        seed_tasks.append(set_hashes(task))
-    print(f"Starting with seed keys: {seed_keys}")
-    DB = connect()
-    DB.add_examples(seed_tasks, datasets=[dataset])
-    accept_keys = seed_keys
+    log("RECIPE: Loaded sense2vec vectors", vectors_path)
+    accept_keys = []
     reject_keys = []
     seen = set(accept_keys)
+    seed_tasks = []
+    for seed in seeds:
+        key = s2v.get_best_sense(seed)
+        if key is None:
+            raise ValueError(f"Can't find seed term '{seed}' in vectors")
+        accept_keys.append(key)
+        best_word, best_sense = s2v.split_key(key)
+        task = {
+            "text": key,
+            "word": best_word,
+            "sense": best_sense,
+            "meta": {"score": 1.0},
+            "answer": "accept",
+        }
+        seed_tasks.append(set_hashes(task))
+    print(f"Starting with seed keys: {accept_keys}")
+    DB = connect()
+    if dataset not in DB:
+        DB.add_dataset(dataset)
+    dataset_hashes = DB.get_task_hashes(dataset)
+    DB.add_examples(
+        [st for st in seed_tasks if st[TASK_HASH_ATTR] not in dataset_hashes],
+        datasets=[dataset],
+    )
 
     if resume:
         prev = DB.get_dataset(dataset)
@@ -68,13 +85,19 @@ def teach(
         presenting examples to the user with a similarity above the threshold
         parameter."""
         while True:
-            log(f"RECIPE: Getting {top_n} similar phrases")
+            log(
+                f"RECIPE: Looking for {top_n} phrases most similar to "
+                f"{len(accept_keys)} accepted keys"
+            )
             most_similar = s2v.most_similar(accept_keys, n=top_n)
+            log(f"RECIPE: Found {len(most_similar)} most similar phrases")
             for key, score in most_similar:
                 if key not in seen and score > threshold:
                     seen.add(key)
                     word, sense = s2v.split_key(key)
-                    meta = {"score": score}
+                    # Make sure the score is a regular float, otherwise server
+                    # may fail when trying to serialize it to/from JSON
+                    meta = {"score": float(score)}
                     yield {"text": key, "word": word, "sense": sense, "meta": meta}
 
     stream = get_stream()
@@ -84,7 +107,7 @@ def teach(
         "dataset": dataset,
         "stream": stream,
         "update": update,
-        "config": {"batch_size": batch_size, "html_template": "{{word}} ({{sense}})"},
+        "config": {"batch_size": batch_size, "html_template": HTML_TEMPLATE},
     }
 
 
@@ -94,8 +117,12 @@ def teach(
     spacy_model=("spaCy model for tokenization", "positional", None, str),
     label=("Label to apply to all patterns", "positional", None, str),
     output_file=("Optional output file. Defaults to stdout", "option", "o", str),
+    case_sensitive=("Make patterns case-sensitive", "flag", "CS", bool),
+    dry=("Perform a dry run and don't output anything", "flag", "D", bool),
 )
-def to_patterns(dataset, spacy_model, label, output_file="-"):
+def to_patterns(
+    dataset, spacy_model, label, output_file="-", case_sensitive=False, dry=False
+):
     """
     Convert a list of seed phrases to a list of match patterns that can be used
     with ner.match. If no output file is specified, each pattern is printed.
@@ -107,9 +134,16 @@ def to_patterns(dataset, spacy_model, label, output_file="-"):
     nlp = spacy.load(spacy_model)
     log(f"RECIPE: Loaded spaCy model '{spacy_model}'")
     DB = connect()
+    if dataset not in DB:
+        raise ValueError(f"Can't find dataset '{dataset}'")
     examples = DB.get_dataset(dataset)
     terms = [eg["text"] for eg in examples if eg["answer"] == "accept"]
-    patterns = [{"lower": t.lower_ for t in nlp.make_doc(term)} for term in terms]
+    if case_sensitive:
+        patterns = [{"text": t.text for t in nlp.make_doc(term)} for term in terms]
+    else:
+        patterns = [{"lower": t.lower_ for t in nlp.make_doc(term)} for term in terms]
     patterns = [{"label": label, "pattern": pattern} for pattern in patterns]
     log(f"RECIPE: Generated {len(patterns)} patterns")
-    srsly.write_jsonl(output_file, patterns)
+    if not dry:
+        srsly.write_jsonl(output_file, patterns)
+    return patterns
