@@ -15,7 +15,7 @@ def setup_package():
         about = {}
         exec(f.read(), about)
 
-    setup(name="sense2vec", version=about["__version__"], packages=find_packages())
+    setup(name=package_name, version=about["__version__"], packages=find_packages())
 
 
 if __name__ == "__main__":
