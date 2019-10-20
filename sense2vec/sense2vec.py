@@ -157,6 +157,8 @@ class Sense2Vec(object):
         result = OrderedDict(zip(result_keys.flatten(), scores.flatten()))
         result = [(self.strings[key], score) for key, score in result.items() if key]
         result = [(key, score) for key, score in result if key not in keys]
+        # TODO: normalize scores properly
+        result = [(key, 1.0 if score > 1.0 else score) for key, score in result]
         return result
 
     def get_other_senses(

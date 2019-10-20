@@ -72,7 +72,7 @@ def test_sense2vec_most_similar():
     result1 = s2v.most_similar(["x"], n=2)
     assert len(result1) == 2
     assert result1[0][0] == "a"
-    # TODO: assert result1[0][1] == 1.0
+    assert result1[0][1] == 1.0
     assert result1[0][1] == pytest.approx(1.0)
     assert result1[1][0] == "b"
     result2 = s2v.most_similar(["a", "x"], n=2)
