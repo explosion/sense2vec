@@ -24,9 +24,9 @@ class Sense2Vec(object):
         strings (StringStore): Optional string store. Will be created if it
             doesn't exist.
         make_key (callable): Optional custom function that takes a word and
-            sense string and creates the key (e.g. "word|sense").
+            sense string and creates the key (e.g. "some_word|sense").
         split_key (callable): Optional custom function that takes a key and
-            returns the word and sense (e.g. ("word", "sense")).
+            returns the word and sense (e.g. ("some word", "sense")).
         senses (list): Optional list of all available senses. Used in methods
             that generate the best sense or other senses.
         RETURNS (Sense2Vec): The newly constructed object.
@@ -88,7 +88,7 @@ class Sense2Vec(object):
             yield self.strings[key], value
 
     def keys(self):
-        """YIELDS (unicode): The keys in the table."""
+        """YIELDS (unicode): The string keys in the table."""
         for key in self.vectors.keys():
             yield self.strings[key]
 
@@ -144,11 +144,12 @@ class Sense2Vec(object):
     ) -> List[Tuple[str, float]]:
         """Get the most similar entries in the table.
 
-        key (iterable): The string or integer keys to compare to.
+        keys (unicode / int / iterable): The string or integer key(s) to compare to.
         n (int): The number of similar keys to return.
         batch_size (int): The batch size to use.
-        RETURNS (list): The keys of the most similar vectors.
+        RETURNS (list): The (key, score) tuples of the most similar vectors.
         """
+        # TODO: this isn't always returning the correct number?
         if isinstance(keys, (str, int)):
             keys = [keys]
         # Always ask for more because we'll always get the keys themselves
@@ -180,7 +181,7 @@ class Sense2Vec(object):
 
         key (unicode / int): The key to check.
         ignore_case (bool): Check for uppercase, lowercase and titlecase.
-        RETURNS (list): Other entries with different senses.
+        RETURNS (list): The string keys of other entries with different senses.
         """
         result = []
         key = key if isinstance(key, str) else self.strings[key]
@@ -199,7 +200,7 @@ class Sense2Vec(object):
 
         word (unicode): The word to check.
         ignore_case (bool): Check for uppercase, lowercase and titlecase.
-        RETURNS (unicode): The best-matching sense or None.
+        RETURNS (unicode): The best-matching key or None.
         """
         if not self.senses:
             return None

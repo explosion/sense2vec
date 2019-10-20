@@ -30,10 +30,10 @@ query = "natural_language_processing|NOUN"
 assert query in s2v
 vector = s2v[query]
 freq = s2v.get_freq(query)
-most_similar = s2v.most_similar(query, 3)
-# [('natural_language_processing|NOUN', 1.0),
-#  ('machine_learning|NOUN', 0.8986966609954834),
-#  ('computer_vision|NOUN', 0.8636297583580017)]
+most_similar = s2v.most_similar(query, n=3)
+# [('machine_learning|NOUN', 0.8986967),
+#  ('computer_vision|NOUN', 0.8636297),
+#  ('deep_learning|NOUN', 0.8573361)]
 ```
 
 ### Usage as a spaCy pipeline component
@@ -51,9 +51,9 @@ assert doc[3:6].text == "natural language processing"
 freq = doc[3:6]._.s2v_freq
 vector = doc[3:6]._.s2v_vec
 most_similar = doc[3:6]._.s2v_most_similar(3)
-# [(('natural language processing', 'NOUN'), 1.0),
-#  (('machine learning', 'NOUN'), 0.8986966609954834),
-#  (('computer vision', 'NOUN'), 0.8636297583580017)]
+# [(('machine learning', 'NOUN'), 0.8986967),
+#  (('computer vision', 'NOUN'), 0.8636297),
+#  (('deep learning', 'NOUN'), 0.8573361)]
 ```
 
 ## Installation & Setup
@@ -71,7 +71,7 @@ extracted data directory:
 
 ```python
 from sense2vec import Sense2Vec
-s2v = Sense2Vec.from_disk("/path/to/reddit_vectors-1.1.0")
+s2v = Sense2Vec().from_disk("/path/to/reddit_vectors-1.1.0")
 ```
 
 ## Usage
@@ -131,14 +131,23 @@ for ent in doc.ents:
 
 ### Available attributes
 
-The following attributes are available via the `._` property – for example
-`token._.in_s2v`:
+The following extension attributes are exposed on the `Doc` object via the `._`
+property:
+
+| Name          | Attribute Type | Type | Description                                                                         |
+| ------------- | -------------- | ---- | ----------------------------------------------------------------------------------- |
+| `s2v_phrases` | property       | list | All sense2vec-compatible phrases in the given `Doc` (noun phrases, named entities). |
+
+The following attributes are available via the `._` property of `Token` and
+`Span` objects – for example `token._.in_s2v`:
 
 | Name               | Attribute Type | Type               | Description                                                                        |
 | ------------------ | -------------- | ------------------ | ---------------------------------------------------------------------------------- |
 | `in_s2v`           | property       | bool               | Whether a key exists in the vector map.                                            |
-| `s2v_freq`         | property       | int                | The frequency of the given key.                                                    |
+| `s2v_key`          | property       | unicode            | The sense2vec key of the given object, e.g. `"duck|NOUN"`.                         |
 | `s2v_vec`          | property       | `ndarray[float32]` | The vector of the given key.                                                       |
+| `s2v_freq`         | property       | int                | The frequency of the given key.                                                    |
+| `s2v_other_senses` | property       | list               | Available other senses, e.g. `"duck|VERB"` for `"duck|NOUN"`.                      |
 | `s2v_most_similar` | method         | list               | Get the `n` most similar terms. Returns a list of `((word, sense), score)` tuples. |
 
 > ⚠️ **A note on span attributes:** Under the hood, entities in `doc.ents` are
@@ -151,155 +160,300 @@ The following attributes are available via the `._` property – for example
 
 ### Standalone usage
 
-To use only the `sense2vec` library, you can import the package and then call
-its `load()` method to load in the vectors.
+You can also use the underlying `Sense2Vec` class directly and load in the
+vectors using the `from_disk` method. See below for the available API methods.
 
 ```python
-import sense2vec
-s2v = sense2vec.load("/path/to/reddit_vectors-1.1.0")
+from sense2vec import Sense2Vec
+s2v = Sense2Vec().from_disk("/path/to/reddit_vectors-1.1.0")
+most_similar = s2v.most_similar("natural_language_processing|NOUN", n=10)
 ```
 
-`sense2vec.load` returns an instance of the `VectorMap` class, which you can
-interact with via the following methods.
+> ⚠️ **Important note:** To look up entries in the vectors table, the keys need
+> to follow the scheme of `phrase_text|SENSE` (note the `_` instead of spaces
+> and the `|` before the tag or label) – for example, `machine_learning|NOUN`.
+> Also note that the underlying vector table is case-sensitive.
 
-> ⚠️ **Important note:** When interacting with the `VectorMap` directly, the
-> keys need to follow the scheme of `phrase_text|SENSE` (note the `_` instead of
-> spaces and the `|` before the tag or label) – for example,
-> `machine_learning|NOUN`. Also note that the underlying vector table is
-> case-sensitive.
+## 🎛 API
 
-#### <kbd>method</kbd> `VectorMap.__len__`
+### <kbd>method</kbd> `Sense2Vec.__init__`
 
-The total number of entries in the map.
+Initialize the `Sense2Vec` object.
 
-| Argument    | Type | Description                       |
-| ----------- | ---- | --------------------------------- |
-| **RETURNS** | int  | The number of entries in the map. |
+| Argument    | Type                        | Description                                                                                                 |
+| ----------- | --------------------------- | ----------------------------------------------------------------------------------------------------------- |
+| `shape`     | tuple                       | The vector shape. Defaults to `(1000, 128)`.                                                                |
+| `strings`   | `spacy.strings.StringStore` | Optional string store. Will be created if it doesn't exist.                                                 |
+| `make_key`  | callable                    | Optional custom function that takes a word and sense string and creates the key (e.g. `"some_word|sense"`). |
+| `split_key` | callable                    | Optional custom function that takes a key and returns the word and sense (e.g. `("some word", "sense")`).   |
+| `senses`    | list                        | Optional list of all available senses. Used in methods that generate the best sense or other senses.        |
+| **RETURNS** | `Sense2Vec`                 | The newly constructed object.                                                                               |
 
 ```python
-s2v = sense2vec.load("/path/to/reddit_vectors-1.1.0")
-assert len(s2v) == 1195261
+s2v = Sense2Vec(shape=(300, 128), senses=["VERB", "NOUN"])
 ```
 
-#### <kbd>method</kbd> `VectorMap.__contains__`
+### <kbd>method</kbd> `Sense2Vec.__len__`
 
-Check whether the `VectorMap` has a given key. Keys consist of the word string,
-a pipe and the "sense", i.e. the part-of-speech tag or entity label. For
-example: `'duck|NOUN'` or `'duck|VERB'`. See the section on "Senses" below for
-more details. Also note that the underlying vector table is **case-sensitive**.
+The number of rows in the vectors table.
 
-| Argument    | Type    | Description                         |
-| ----------- | ------- | ----------------------------------- |
-| `string`    | unicode | The key to check.                   |
-| **RETURNS** | bool    | Whether the key is part of the map. |
+| Argument    | Type | Description                              |
+| ----------- | ---- | ---------------------------------------- |
+| **RETURNS** | int  | The number of rows in the vectors table. |
 
 ```python
-assert "duck|NOUN" in s2v
-assert "duck|VERB" in s2v
-assert "dkdksl|VERB" not in s2v
+s2v = Sense2Vec(shape=(300, 128))
+assert len(s2v) == 300
 ```
 
-#### <kbd>method</kbd> `VectorMap.__getitem__`
+### <kbd>method</kbd> `Sense2Vec.__contains__`
 
-Retrieve a `(frequency, vector)` tuple from the vector map. The frequency is an
-integer, the vector a `numpy.ndarray(dtype='float32')`. If the key is not found,
-a `KeyError` is raised.
+Check if a key is in the vectors table.
 
-| Argument    | Type    | Description                                       |
-| ----------- | ------- | ------------------------------------------------- |
-| `string`    | unicode | The key to retrieve the frequency and vector for. |
-| **RETURNS** | tuple   | The `(frequency, vector)` tuple.                  |
+| Argument    | Type          | Description                      |
+| ----------- | ------------- | -------------------------------- |
+| `key`       | unicode / int | The key to look up.              |
+| **RETURNS** | bool          | Whether the key is in the table. |
 
 ```python
-freq, vector = s2v["duck|NOUN"]
+s2v = Sense2Vec(shape=(10, 4))
+s2v.add("avocado|NOUN", numpy.asarray([4, 2, 2, 2], dtype=numpy.float32))
+assert "avocado|NOUN" in s2v
+assert "avocado|VERB" not in s2v
 ```
 
-#### <kbd>method</kbd> `VectorMap.__setitem__`
+### <kbd>method</kbd> `Sense2Vec.__getitem__`
 
-Assign a `(frequency, vector)` tuple to the vector map. The frequency should be
-an integer, the vector a `numpy.ndarray(dtype='float32')`.
+Retrieve a vector for a given key.
 
-| Argument | Type    | Description                                    |
-| -------- | ------- | ---------------------------------------------- |
-| `key`    | unicode | The key to assign the frequency and vector to. |
-| `value`  | tuple   | The `(frequency, vector)` tuple to assign.     |
+| Argument    | Type            | Description         |
+| ----------- | --------------- | ------------------- |
+| `key`       | unicode / int   | The key to look up. |
+| **RETURNS** | `numpy.ndarray` | The vector.         |
 
 ```python
-freq, vector = s2v["avocado|NOUN"]
-s2v["🥑|NOUN"] = (freq, vector)
+vec = s2v["avocado|NOUN"]
 ```
 
-#### <kbd>method</kbd> `VectorMap.__iter__`, `VectorMap.keys`
+### <kbd>method</kbd> `Sense2Vec.__setitem__`
 
-Iterate over the keys in the map, in order of insertion.
+Set a vector for a given key. Will raise an error if the key doesn't exist. To
+add a new entry, use `Sense2Vec.add`.
 
-| Argument   | Type    | Description          |
-| ---------- | ------- | -------------------- |
-| **YIELDS** | unicode | The keys in the map. |
-
-#### <kbd>method</kbd> `VectorMap.values`
-
-Iterate over the values in the map, in order of insertion and yield
-`(frequency, vector)` tuples from the vector map. The frequency is an integer,
-the vector a `numpy.ndarray(dtype='float32')`
-
-| Argument   | Type  | Description            |
-| ---------- | ----- | ---------------------- |
-| **YIELDS** | tuple | The values in the map. |
-
-#### <kbd>method</kbd> `VectorMap.items`
-
-Iterate over the items in the map, in order of insertion and yield
-`(key, (frequency, vector))` tuples from the vector map. The frequency is an
-integer, the vector a `numpy.ndarray(dtype='float32')`
-
-| Argument   | Type  | Description           |
-| ---------- | ----- | --------------------- |
-| **YIELDS** | tuple | The items in the map. |
-
-#### <kbd>method</kbd> `VectorMap.most_similar`
-
-Find the keys of the `n` most similar entries, given a vector. Note that the
-_most_ similar entry with a score of `1.0` will be the key of the query vector
-itself.
-
-| Argument    | Type                             | Description                                        |
-| ----------- | -------------------------------- | -------------------------------------------------- |
-| `vector`    | `numpy.ndarray(dtype='float32')` | The vector to compare to.                          |
-| `n`         | int                              | The number of entries to return. Defaults to `10`. |
-| **RETURNS** | tuple                            | A `(words, scores)` tuple.                         |
+| Argument | Type            | Description        |
+| -------- | --------------- | ------------------ |
+| `key`    | unicode / int   | The key.           |
+| `vector` | `numpy.ndarray` | The vector to set. |
 
 ```python
-freq, vector = s2v["avocado|NOUN"]
-words, scores = s2v.most_similar(vector, n=3)
-for word, score in zip(words, scores):
-    print(word, score)
-# avocado|NOUN 1.0
-# avacado|NOUN 0.970944344997406
-# spinach|NOUN 0.962776780128479
+vec = s2v["avocado|NOUN"]
+s2v["avacado|NOUN"] = vec
 ```
 
-#### <kbd>method</kbd> `VectorMap.save`
+### <kbd>method</kbd> `Sense2Vec.add`
 
-Serialize the model to a directory. This will export three files to the output
-directory: a `strings.json` containing the keys in insertion order, a
-`freqs.json` containing the frequencies and a `vectors.bin` containing the
-vectors.
+Add a new vector to the table.
 
-| Argument   | Type    | Description                       |
-| ---------- | ------- | --------------------------------- |
-| `data_dir` | unicode | The path to the output directory. |
+| Argument | Type            | Description                                                  |
+| -------- | --------------- | ------------------------------------------------------------ |
+| `key`    | unicode / int   | The key to add.                                              |
+| `vector` | `numpy.ndarray` | The vector to add.                                           |
+| `freq`   | int             | Optional frequency count. Used to find best matching senses. |
 
-#### <kbd>method</kbd> `VectorMap.load`
+```python
+vec = s2v["avocado|NOUN"]
+s2v.add("🥑|NOUN", vec, 1234)
+```
 
-Load a model from a directory. Expects three files in the directory (see
-`VectorMap.save` for details).
+### <kbd>method</kbd> `Sense2Vec.get_freq`
 
-| Argument   | Type    | Description                      |
-| ---------- | ------- | -------------------------------- |
-| `data_dir` | unicode | The path to load the model from. |
+Get the frequency count for a given key.
 
-## Senses
+| Argument    | Type          | Description                                       |
+| ----------- | ------------- | ------------------------------------------------- |
+| `key`       | unicode / int | The key to look up.                               |
+| `default`   | -             | Default value to return if no frequency is found. |
+| **RETURNS** | int           | The frequency count.                              |
+
+```python
+vec = s2v["avocado|NOUN"]
+s2v.add("🥑|NOUN", vec, 1234)
+assert s2v.get_freq("🥑|NOUN") == 1234
+```
+
+### <kbd>method</kbd> `Sense2Vec.set_freq`
+
+Set a frequency count for a given key.
+
+| Argument | Type          | Description                   |
+| -------- | ------------- | ----------------------------- |
+| `key`    | unicode / int | The key to set the count for. |
+| `freq`   | int           | The frequency count.          |
+
+```python
+s2v.set_freq("avocado|NOUN", 104294)
+```
+
+### <kbd>method</kbd> `Sense2Vec.__iter__`, `Sense2Vec.items`
+
+Iterate over the entries in the vectors table.
+
+| Argument   | Type  | Description                               |
+| ---------- | ----- | ----------------------------------------- |
+| **YIELDS** | tuple | String key and vector pairs in the table. |
+
+```python
+for key, vec in s2v:
+    print(key, vec)
+
+for key, vec in s2v.items():
+    print(key, vec)
+```
+
+### <kbd>method</kbd> `Sense2Vec.keys`
+
+Iterate over the keys in the table.
+
+| Argument   | Type    | Description                   |
+| ---------- | ------- | ----------------------------- |
+| **YIELDS** | unicode | The string keys in the table. |
+
+```python
+all_keys = list(s2v.keys())
+```
+
+### <kbd>method</kbd> `Sense2Vec.values`
+
+Iterate over the vectors in the table.
+
+| Argument   | Type            | Description               |
+| ---------- | --------------- | ------------------------- |
+| **YIELDS** | `numpy.ndarray` | The vectors in the table. |
+
+```python
+all_vecs = list(s2v.values())
+```
+
+### <kbd>property</kbd> `Sense2Vec.senses`
+
+The available senses in the table, e.g. `"NOUN"` or `"VERB"` (added at
+initialization).
+
+| Argument    | Type | Description           |
+| ----------- | ---- | --------------------- |
+| **RETURNS** | list | The available senses. |
+
+```python
+s2v = Sense2Vec(senses=["VERB", "NOUN"])
+assert "VERB" in s2v.senses
+```
+
+### <kbd>method</kbd> `Sense2Vec.most_similar`
+
+Get the most similar entries in the table.
+
+| Argument     | Type                      | Description                                             |
+| ------------ | ------------------------- | ------------------------------------------------------- |
+| `keys`       | unicode / int / iterable  | The string or integer key(s) to compare to.             |
+| `n`          | int                       | The number of similar keys to return. Defaults to `10`. |
+| `batch_size` | int                       | The batch size to use. Defaults to `16`.                |
+| **RETURNS**  | list                      | The `(key, score)` tuples of the most similar vectors.  |
+
+```python
+most_similar = s2v.most_similar("natural_language_processing|NOUN", n=3)
+# [('machine_learning|NOUN', 0.8986967),
+#  ('computer_vision|NOUN', 0.8636297),
+#  ('deep_learning|NOUN', 0.8573361)]
+```
+
+### <kbd>method</kbd> `Sense2Vec.get_other_senses`
+
+Find other entries for the same word with a different sense, e.g. `"duck|VERB"`
+for `"duck|NOUN"`.
+
+| Argument      | Type          | Description                                                       |
+| ------------- | ------------- | ----------------------------------------------------------------- |
+| `key`         | unicode / int | The key to check.                                                 |
+| `ignore_case` | bool          | Check for uppercase, lowercase and titlecase. Defaults to `True`. |
+| **RETURNS**   | list          | The string keys of other entries with different senses.           |
+
+```python
+other_senses = s2v.get_other_senses("duck|NOUN")
+# ['duck|VERB', 'Duck|ORG', 'Duck|VERB', 'Duck|PERSON', 'Duck|ADJ']
+```
+
+### <kbd>method</kbd> `Sense2Vec.get_best_sense`
+
+Find the best-matching sense for a given word based on the available senses and
+frequency counts. Returns `None` if no match is found.
+
+| Argument      | Type    | Description                                                       |
+| ------------- | ------- | ----------------------------------------------------------------- |
+| `word`        | unicode | The word to check.                                                |
+| `ignore_case` | bool    | Check for uppercase, lowercase and titlecase. Defaults to `True`. |
+| **RETURNS**   | unicode | The best-matching key or None.                                    |
+
+```python
+assert s2v.get_best_sense("duck") == "duck|NOUN"
+```
+
+### <kbd>method</kbd> `Sense2Vec.to_bytes`
+
+Serialize a `Sense2Vec` object to a bytestring.
+
+| Argument    | Type  | Description                               |
+| ----------- | ----- | ----------------------------------------- |
+| `exclude`   | list  | Names of serialization fields to exclude. |
+| **RETURNS** | bytes | The serialized `Sense2Vec` object.        |
+
+```python
+s2v_bytes = s2v.to_bytes()
+```
+
+### <kbd>method</kbd> `Sense2Vec.from_bytes`
+
+Load a `Sense2Vec` object from a bytestring.
+
+| Argument     | Type        | Description                               |
+| ------------ | ----------- | ----------------------------------------- |
+| `bytes_data` | bytes       | The data to load.                         |
+| `exclude`    | list        | Names of serialization fields to exclude. |
+| **RETURNS**  | `Sense2Vec` | The loaded object.                        |
+
+```python
+s2v_bytes = s2v.to_bytes()
+new_s2v = Sense2Vec().from_bytes(s2v_bytes)
+```
+
+### <kbd>method</kbd> `Sense2Vec.to_disk`
+
+Serialize a `Sense2Vec` object to a directory.
+
+| Argument  | Type             | Description                               |
+| --------- | ---------------- | ----------------------------------------- |
+| `path`    | unicode / `Path` | The path.                                 |
+| `exclude` | list             | Names of serialization fields to exclude. |
+
+```python
+s2v.to_disk("/path/to/sense2vec")
+```
+
+### <kbd>method</kbd> `Sense2Vec.from_disk`
+
+Load a `Sense2Vec` object from a directory.
+
+| Argument    | Type             | Description                               |
+| ----------- | ---------------- | ----------------------------------------- |
+| `path`      | unicode / `Path` | The path. to load from                    |
+| `exclude`   | list             | Names of serialization fields to exclude. |
+| **RETURNS** | `Sense2Vec`      | The loaded object.                        |
+
+```python
+s2v.to_disk("/path/to/sense2vec")
+new_s2v = Sense2Vec().from_disk("/path/to/sense2vec")
+```
+
+## Pre-trained vectors
 
 The pre-trained Reddit vectors support the following "senses", either
 part-of-speech tags or entity labels. For more details, see spaCy's
@@ -336,8 +490,3 @@ part-of-speech tags or entity labels. For more details, see spaCy's
 | `EVENT`       | Named hurricanes, battles, wars, sports events, etc. |
 | `WORK_OF_ART` | Titles of books, songs, etc.                         |
 | `LANGUAGE`    | Any named language.                                  |
-
-## Training a sense2vec model
-
-> **🚧 Under construction:** We're currently updating the training scripts for
-> spaCy v2.x.
