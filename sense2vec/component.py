@@ -17,6 +17,7 @@ class Sense2VecComponent(object):
         vocab: Vocab = None,
         shape: Tuple[int, int] = (1000, 128),
         merge_phrases: bool = False,
+        **kwargs
     ):
         """Initialize the pipeline component.
 
@@ -38,7 +39,7 @@ class Sense2VecComponent(object):
         nlp (Language): The nlp object.
         RETURNS (Sense2VecComponent): The newly constructed object.
         """
-        return cls(vocab=nlp.vocab)
+        return cls(vocab=nlp.vocab, **kwargs)
 
     def __call__(self, doc: Doc) -> Doc:
         """Process a Doc object with the component.
