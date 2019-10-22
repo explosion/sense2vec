@@ -146,14 +146,14 @@ class Sense2Vec(object):
         n: int = 10,
         batch_size: int = 16,
     ) -> List[Tuple[str, float]]:
-        """Get the most similar entries in the table.
+        """Get the most similar entries in the table. If more than one key is
+        provided, the average of the vectors is used.
 
         keys (unicode / int / iterable): The string or integer key(s) to compare to.
         n (int): The number of similar keys to return.
         batch_size (int): The batch size to use.
         RETURNS (list): The (key, score) tuples of the most similar vectors.
         """
-        # TODO: this isn't always returning the correct number?
         if isinstance(keys, (str, int)):
             keys = [keys]
         # Always ask for more because we'll always get the keys themselves
@@ -166,9 +166,10 @@ class Sense2Vec(object):
                 f"Can't get {n} most similar out of {len(self.vectors)} total "
                 f"entries in the table while excluding the {len(keys)} keys"
             )
-        vecs = [self[key] for key in keys]
+        vecs = numpy.vstack([self[key] for key in keys])
+        average = vecs.mean(axis=0, keepdims=True)
         result_keys, _, scores = self.vectors.most_similar(
-            numpy.vstack(vecs), n=n_similar, batch_size=batch_size
+            average, n=n_similar, batch_size=batch_size
         )
         result = OrderedDict(zip(result_keys.flatten(), scores.flatten()))
         result = [(self.strings[key], score) for key, score in result.items() if key]

@@ -364,7 +364,8 @@ assert "VERB" in s2v.senses
 
 ### <kbd>method</kbd> `Sense2Vec.most_similar`
 
-Get the most similar entries in the table.
+Get the most similar entries in the table. If more than one key is provided, the
+average of the vectors is used.
 
 | Argument     | Type                      | Description                                             |
 | ------------ | ------------------------- | ------------------------------------------------------- |
