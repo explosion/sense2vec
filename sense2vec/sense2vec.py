@@ -271,9 +271,6 @@ class Sense2Vec(object):
         strings_path = path / "strings.json"
         freqs_path = path / "freqs.json"
         self.vectors = Vectors().from_disk(path)
-        # TODO: this is a hack preventing division by 0 errors when getting
-        # the most similar vectors
-        self.vectors.data[self.vectors.data == 0] = 1e-10
         self.cfg = srsly.read_json(path / "cfg")
         if freqs_path.exists():
             self.freqs = dict(srsly.read_json(freqs_path))
