@@ -193,14 +193,15 @@ most_similar = s2v.most_similar("natural_language_processing|NOUN", n=10)
 
 Initialize the `Sense2Vec` object.
 
-| Argument    | Type                        | Description                                                                                                 |
-| ----------- | --------------------------- | ----------------------------------------------------------------------------------------------------------- |
-| `shape`     | tuple                       | The vector shape. Defaults to `(1000, 128)`.                                                                |
-| `strings`   | `spacy.strings.StringStore` | Optional string store. Will be created if it doesn't exist.                                                 |
-| `make_key`  | callable                    | Optional custom function that takes a word and sense string and creates the key (e.g. `"some_word|sense"`). |
-| `split_key` | callable                    | Optional custom function that takes a key and returns the word and sense (e.g. `("some word", "sense")`).   |
-| `senses`    | list                        | Optional list of all available senses. Used in methods that generate the best sense or other senses.        |
-| **RETURNS** | `Sense2Vec`                 | The newly constructed object.                                                                               |
+| Argument       | Type                        | Description                                                                                                 |
+| -------------- | --------------------------- | ----------------------------------------------------------------------------------------------------------- |
+| `shape`        | tuple                       | The vector shape. Defaults to `(1000, 128)`.                                                                |
+| `strings`      | `spacy.strings.StringStore` | Optional string store. Will be created if it doesn't exist.                                                 |
+| `make_key`     | callable                    | Optional custom function that takes a word and sense string and creates the key (e.g. `"some_word|sense"`). |
+| `split_key`    | callable                    | Optional custom function that takes a key and returns the word and sense (e.g. `("some word", "sense")`).   |
+| `senses`       | list                        | Optional list of all available senses. Used in methods that generate the best sense or other senses.        |
+| `vectors_name` | unicode                     | Optional name to assign to the `Vectors` table, to prevent clashes. Defaults to `"sense2vec"`.              |
+| **RETURNS**    | `Sense2Vec`                 | The newly constructed object.                                                                               |
 
 ```python
 s2v = Sense2Vec(shape=(300, 128), senses=["VERB", "NOUN"])

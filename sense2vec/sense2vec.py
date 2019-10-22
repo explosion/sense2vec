@@ -17,6 +17,7 @@ class Sense2Vec(object):
         make_key: Callable[[str, str], str] = make_key,
         split_key: Callable[[str], Tuple[str, str]] = split_key,
         senses: List[str] = [],
+        vectors_name: str = "sense2vec",
     ):
         """Initialize the Sense2Vec object.
 
@@ -29,11 +30,12 @@ class Sense2Vec(object):
             returns the word and sense (e.g. ("some word", "sense")).
         senses (list): Optional list of all available senses. Used in methods
             that generate the best sense or other senses.
+        vectors_name (unicode): Optional name to assign to the Vectors object.
         RETURNS (Sense2Vec): The newly constructed object.
         """
         self.make_key = make_key
         self.split_key = split_key
-        self.vectors = Vectors(shape=shape)
+        self.vectors = Vectors(shape=shape, name=vectors_name)
         self.strings = StringStore() if strings is None else strings
         self.freqs: Dict[int, int] = {}
         self.cfg = {"senses": senses}
