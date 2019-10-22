@@ -58,8 +58,9 @@ class Sense2Vec(object):
         key = self.ensure_int_key(key)
         return key in self.vectors
 
-    def __getitem__(self, key: Union[str, int]) -> numpy.ndarray:
-        """Retrieve a vector for a given key.
+    def __getitem__(self, key: Union[str, int]) -> Union[numpy.ndarray, None]:
+        """Retrieve a vector for a given key. Returns None if the key is not
+        in the table.
 
         key (unicode / int): The key to look up.
         RETURNS (numpy.ndarray): The vector.
@@ -67,6 +68,7 @@ class Sense2Vec(object):
         key = self.ensure_int_key(key)
         if key in self.vectors:
             return self.vectors[key]
+        return None
 
     def __setitem__(self, key: Union[str, int], vector: numpy.ndarray):
         """Set a vector for a given key. Will raise an error if the key

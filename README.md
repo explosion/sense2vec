@@ -238,12 +238,12 @@ assert "avocado|VERB" not in s2v
 
 ### <kbd>method</kbd> `Sense2Vec.__getitem__`
 
-Retrieve a vector for a given key.
+Retrieve a vector for a given key. Returns None if the key is not in the table.
 
-| Argument    | Type            | Description         |
-| ----------- | --------------- | ------------------- |
-| `key`       | unicode / int   | The key to look up. |
-| **RETURNS** | `numpy.ndarray` | The vector.         |
+| Argument    | Type            | Description           |
+| ----------- | --------------- | --------------------- |
+| `key`       | unicode / int   | The key to look up.   |
+| **RETURNS** | `numpy.ndarray` | The vector or `None`. |
 
 ```python
 vec = s2v["avocado|NOUN"]
