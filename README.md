@@ -92,16 +92,8 @@ s2v = Sense2Vec().from_disk("/path/to/reddit_vectors-1.1.0")
 ### Usage with spaCy v2.x
 
 The easiest way to use the library and vectors is to plug it into your spaCy
-pipeline. Note that `sense2vec` doesn't depend on spaCy, so you'll have to
-install it separately and download the English model.
-
-```bash
-pip install -U spacy
-python -m spacy download en_core_web_sm
-```
-
-The `sense2vec` package exposes a `Sense2VecComponent`, which can be initialised
-with the shared vocab and added to your spaCy pipeline as a
+pipeline. The `sense2vec` package exposes a `Sense2VecComponent`, which can be
+initialised with the shared vocab and added to your spaCy pipeline as a
 [custom pipeline component](https://spacy.io/usage/processing-pipelines#custom-components).
 By default, components are added to the _end of the pipeline_, which is the
 recommended position for this component, since it needs access to the dependency
@@ -112,14 +104,11 @@ import spacy
 from sense2vec import Sense2VecComponent
 
 nlp = spacy.load("en_core_web_sm")
-s2v = Sense2VecComponent(nlp.vocab).from_disk("/path/to/reddit_vectors-1.1.0")
+s2v = Sense2VecComponent(nlp.vocab).from_disk("/path/to/sense2vec_vectors")
 nlp.add_pipe(s2v)
 ```
 
-The pipeline component will **merge noun phrases and entities** according to the
-same schema used when training the sense2vec models (e.g. noun chunks without
-determiners like "the"). This ensures that you'll be able to retrieve meaningful
-vectors for phrases in your text. The component will also add serveral
+The component will add serveral
 [extension attributes and methods](https://spacy.io/usage/processing-pipelines#custom-components-attributes)
 to spaCy's `Token` and `Span` objects that let you retrieve vectors and
 frequencies, as well as most similar terms.
