@@ -62,6 +62,25 @@ def make_spacy_key(
     return make_key(text, sense or DEFAULT_SENSE)
 
 
+def get_noun_phrases(doc: Doc) -> List[Span]:
+    """Compile a list of noun phrases in sense2vec's format (without
+    determiners). Separated out to make it easier to customize, e.g. for
+    languages that don't implement a noun_chunks iterator out-of-the-box, or
+    use different label schemes.
+
+    doc (Doc): The Doc to get noun phrases from.
+    RETURNS (list): The noun phrases as a list of Span objects.
+    """
+    trim_labels = ("advmod", "amod", "compound")
+    spans = []
+    if doc.is_parsed:
+        for np in doc.noun_chunks:
+            while len(np) > 1 and np[0].dep_ not in trim_labels:
+                np = np[1:]
+            spans.append(np)
+    return spans
+
+
 def get_phrases(doc: Doc) -> List[Span]:
     """Compile a list of sense2vec phrases based on a processed Doc: named
     entities and noun chunks without determiners.
@@ -73,13 +92,10 @@ def get_phrases(doc: Doc) -> List[Span]:
     ent_words = set()
     for span in spans:
         ent_words.update(token.i for token in span)
-    if doc.is_parsed:
-        for np in doc.noun_chunks:
-            # Prefer entities over noun chunks if there's overlap.
-            if not any(w.i in ent_words for w in np):
-                while len(np) > 1 and np[0].dep_ not in ("advmod", "amod", "compound"):
-                    np = np[1:]
-                spans.append(np)
+    for np in get_noun_phrases(doc):
+        # Prefer entities over noun chunks if there's overlap
+        if not any(w.i in ent_words for w in np):
+            spans.append(np)
     return spans
 
 
