@@ -83,7 +83,9 @@ def get_phrases(doc: Doc) -> List[Span]:
     return spans
 
 
-def is_particle(token: Token, pos: Tuple[str] = ("PART",), deps: Tuple[str] = ("prt",)):
+def is_particle(
+    token: Token, pos: Tuple[str] = ("PART",), deps: Tuple[str] = ("prt",)
+) -> bool:
     """Determine whether a word is a particle, for phrasal verb detection.
 
     token (Token): The token to check.
