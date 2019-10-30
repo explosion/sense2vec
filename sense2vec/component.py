@@ -22,13 +22,12 @@ from .util import merge_phrases, get_phrases, make_spacy_key
         "token._.s2v_freq",
         "token._.s2v_other_senses",
         "token._.s2v_most_similar",
-        # TODO: requires https://github.com/explosion/spaCy/pull/4555
-        # "span._.in_s2v",
-        # "span._.s2v_key",
-        # "span._.s2v_vec",
-        # "span._.s2v_freq",
-        # "span._.s2v_other_senses",
-        # "span._.s2v_most_similar",
+        "span._.in_s2v",
+        "span._.s2v_key",
+        "span._.s2v_vec",
+        "span._.s2v_freq",
+        "span._.s2v_other_senses",
+        "span._.s2v_most_similar",
     ],
 )
 class Sense2VecComponent(object):
