@@ -11,7 +11,9 @@ def represent_doc(doc):
     strings = []
     for sent in doc.sents:
         if sent.text.strip():
-            words = " ".join(make_spacy_key(w) for w in sent if not w.is_space)
+            words = " ".join(
+                make_spacy_key(w, prefer_ents=True) for w in sent if not w.is_space
+            )
             strings.append(words)
     return "\n".join(strings) + "\n" if strings else ""
 
