@@ -17,7 +17,7 @@ class Sense2VecComponent(object):
         vocab: Vocab = None,
         shape: Tuple[int, int] = (1000, 128),
         merge_phrases: bool = False,
-        **kwargs
+        **kwargs,
     ):
         """Initialize the pipeline component.
 
