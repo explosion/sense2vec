@@ -103,7 +103,9 @@ class Sense2VecComponent(object):
         obj (Token / Span): The object to create the key for.
         RETURNS (unicode): The key.
         """
-        return make_spacy_key(obj, obj.doc._._s2v.make_key)
+        return make_spacy_key(
+            obj, obj.doc._._s2v.make_key, prefer_ents=self.merge_phrases
+        )
 
     def s2v_most_similar(
         self, obj: Union[Token, Span], n: int = 10

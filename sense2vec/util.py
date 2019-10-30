@@ -29,7 +29,9 @@ def split_key(key: str) -> Tuple[str, str]:
 
 
 def make_spacy_key(
-    obj: Union[Token, Span], make_key: Callable[[str, str], str] = make_key
+    obj: Union[Token, Span],
+    make_key: Callable[[str, str], str] = make_key,
+    prefer_ents: bool = False,
 ) -> str:
     """Create a key from a spaCy object, i.e. a Token or Span. If the object
     is a token, the part-of-speech tag (Token.pos_) is used for the sense
@@ -40,6 +42,10 @@ def make_spacy_key(
     obj (Token / Span): The spaCy object to create the key for.
     make_key (callable): function that takes a word and sense string and
         creates the key (e.g. "word|sense").
+    prefer_ents (bool): Prefer entity types for single tokens (i.e.
+        token.ent_type instead of tokens.pos_). Should be enabled if phrases
+        are merged into single tokens, because otherwise the entity sense would
+        never be used.
     RETURNS (unicode): The key.
     """
     text = obj.text
@@ -47,7 +53,7 @@ def make_spacy_key(
         if obj.like_url:
             text = "%%URL"
             sense = "X"
-        elif obj.ent_type_:
+        elif obj.ent_type_ and prefer_ents:
             sense = obj.ent_type_
         else:
             sense = obj.pos_
