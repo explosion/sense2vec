@@ -73,9 +73,14 @@ def get_phrases(doc: Doc) -> List[Span]:
     return spans
 
 
-def is_particle(word, tags=("RP",), deps=("prt",)):
-    """Determine whether a word is a 'particle', for phrasal verb detection."""
-    return (word.tag_ in tags or word.dep_ in deps)
+def is_particle(token: Token, pos: Tuple[str] = ("PART",), deps: Tuple[str] = ("prt",)):
+    """Determine whether a word is a particle, for phrasal verb detection.
+
+    token (Token): The token to check.
+    pos (tuple): The universal POS tags to check (Token.pos_).
+    deps (tuple): The dependency labels to check (Token.dep_).
+    """
+    return token.pos_ in pos or token.dep_ in deps
 
 
 def merge_phrases(doc: Doc) -> Doc:
