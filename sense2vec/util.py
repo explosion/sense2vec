@@ -51,6 +51,9 @@ def make_spacy_key(
             sense = obj.pos_
     elif isinstance(obj, Span):
         sense = obj.label_ or obj.root.pos_
+    if obj.doc.is_parsed and isinstance(obj, Token) and sense == "VERB":
+        particles = [child.text for child in obj.children if is_particle(child)]
+        text = "_".join([obj.text] + particles)
     return make_key(text, sense or DEFAULT_SENSE)
 
 
@@ -68,6 +71,11 @@ def get_phrases(doc: Doc) -> List[Span]:
                 np = np[1:]
             spans.append(np)
     return spans
+
+
+def is_particle(word, tags=("RP",), deps=("prt",)):
+    """Determine whether a word is a 'particle', for phrasal verb detection."""
+    return (word.tag_ in tags or word.dep_ in deps)
 
 
 def merge_phrases(doc: Doc) -> Doc:
