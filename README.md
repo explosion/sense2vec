@@ -26,10 +26,10 @@ simple Python implementation for loading and querying sense2vec models.
 - Fully **serializable** so you can easily ship your sense2vec vectors with your
   spaCy model packages.
 - **Train your own vectors** using a pretrained spaCy model and raw text of your
-  choice.
+  choice ([details](#-training-your-own-sense2vec-vectors)).
 - [Prodigy](https://prodi.gy) annotation recipes for creating lists of similar
   multi-word phrases and converting them to match patterns, e.g. for rule-based
-  NER or to boostrap NER annotation ([details & examples](#prodigy-recipes)).
+  NER or to boostrap NER annotation ([details & examples](#-prodigy-recipes)).
 
 ## 🚀 Usage Examples
 
