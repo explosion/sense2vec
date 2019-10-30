@@ -10,7 +10,7 @@ interactive example of the technology, see our
 semantic similarities across all Reddit comments of 2015. This library is a
 simple Python implementation for loading and querying sense2vec models.
 
-🦆 **Version 1.0 out now!**
+🦆 **Version 1.0 alpha out now!**
 [Read the release notes here.](https://github.com/explosion/sense2vec/releases/)
 
 [![Azure Pipelines](https://img.shields.io/azure-devops/build/explosion-ai/public/12/master.svg?logo=azure-pipelines&style=flat-square&label=build)](https://dev.azure.com/explosion-ai/public/_build?definitionId=12)
@@ -38,7 +38,7 @@ simple Python implementation for loading and querying sense2vec models.
 ```python
 from sense2vec import Sense2Vec
 
-s2v = Sense2Vec().from_disk("/path/to/reddit_vectors-1.1.0")
+s2v = Sense2Vec().from_disk("/path/to/sense2vec_vectors")
 query = "natural_language_processing|NOUN"
 assert query in s2v
 vector = s2v[query]
@@ -56,7 +56,7 @@ import spacy
 from sense2vec import Sense2VecComponent
 
 nlp = spacy.load("en_core_web_sm")
-s2v = Sense2VecComponent(nlp.vocab).from_disk("/path/to/reddit_vectors-1.1.0")
+s2v = Sense2VecComponent(nlp.vocab).from_disk("/path/to/sense2vec_vectors")
 nlp.add_pipe(s2v)
 
 doc = nlp("A sentence about natural language processing.")
@@ -71,10 +71,14 @@ most_similar = doc[3:6]._.s2v_most_similar(3)
 
 ## ⏳ Installation & Setup
 
+> ️🚨 **This is an alpha release so you need to specify the explicit version
+> during installation. The pre-packaged vectors are just a converted version of
+> the old model and will be updated for the stable release.**
+
 sense2vec releases are available on pip:
 
 ```bash
-pip install sense2vec
+pip install sense2vec==1.0.0a2
 ```
 
 The Reddit vectors model is attached to the
@@ -84,12 +88,12 @@ extracted data directory:
 
 ```python
 from sense2vec import Sense2Vec
-s2v = Sense2Vec().from_disk("/path/to/reddit_vectors-1.1.0")
+s2v = Sense2Vec().from_disk("/path/to/sense2vec_vectors")
 ```
 
 ## 👩‍💻 Usage
 
-### Usage with spaCy v2.x
+### Usage with spaCy v2.2+
 
 The easiest way to use the library and vectors is to plug it into your spaCy
 pipeline. The `sense2vec` package exposes a `Sense2VecComponent`, which can be
