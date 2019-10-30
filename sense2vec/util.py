@@ -51,9 +51,6 @@ def make_spacy_key(
             sense = obj.pos_
     elif isinstance(obj, Span):
         sense = obj.label_ or obj.root.pos_
-    if obj.doc.is_parsed and isinstance(obj, Token) and sense == "VERB":
-        particles = [child.text for child in obj.children if is_particle(child)]
-        text = "_".join([obj.text] + particles)
     return make_key(text, sense or DEFAULT_SENSE)
 
 
