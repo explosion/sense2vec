@@ -1,4 +1,5 @@
 from typing import Tuple, Union, List
+from spacy import component
 from spacy.tokens import Doc, Token, Span
 from spacy.vocab import Vocab
 from spacy.language import Language
@@ -9,9 +10,28 @@ from .sense2vec import Sense2Vec
 from .util import merge_phrases, get_phrases, make_spacy_key
 
 
+@component(
+    "sense2vec",
+    requires=["token.pos", "token.dep", "token.ent_type", "token.ent_iob", "doc.ents"],
+    assigns=[
+        "doc._._s2v",
+        "doc._.s2v_phrases",
+        "token._.in_s2v",
+        "token._.s2v_key",
+        "token._.s2v_vec",
+        "token._.s2v_freq",
+        "token._.s2v_other_senses",
+        "token._.s2v_most_similar",
+        # TODO: requires https://github.com/explosion/spaCy/pull/4555
+        # "span._.in_s2v",
+        # "span._.s2v_key",
+        # "span._.s2v_vec",
+        # "span._.s2v_freq",
+        # "span._.s2v_other_senses",
+        # "span._.s2v_most_similar",
+    ],
+)
 class Sense2VecComponent(object):
-    name = "sense2vec"
-
     def __init__(
         self,
         vocab: Vocab = None,
