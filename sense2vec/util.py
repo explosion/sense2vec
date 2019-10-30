@@ -47,6 +47,8 @@ def make_spacy_key(
         if obj.like_url:
             text = "%%URL"
             sense = "X"
+        elif obj.ent_type_:
+            sense = obj.ent_type_
         else:
             sense = obj.pos_
     elif isinstance(obj, Span):
@@ -62,11 +64,16 @@ def get_phrases(doc: Doc) -> List[Span]:
     RETURNS (list): The phrases as a list of Span objects.
     """
     spans = list(doc.ents)
+    ent_words = set()
+    for span in spans:
+        ent_words.update(token.i for token in span)
     if doc.is_parsed:
         for np in doc.noun_chunks:
-            while len(np) > 1 and np[0].dep_ not in ("advmod", "amod", "compound"):
-                np = np[1:]
-            spans.append(np)
+            # Prefer entities over noun chunks if there's overlap.
+            if not any(w.i in ent_words for w in np):
+                while len(np) > 1 and np[0].dep_ not in ("advmod", "amod", "compound"):
+                    np = np[1:]
+                spans.append(np)
     return spans
 
 
