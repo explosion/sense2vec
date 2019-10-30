@@ -13,11 +13,11 @@ from wasabi import Printer
     input_data=("Location of input directory or text file", "positional", None, str),
     output_dir=("Location of output directory", "positional", None, str),
     n_workers=("Number of workers", "option", "n", int),
-    size=("Dimension of the word vectors", "option", "d", int),
+    size=("Dimension of the vectors", "option", "s", int),
     window=("Context window size", "option", "w", int),
-    min_count=("Min count", "option", "m", int),
-    negative=("Number of negative samples", "option", "g", int),
-    nr_iter=("Number of iterations", "option", "i", int),
+    min_count=("Minimum frequency of terms to be included", "option", "m", int),
+    negative=("Number of negative examples for Word2Vec", "option", "g", int),
+    n_iter=("Number of iterations", "option", "i", int),
     verbose=("Log debugging info", "flag", "V", bool),
 )
 def main(
@@ -28,9 +28,13 @@ def main(
     window=5,
     size=128,
     min_count=10,
-    nr_iter=2,
+    n_iter=2,
     verbose=False,
 ):
+    """Train a sense2vec model using Gensim. Accepts a text file or a directory
+    of text files in the format created by the preprocessing script. Saves out
+    a sense2vec model component that can be loaded via Sense2Vec.from_disk.
+    """
     msg = Printer(hide_animation=verbose)
     if not Path(input_data).exists():
         msg.fail("Can't find input data (file or directory)", input_data, exits=1)
@@ -45,7 +49,7 @@ def main(
         workers=n_workers,
         sample=1e-5,
         negative=negative,
-        iter=nr_iter,
+        iter=n_iter,
     )
     sentences = PathLineSentences(input_data)
     msg.info(f"Using input data from {len(sentences.input_files)} file(s)")

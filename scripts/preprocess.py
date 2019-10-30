@@ -20,14 +20,14 @@ def represent_doc(doc):
     in_file=("Path to input file", "positional", None, str),
     out_file=("Path to output file", "positional", None, str),
     spacy_model=("Name of spaCy model to use", "positional", None, str),
-    n_workers=("Number of workers", "option", "n", int),
+    n_process=("Number of processes (multiprocessing)", "option", "n", int),
 )
-def main(in_file, out_file, spacy_model="en_core_web_sm", n_workers=4):
+def main(in_file, out_file, spacy_model="en_core_web_sm", n_process=1):
     """
     This script can be used to preprocess a corpus for training a sense2vec
-    model. It take text file with one sentence per line, and outputs a text file
-    with one sentence per line in the expected sense2vec format (merged noun
-    phrases, concatenated phrases with underscores and added "senses").
+    model. It takes a text file with one sentence per line, and outputs a text
+    file with one sentence per line in the expected sense2vec format (merged
+    noun phrases, concatenated phrases with underscores and added "senses").
 
     Example input:
     Rats, mould and broken furniture: the scandal of the UK's refugee housing
@@ -35,11 +35,6 @@ def main(in_file, out_file, spacy_model="en_core_web_sm", n_workers=4):
     Example output:
     Rats|NOUN ,|PUNCT mould|NOUN and|CCONJ broken_furniture|NOUN :|PUNCT
     the|DET scandal|NOUN of|ADP the|DET UK|GPE 's|PART refugee_housing|NOUN
-
-    DISCLAIMER: The sense2vec training and preprocessing tools are still a work
-    in progress. Please note that this script hasn't been optimised for
-    efficiency yet and doesn't paralellize or batch up any of the work, so you
-    might have to add this functionality yourself for now.
     """
     msg = Printer()
     input_path = Path(in_file)
@@ -52,7 +47,7 @@ def main(in_file, out_file, spacy_model="en_core_web_sm", n_workers=4):
     lines_count = 0
     msg.text("Preprocessing text...")
     with input_path.open("r", encoding="utf8") as texts:
-        docs = nlp.pipe(texts, n_threads=n_workers)
+        docs = nlp.pipe(texts, n_process=n_process)
         lines = (represent_doc(doc) for doc in docs)
         with output_path.open("w", encoding="utf8") as f:
             for line in tqdm.tqdm(lines, desc="Lines", unit=""):
