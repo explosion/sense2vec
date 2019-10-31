@@ -483,8 +483,11 @@ new_s2v = Sense2Vec().from_disk("/path/to/sense2vec")
 ## 🚂 Training your own sense2vec vectors
 
 The [`/scripts`](/scripts) directory contains command line utilities for
-preprocessing text and training your own vectors. To train your own sense2vec
-vectors, you'll need the following:
+preprocessing text and training your own vectors.
+
+### Requirements
+
+To train your own sense2vec vectors, you'll need the following:
 
 - A **very large** source of raw text (ideally more than you'd use for word2vec,
   since the senses make the vocabulary more sparse). We recommend at least 1
@@ -496,60 +499,28 @@ vectors, you'll need the following:
   you'll need to write your own. (The `doc.noun_chunks` and `doc.ents` are what
   sense2vec uses to determine what's a phrase.)
 
-### <kbd>script</kbd> `preprocess.py`
+### Step-by-step process
 
-Preprocess a corpus for training a sense2vec model. It takes a text file with
-one sentence per line, and outputs a text file with one sentence per line in the
-expected sense2vec format (merged noun phrases, concatenated phrases with
-underscores and added "senses").
+The training process is split up into several steps to allow you to resume at
+any given point. Processing scripts are designed to operate on single files,
+making it easy to paralellize the work.
 
-```bash
-python preprocess.py [in_file] [out_file] [spacy_model] [--n-process]
-```
+1. [`01_parse.py`](scripts/01_parse.py): Use spaCy to parse the raw text and
+   output binary collections of `Doc` objects (see
+   [DocBin](https://spacy.io/api/docbin)).
+2. [`02_preprocess.py`](scripts/02_preprocess.py): Load a collection of parsed
+   `Doc` objects produced in the previous step and output text files in the
+   sense2vec format (one sentence per line and merged phrases with senses).
+3. [`03_glove_build_counts.py`](scripts/03_glove_build_counts.py): Use
+   [GloVe](https://github.com/stanfordnlp/GloVe) to build the vocabulary and
+   counts.
+4. [`04_glove_train_vectors.py`](scripts/04_glove_train_vectors.py): Use
+   [GloVe](https://github.com/stanfordnlp/GloVe) to train vectors.
+5. [`05_export.py`](scripts/05_export.py): Load the vectors and frequencies and
+   output a sense2vec component that can be loaded via `Sense2Vec.from_disk`.
 
-| Argument            | Type       | Description                                                                          |
-| ------------------- | ---------- | ------------------------------------------------------------------------------------ |
-| `in_file`           | positional | Path to input file.                                                                  |
-| `out_file`          | positional | Path to output file.                                                                 |
-| `spacy_model`       | positional | Name of [spaCy model](https://spacy.io/models) to use. Defaults to `en_core_web_sm`. |
-| `--n-process`, `-n` | option     | Number of processes (multiprocessing). Defaults to `1`.                              |
-
-#### Example input
-
-```
-Rats, mould and broken furniture: the scandal of the UK's refugee housing
-```
-
-#### Example output
-
-```
-Rats|NOUN ,|PUNCT mould|NOUN and|CCONJ broken_furniture|NOUN :|PUNCT
-the|DET scandal|NOUN of|ADP the|DET UK|GPE 's|PART refugee_housing|NOUN
-```
-
-### <kbd>script</kbd> `train.py`
-
-Train a sense2vec model using [Gensim](https://radimrehurek.com/gensim/).
-Accepts a text file or a directory of text files in the format created by the
-preprocessing script. Saves out a sense2vec model component that can be loaded
-via `Sense2Vec.from_disk`.
-
-```bash
-python train.py [input_data] [output_dir] [--n-workers] [--size] [--window]
-[--min-count] [--negative] [--n-iter] [--verbose]
-```
-
-| Argument            | Type       | Description                                                         |
-| ------------------- | ---------- | ------------------------------------------------------------------- |
-| `input_data`        | positional | Location of input directory or text file.                           |
-| `output_dir`        | positional | Location of output directory. Will be created if it doesn't exist.  |
-| `--n-workers`, `-n` | option     | Number of workers. Defaults to `4`.                                 |
-| `--size`, `-s`      | option     | Dimension of the vectors. Defaults to `128`.                        |
-| `--window`, `-w`    | option     | Context window size. Defaults to `5`.                               |
-| `--min-count`, `-m` | option     | The minimum frequency of the term to be included. Defaults to `10`. |
-| `--negative`, `-g`  | option     | Number of negative examples for Word2Vec. Defaults to `5`.          |
-| `--n-iter`, `-i`    | option     | Number of iterations.                                               |
-| `--verbose`, `-V`   | flag       | Log debugging info.                                                 |
+For more detailed documentation of the scripts, check out the source or run them
+with `--help`. For example, `python scripts/01_parse.py --help`.
 
 ## 🍳 Prodigy recipes
 
