@@ -193,12 +193,15 @@ def evaluate(
         if not data:
             msg.warn("No annotations collected", exits=1)
         agree_count = 0
+        disagree_high_conf = 0
         for eg in data:
             choice = eg["accept"][0]
             score_choice = [o["score"] for o in eg["options"] if o["id"] == choice][0]
             score_other = [o["score"] for o in eg["options"] if o["id"] != choice][0]
             if score_choice > score_other:
                 agree_count += 1
+            elif eg["confidence"] > 0.8:
+                disagree_high_conf += 1
         pc = agree_count / len(data)
         text = f"You agreed {agree_count} / {len(data)} times ({pc:.0%})"
         msg.info(f"Evaluating data from '{set_id}'")
@@ -206,6 +209,7 @@ def evaluate(
             msg.good(text)
         else:
             msg.fail(text)
+        msg.text(f"You disagreed on {disagree_high_conf} high confidence scores")
 
     if eval_only:
         eval_dataset(dataset)
