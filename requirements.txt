@@ -1,8 +1,6 @@
+spacy>=2.2.2,<3.0.0
 numpy>=1.15.0
-cymem>=2.0.2,<2.1.0
-murmurhash>=0.28.0,<1.1.0
-preshed>=2.0.1,<2.1.0
-srsly>=0.1.0,<1.1.0
+srsly>=0.2.0
+importlib_metadata>=0.20; python_version < "3.8"
 # Development requirements
-cython>=0.24,<0.28.0
-pytest>=3.0.6,<4.0.0
+pytest>=5.2.0,<6.0.0

@@ -1,9 +1,11 @@
 tmp/
-data/
 cythonize.dat
 *.cpp
 .pytest_cache
 .vscode
+.mypy_cache
+.prettierrc
+.python-version
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
