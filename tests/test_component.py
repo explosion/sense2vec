@@ -45,6 +45,17 @@ def test_component_attributes_ents(doc):
     assert phrase[0]._.in_s2v is True
 
 
+def test_component_similarity(doc):
+    s2v = Sense2VecComponent(doc.vocab, shape=(4, 4))
+    s2v.first_run = False
+    vector = numpy.asarray([4, 2, 2, 2], dtype=numpy.float32)
+    s2v.s2v.add("hello|INTJ", vector)
+    s2v.s2v.add("world|NOUN", vector)
+    doc = s2v(doc)
+    assert doc[0]._.s2v_similarity(doc[1]) == 1.0
+    assert doc[1:3]._.s2v_similarity(doc[1:3]) == 1.0
+
+
 def test_component_to_from_bytes(doc):
     s2v = Sense2VecComponent(doc.vocab, shape=(1, 4))
     s2v.first_run = False

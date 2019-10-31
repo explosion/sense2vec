@@ -140,6 +140,28 @@ class Sense2Vec(object):
         """
         return key if isinstance(key, int) else self.strings[key]
 
+    def similarity(self, keys_a, keys_b):
+        """Make a semantic similarity estimate of two keys or two sets of keys.
+        The default estimate is cosine similarity using an average of vectors.
+
+        keys_a (unicode / int / iterable): The string or integer key(s).
+        keys_b (unicode / int / iterable): The other string or integer key(s).
+        RETURNS (float): The similarity score.
+        """
+        if isinstance(keys_a, (str, int)):
+            keys_a = [keys_a]
+        if isinstance(keys_b, (str, int)):
+            keys_b = [keys_b]
+        average_a = numpy.vstack([self[key] for key in keys_a]).mean(axis=0)
+        average_b = numpy.vstack([self[key] for key in keys_b]).mean(axis=0)
+        if average_a.all() == 0 or average_b.all() == 0:
+            return 0.0
+        norm_a = numpy.linalg.norm(average_a)
+        norm_b = numpy.linalg.norm(average_b)
+        if norm_a == norm_b:
+            return 1.0
+        return numpy.dot(average_a, average_b) / (norm_a * norm_b)
+
     def most_similar(
         self,
         keys: Union[Iterable[Union[str, int]], str, int],

@@ -64,6 +64,21 @@ def test_sense2vec_best_sense():
     assert s2v.get_best_sense("a") is None
 
 
+def test_sense2vec_similarity():
+    s2v = Sense2Vec(shape=(5, 4))
+    s2v.add("a", numpy.asarray([4, 4, 2, 2], dtype=numpy.float32))
+    s2v.add("b", numpy.asarray([4, 4, 2, 2], dtype=numpy.float32))
+    s2v.add("c", numpy.asarray([4, 4, 4, 2], dtype=numpy.float32))
+    s2v.add("d", numpy.asarray([0.1, 0.2, 0.3, 0.4], dtype=numpy.float32))
+    s2v.add("e", numpy.asarray([0, 0, 0, 0], dtype=numpy.float32))
+    assert s2v.similarity("a", "b") == 1.0
+    assert 1.0 > s2v.similarity("b", "c") > 0.9
+    assert 1.0 > s2v.similarity(["a", "b"], "c") > 0.9
+    assert s2v.similarity("b", "c") == s2v.similarity(["a", "b"], "c")
+    assert s2v.similarity("a", "d") < 0.8
+    assert s2v.similarity("a", "e") == 0.0
+
+
 def test_sense2vec_most_similar():
     s2v = Sense2Vec(shape=(6, 4))
     s2v.add("a", numpy.asarray([4, 2, 2, 2], dtype=numpy.float32))
