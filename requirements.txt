@@ -1,4 +1,4 @@
-spacy==2.2.2.dev4
+spacy>=2.2.2,<3.0.0
 numpy>=1.15.0
 srsly>=0.2.0
 importlib_metadata>=0.20; python_version < "3.8"
