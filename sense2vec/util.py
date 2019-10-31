@@ -3,6 +3,11 @@ import re
 from spacy.tokens import Doc, Token, Span
 from spacy.util import filter_spans
 
+try:
+    import importlib.metadata as importlib_metadata  # Python 3.8
+except ImportError:
+    import importlib_metadata  # noqa: F401
+
 
 DEFAULT_SENSE = "?"
 

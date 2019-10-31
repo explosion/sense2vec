@@ -9,11 +9,7 @@ git checkout $1
 git pull origin $1
 git push origin $1
 
-version=$(grep "__version__ = " sense2vec/about.py)
-version=${version/__version__ = }
-version=${version/\'/}
-version=${version/\'/}
-version=${version/\"/}
-version=${version/\"/}
+version=$(grep "version = " setup.cfg)
+version=${version/version = }
 git tag "v$version"
 git push origin "v$version"
