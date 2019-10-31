@@ -140,7 +140,11 @@ class Sense2Vec(object):
         """
         return key if isinstance(key, int) else self.strings[key]
 
-    def similarity(self, keys_a, keys_b):
+    def similarity(
+        self,
+        keys_a: Union[Iterable[Union[str, int]], str, int],
+        keys_b: Union[Iterable[Union[str, int]], str, int],
+    ) -> float:
         """Make a semantic similarity estimate of two keys or two sets of keys.
         The default estimate is cosine similarity using an average of vectors.
 

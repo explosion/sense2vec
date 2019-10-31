@@ -129,7 +129,9 @@ class Sense2VecComponent(object):
             obj, obj.doc._._s2v.make_key, prefer_ents=self.merge_phrases
         )
 
-    def s2v_similarity(self, obj: Union[Token, Span], other: Union[Token, Span]) -> str:
+    def s2v_similarity(
+        self, obj: Union[Token, Span], other: Union[Token, Span]
+    ) -> float:
         """Extension attribute method. Estimate the similarity of two objects.
 
         obj (Token / Span): The object the attribute is called on.
