@@ -1,5 +1,4 @@
-from typing import Callable, Tuple, List, Union, Iterable, Dict
-from collections import OrderedDict
+from typing import Callable, Tuple, List, Union, Sequence, Dict
 from pathlib import Path
 from spacy.vectors import Vectors
 from spacy.strings import StringStore
@@ -142,8 +141,8 @@ class Sense2Vec(object):
 
     def similarity(
         self,
-        keys_a: Union[Iterable[Union[str, int]], str, int],
-        keys_b: Union[Iterable[Union[str, int]], str, int],
+        keys_a: Union[Sequence[Union[str, int]], str, int],
+        keys_b: Union[Sequence[Union[str, int]], str, int],
     ) -> float:
         """Make a semantic similarity estimate of two keys or two sets of keys.
         The default estimate is cosine similarity using an average of vectors.
@@ -168,7 +167,7 @@ class Sense2Vec(object):
 
     def most_similar(
         self,
-        keys: Union[Iterable[Union[str, int]], str, int],
+        keys: Union[Sequence[Union[str, int]], str, int],
         n: int = 10,
         batch_size: int = 16,
     ) -> List[Tuple[str, float]]:
@@ -197,8 +196,8 @@ class Sense2Vec(object):
         result_keys, _, scores = self.vectors.most_similar(
             average, n=n_similar, batch_size=batch_size
         )
-        result = OrderedDict(zip(result_keys.flatten(), scores.flatten()))
-        result = [(self.strings[key], score) for key, score in result.items() if key]
+        result = list(zip(result_keys.flatten(), scores.flatten()))
+        result = [(self.strings[key], score) for key, score in result if key]
         result = [(key, score) for key, score in result if key not in keys]
         return result
 
@@ -243,7 +242,7 @@ class Sense2Vec(object):
                     freqs.append((freq, key))
         return max(freqs)[1] if freqs else None
 
-    def to_bytes(self, exclude: Iterable[str] = tuple()) -> bytes:
+    def to_bytes(self, exclude: Sequence[str] = tuple()) -> bytes:
         """Serialize a Sense2Vec object to a bytestring.
 
         exclude (list): Names of serialization fields to exclude.
@@ -256,7 +255,7 @@ class Sense2Vec(object):
             data["strings"] = self.strings.to_bytes()
         return srsly.msgpack_dumps(data)
 
-    def from_bytes(self, bytes_data: bytes, exclude: Iterable[str] = tuple()):
+    def from_bytes(self, bytes_data: bytes, exclude: Sequence[str] = tuple()):
         """Load a Sense2Vec object from a bytestring.
 
         bytes_data (bytes): The data to load.
@@ -271,7 +270,7 @@ class Sense2Vec(object):
             self.strings = StringStore().from_bytes(data["strings"])
         return self
 
-    def to_disk(self, path: Union[Path, str], exclude: Iterable[str] = tuple()):
+    def to_disk(self, path: Union[Path, str], exclude: Sequence[str] = tuple()):
         """Serialize a Sense2Vec object to a directory.
 
         path (unicode / Path): The path.
@@ -284,7 +283,7 @@ class Sense2Vec(object):
         if "strings" not in exclude:
             self.strings.to_disk(path / "strings.json")
 
-    def from_disk(self, path: Union[Path, str], exclude: Iterable[str] = tuple()):
+    def from_disk(self, path: Union[Path, str], exclude: Sequence[str] = tuple()):
         """Load a Sense2Vec object from a directory.
 
         path (unicode / Path): The path to load from.

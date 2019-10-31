@@ -1,4 +1,4 @@
-from typing import Union, Callable, List, Tuple
+from typing import Union, Callable, List, Tuple, Set
 import re
 from spacy.tokens import Doc, Token, Span
 from spacy.util import filter_spans
@@ -94,7 +94,7 @@ def get_phrases(doc: Doc) -> List[Span]:
     RETURNS (list): The phrases as a list of Span objects.
     """
     spans = list(doc.ents)
-    ent_words = set()
+    ent_words: Set[str] = set()
     for span in spans:
         ent_words.update(token.i for token in span)
     for np in get_noun_phrases(doc):
