@@ -29,6 +29,8 @@ def split_key(key: str) -> Tuple[str, str]:
     key (unicode): The key to split.
     RETURNS (tuple): The split (word, sense) tuple.
     """
+    if "|" not in key:
+        raise ValueError(f"Invalid key: {key}")
     word, sense = key.replace("_", " ").rsplit("|", 1)
     return word, sense
 
