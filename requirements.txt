@@ -1,5 +1,5 @@
 spacy==2.2.2.dev4
 numpy>=1.15.0
-srsly>=0.1.0
+srsly>=0.2.0
 # Development requirements
 pytest>=5.2.0,<6.0.0
