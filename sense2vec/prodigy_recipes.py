@@ -164,9 +164,16 @@ def to_patterns(
     n_freq=("Number of most frequent entries to limit to", "option", "f", int),
     threshold=("Similarity threshold to consider examples", "option", "t", float),
     eval_whole=("Evaluate whole dataset instead of session", "flag", "E", bool),
+    eval_only=("Don't annotate, only evaluate current set", "flag", "O", bool),
 )
 def evaluate(
-    dataset, vectors_path, senses=None, n_freq=100_000, threshold=0.7, eval_whole=False
+    dataset,
+    vectors_path,
+    senses=None,
+    n_freq=100_000,
+    threshold=0.7,
+    eval_whole=False,
+    eval_only=False,
 ):
     """Evaluate a word vectors model by asking providing questions triples:
     is word A more similar to word B, or to word C? If the human mostly agrees
@@ -176,6 +183,33 @@ def evaluate(
     log("RECIPE: Starting recipe sense2vec.evaluate", locals())
     s2v = Sense2Vec().from_disk(vectors_path)
     log("RECIPE: Loaded sense2vec vectors", vectors_path)
+
+    def eval_dataset(set_id):
+        """Output summary about user agreement with the model."""
+        msg = Printer()
+        db = connect()
+        data = db.get_dataset(set_id)
+        data = [eg for eg in data if eg["answer"] == "accept" and eg.get("accept")]
+        if not data:
+            msg.warn("No annotations collected", exits=1)
+        agree_count = 0
+        for eg in data:
+            choice = eg["accept"][0]
+            score_choice = [o["score"] for o in eg["options"] if o["id"] == choice][0]
+            score_other = [o["score"] for o in eg["options"] if o["id"] != choice][0]
+            if score_choice > score_other:
+                agree_count += 1
+        pc = agree_count / len(data)
+        text = f"You agreed {agree_count} / {len(data)} times ({pc:.0%})"
+        msg.info(f"Evaluating data from '{set_id}'")
+        if pc > 0.5:
+            msg.good(text)
+        else:
+            msg.fail(text)
+
+    if eval_only:
+        eval_dataset(dataset)
+        return None
 
     def get_stream():
         html = "{} <strong style='opacity: 0.75; font-size: 14px; padding-left: 10px'>{}</strong>"
@@ -226,27 +260,8 @@ def evaluate(
                 yield task
 
     def on_exit(ctrl):
-        """Output summary about user agreement with the model."""
-        msg = Printer()
         set_id = dataset if eval_whole else ctrl.session_id
-        data = ctrl.db.get_dataset(set_id)
-        data = [eg for eg in data if eg["answer"] == "accept" and eg.get("accept")]
-        if not data:
-            msg.warn("No annotations collected", exits=1)
-        agree_count = 0
-        for eg in data:
-            choice = eg["accept"][0]
-            score_choice = [o["score"] for o in eg["options"] if o["id"] == choice][0]
-            score_other = [o["score"] for o in eg["options"] if o["id"] != choice][0]
-            if score_choice > score_other:
-                agree_count += 1
-        pc = agree_count / len(data)
-        text = f"You agreed {agree_count} / {len(data)} times ({pc:.0%})"
-        msg.info(f"Evaluating data from '{set_id}'")
-        if pc > 0.5:
-            msg.good(text)
-        else:
-            msg.fail(text)
+        eval_dataset(set_id)
 
     return {
         "view_id": "choice",
