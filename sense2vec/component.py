@@ -22,12 +22,14 @@ from .util import merge_phrases, get_phrases, make_spacy_key
         "token._.s2v_freq",
         "token._.s2v_other_senses",
         "token._.s2v_most_similar",
+        "token._.s2v_similarity",
         "span._.in_s2v",
         "span._.s2v_key",
         "span._.s2v_vec",
         "span._.s2v_freq",
         "span._.s2v_other_senses",
         "span._.s2v_most_similar",
+        "span._.s2v_similarity",
     ],
 )
 class Sense2VecComponent(object):
@@ -90,6 +92,7 @@ class Sense2VecComponent(object):
             obj.set_extension("s2v_freq", getter=self.s2v_freq)
             obj.set_extension("s2v_other_senses", getter=self.s2v_other_senses)
             obj.set_extension("s2v_most_similar", method=self.s2v_most_similar)
+            obj.set_extension("s2v_similarity", method=self.s2v_similarity)
 
     def in_s2v(self, obj: Union[Token, Span]) -> bool:
         """Extension attribute getter. Check if a token or span has a vector.
@@ -126,11 +129,24 @@ class Sense2VecComponent(object):
             obj, obj.doc._._s2v.make_key, prefer_ents=self.merge_phrases
         )
 
+    def s2v_similarity(self, obj: Union[Token, Span], other: Union[Token, Span]) -> str:
+        """Extension attribute method. Estimate the similarity of two objects.
+
+        obj (Token / Span): The object the attribute is called on.
+        other (Token / Span): The object to compare it to.
+        RETURNS (float): The similarity score.
+        """
+        if not isinstance(other, (Token, Span)):
+            msg = f"Can only get similarity of Token or Span, not {type(other)}"
+            raise ValueError(msg)
+        return obj.doc._._s2v.similarity(self.s2v_key(obj), self.s2v_key(other))
+
     def s2v_most_similar(
         self, obj: Union[Token, Span], n: int = 10
     ) -> List[Tuple[Tuple[str, str], float]]:
         """Extension attribute method. Get the most similar entries.
 
+        obj (Token / Span): The object the attribute is called on.
         n (int): The number of similar entries to return.
         RETURNS (list): The most similar entries as a list of
             ((word, sense), score) tuples.

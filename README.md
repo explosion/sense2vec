@@ -155,6 +155,7 @@ The following attributes are available via the `._` property of `Token` and
 | `s2v_freq`         | property       | int                | The frequency of the given key.                                                    |
 | `s2v_other_senses` | property       | list               | Available other senses, e.g. `"duck|VERB"` for `"duck|NOUN"`.                      |
 | `s2v_most_similar` | method         | list               | Get the `n` most similar terms. Returns a list of `((word, sense), score)` tuples. |
+| `s2v_similarity`   | method         | float              | Get the similarity to another `Token` or `Span`.                                   |
 
 > ⚠️ **A note on span attributes:** Under the hood, entities in `doc.ents` are
 > `Span` objects. This is why the pipeline component also adds attributes and
@@ -353,6 +354,24 @@ initialization).
 ```python
 s2v = Sense2Vec(senses=["VERB", "NOUN"])
 assert "VERB" in s2v.senses
+```
+
+### <kbd>method</kbd> `Sense2vec.similarity`
+
+Make a semantic similarity estimate of two keys or two sets of keys. The default
+estimate is cosine similarity using an average of vectors.
+
+| Argument    | Type                     | Description                         |
+| ----------- | ------------------------ | ----------------------------------- |
+| `keys_a`    | unicode / int / iterable | The string or integer key(s).       |
+| `keys_b`    | unicode / int / iterable | The other string or integer key(s). |
+| **RETURNS** | float                    | The similarity score.               |
+
+```python
+keys_a = ["machine_learning|NOUN", "natural_language_processing|NOUN"]
+keys_b = ["computer_vision|NOUN", "object_detection|NOUN"]
+print(s2v.similarity(keys_a, keys_b))
+assert s2v.similarity("machine_learning|NOUN", "machine_learning|NOUN") == 1.0
 ```
 
 ### <kbd>method</kbd> `Sense2Vec.most_similar`
