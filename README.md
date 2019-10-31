@@ -147,7 +147,7 @@ property:
 The following attributes are available via the `._` property of `Token` and
 `Span` objects – for example `token._.in_s2v`:
 
-| Name               | Attribute Type | Type               | Description                                                                        |
+| Name               | Attribute Type | Return Type        | Description                                                                        |
 | ------------------ | -------------- | ------------------ | ---------------------------------------------------------------------------------- |
 | `in_s2v`           | property       | bool               | Whether a key exists in the vector map.                                            |
 | `s2v_key`          | property       | unicode            | The sense2vec key of the given object, e.g. `"duck|NOUN"`.                         |
