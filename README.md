@@ -503,11 +503,13 @@ To train your own sense2vec vectors, you'll need the following:
 
 The training process is split up into several steps to allow you to resume at
 any given point. Processing scripts are designed to operate on single files,
-making it easy to paralellize the work.
+making it easy to paralellize the work. The scripts in this repo require
+[Glove](https://github.com/stanfordnlp/GloVe), which you need to clone and
+`make`.
 
 1. [`01_parse.py`](scripts/01_parse.py): Use spaCy to parse the raw text and
    output binary collections of `Doc` objects (see
-   [DocBin](https://spacy.io/api/docbin)).
+   [`DocBin`](https://spacy.io/api/docbin)).
 2. [`02_preprocess.py`](scripts/02_preprocess.py): Load a collection of parsed
    `Doc` objects produced in the previous step and output text files in the
    sense2vec format (one sentence per line and merged phrases with senses).
