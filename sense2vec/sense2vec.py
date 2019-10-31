@@ -44,6 +44,12 @@ class Sense2Vec(object):
         """RETURNS (list): The available senses."""
         return self.cfg.get("senses", [])
 
+    @property
+    def frequencies(self) -> List[Tuple[str, int]]:
+        """RETURNS (list): The (key, freq) tuples by frequency, descending."""
+        freqs = [(self.strings[k], s) for k, s in self.freqs.items() if s is not None]
+        return sorted(freqs, key=lambda item: item[1], reverse=True)
+
     def __len__(self) -> int:
         """RETURNS (int): The number of rows in the vectors table."""
         return len(self.vectors)

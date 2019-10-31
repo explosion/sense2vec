@@ -356,6 +356,19 @@ s2v = Sense2Vec(senses=["VERB", "NOUN"])
 assert "VERB" in s2v.senses
 ```
 
+### <kbd>property</kbd> `Sense2vec.frequencies`
+
+The frequencies of they keys in the table, in descending order.
+
+| Argument    | Type | Description                                        |
+| ----------- | ---- | -------------------------------------------------- |
+| **RETURNS** | list | The `(key, freq)` tuples by frequency, descending. |
+
+```python
+most_frequent = s2v.frequencies[:10]
+key, score = s2v.frequencies[0]
+```
+
 ### <kbd>method</kbd> `Sense2vec.similarity`
 
 Make a semantic similarity estimate of two keys or two sets of keys. The default
