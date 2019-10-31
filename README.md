@@ -4,11 +4,11 @@
 
 sense2vec [Trask et. al](https://arxiv.org/abs/1511.06388), 2015) is a nice
 twist on [word2vec](https://en.wikipedia.org/wiki/Word2vec) that lets you learn
-more interesting, detailed and context-sensitive word vectors. For an
-interactive example of the technology, see our
-[sense2vec demo](https://demos.explosion.ai/sense2vec) that lets you explore
-semantic similarities across all Reddit comments of 2015. This library is a
-simple Python implementation for loading and querying sense2vec models.
+more interesting and detailed word vectors. For an interactive example of the
+technology, see our [sense2vec demo](https://demos.explosion.ai/sense2vec) that
+lets you explore semantic similarities across all Reddit comments of 2015. This
+library is a simple Python implementation for loading and querying sense2vec
+models.
 
 🦆 **Version 1.0 alpha out now!**
 [Read the release notes here.](https://github.com/explosion/sense2vec/releases/)
@@ -20,8 +20,8 @@ simple Python implementation for loading and querying sense2vec models.
 
 ## ✨ Features
 
-- Query **context-sensitive vectors** for **multi-word phrases** based on
-  part-of-speech tags and entity labels.
+- Query **vectors for multi-word phrases** based on part-of-speech tags and
+  entity labels.
 - spaCy **pipeline component** and **extension attributes**.
 - Fully **serializable** so you can easily ship your sense2vec vectors with your
   spaCy model packages.
@@ -354,6 +354,19 @@ initialization).
 ```python
 s2v = Sense2Vec(senses=["VERB", "NOUN"])
 assert "VERB" in s2v.senses
+```
+
+### <kbd>property</kbd> `Sense2vec.frequencies`
+
+The frequencies of they keys in the table, in descending order.
+
+| Argument    | Type | Description                                        |
+| ----------- | ---- | -------------------------------------------------- |
+| **RETURNS** | list | The `(key, freq)` tuples by frequency, descending. |
+
+```python
+most_frequent = s2v.frequencies[:10]
+key, score = s2v.frequencies[0]
 ```
 
 ### <kbd>method</kbd> `Sense2vec.similarity`
