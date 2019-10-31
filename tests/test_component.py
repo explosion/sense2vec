@@ -53,6 +53,7 @@ def test_component_similarity(doc):
     s2v.s2v.add("world|NOUN", vector)
     doc = s2v(doc)
     assert doc[0]._.s2v_similarity(doc[1]) == 1.0
+    assert doc[1:3]._.s2v_similarity(doc[1:3]) == 1.0
 
 
 def test_component_to_from_bytes(doc):
