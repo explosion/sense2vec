@@ -11,6 +11,77 @@ HTML_TEMPLATE = """
 <strong style="opacity: 0.75">{{sense}}</strong>
 """
 
+@prodigy.recipe(
+    "sense2vec.evaluate",
+    dataset=("Dataset to save annotations to", "positional", None, str),
+    model=("Name or path of sense2vec model", "positional", None, str),
+    tasks=("File with similarity triples to ask about. If none, questions will be generated.", "positional", None)
+)
+def evaluate(
+    dataset,
+    model,
+    tasks=None,
+):
+    """Evaluate a word vectors model by asking providing questions triples:
+    is word A more similar to word B, or to word C? If the human mostly agrees
+    with the model, the vectors model is good.
+    """
+    nlp = spacy.load(model)
+    
+    def get_stream(s2v):
+        keys = list(s2v.vectors.keys())
+        while True:
+            a, b, c = random.sample(keys, 3)
+            sim_ab = self.vectors.similarity(a, b)
+            sim_ac = self.vectors.similarity(a, c)
+            sim_bc = self.vectors.similarity(b, c)
+            wordA = s2v.strings[a]
+            wordB = s2v.strings[b]
+            wordC = s2v.strings[c]
+            confidence = 1. - (min(sim_ab, sim_ac) / max(sim_ab, sim_ac))
+
+            if sim_ab > sim_ac:
+                mapping = {"agree": accept, "disagree": reject}
+            else:
+                mapping = {"disagree": accept, "agree": reject}
+
+            task = {
+                "input": { "text": s2v.strings[a] },
+                "accept": { "text": s2v.strings[wordB] },
+                "reject": { "text": s2v.strings[wordC] },
+                "mapping": mapping,
+                "similarities": [
+                    {"pair": [wordA, wordB], "score": sim_ab},
+                    {"pair": [wordA, wordC], "score": sim_ac},
+                    {"pair": [wordB, wordC], "score": sim_bc}
+                ],
+                "confidence": confidence
+            }
+            task = set_hashes(task)
+            yield task
+
+    def update(answers):
+        """Updates accept_keys so that the stream can find new phrases."""
+        log(f"RECIPE: Updating with {len(answers)} answers")
+        loss = 0.
+        for eg in answers:
+            human = eg["answer"]
+            if eg["answer"] in ("accept", "reject"):
+                if eg["mapping"][eg["answer"]] == "agree":
+                    right += 1
+                else:
+                    wrong += 1
+                    loss += eg["confidence"]
+    return {
+        "view_id": "compare",
+        "dataset": dataset,
+        "stream": stream,
+        "update": update,
+        "config": {"batch_size": batch_size, "html_template": HTML_TEMPLATE},
+    }
+
+   
+
 
 @prodigy.recipe(
     "sense2vec.teach",
