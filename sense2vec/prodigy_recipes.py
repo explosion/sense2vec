@@ -254,7 +254,7 @@ def evaluate(
                             options.append((key, score))
                     if len(options) < 2:
                         continue
-                    key_b, sim_ab = options[round(len(options) / 2)]
+                    key_b, sim_ab = options[len(options) // 2]
                     key_c, sim_ac = options[-1]
                 else:
                     key_a, key_b, key_c = random.sample(current_keys[sense], 3)
