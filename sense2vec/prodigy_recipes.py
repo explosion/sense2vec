@@ -11,12 +11,6 @@ from collections import defaultdict
 import copy
 
 
-HTML_TEMPLATE = """
-<span style="font-size: {{theme.largeText}}px">{{word}}</span>
-<strong style="opacity: 0.75">{{sense}}</strong>
-"""
-
-
 @prodigy.recipe(
     "sense2vec.teach",
     dataset=("Dataset to save annotations to", "positional", None, str),
@@ -46,6 +40,7 @@ def teach(
     log("RECIPE: Starting recipe sense2vec.teach", locals())
     s2v = Sense2Vec().from_disk(vectors_path)
     log("RECIPE: Loaded sense2vec vectors", vectors_path)
+    html_template = "<span style='font-size: {{theme.largeText}}px'>{{word}}</span><strong style='opacity: 0.75'>{{sense}}</strong>"
     accept_keys = []
     seen = set(accept_keys)
     seed_tasks = []
@@ -115,7 +110,7 @@ def teach(
         "dataset": dataset,
         "stream": stream,
         "update": update,
-        "config": {"batch_size": batch_size, "html_template": HTML_TEMPLATE},
+        "config": {"batch_size": batch_size, "html_template": html_template},
     }
 
 
@@ -226,9 +221,11 @@ def evaluate(
         eval_dataset(dataset)
         return None
 
-    def get_html(word, sense, score=None):
-        html = f"{word} <strong style='opacity: 0.75; font-size: 14px; padding-left: 10px'>{sense}</strong>"
-        if show_scores and score:
+    def get_html(word, sense, score=None, large=False):
+        html_word = f"<span style='font-size: {30 if large else 20}px'>{word}</span>"
+        html_sense = f"<strong style='opacity: 0.75; font-size: 14px; padding-left: 10px'>{sense}</strong>"
+        html = f"{html_word} {html_sense}"
+        if show_scores and score is not None:
             html += f" <span style='opacity: 0.75; font-size: 12px; padding-left: 10px'>{score:.4}</span>"
         return html
 
@@ -275,7 +272,7 @@ def evaluate(
                 task_hash = murmurhash.hash(" ".join([key_a] + sorted([key_b, key_c])))
                 task = {
                     "label": "Which one is more similar?",
-                    "html": get_html(*s2v.split_key(key_a)),
+                    "html": get_html(*s2v.split_key(key_a), large=True),
                     "key": key_a,
                     "options": [
                         {
