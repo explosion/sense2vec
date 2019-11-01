@@ -566,7 +566,7 @@ prodigy sense2vec.teach [dataset] [vectors_path] [--seeds] [--threshold]
 #### Example
 
 ```bash
-prodigy sense2vec.teach tech_phrases /path/to/reddit_vectors-1.1.0
+prodigy sense2vec.teach tech_phrases /path/to/sense2vec_vectors
 --seeds "natural language processing, machine learning, artificial intelligence"
 ```
 
