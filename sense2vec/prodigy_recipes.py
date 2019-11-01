@@ -165,6 +165,7 @@ def to_patterns(
     threshold=("Similarity threshold to consider examples", "option", "t", float),
     eval_whole=("Evaluate whole dataset instead of session", "flag", "E", bool),
     eval_only=("Don't annotate, only evaluate current set", "flag", "O", bool),
+    show_scores=("Show all scores for debugging", "flag", "S", bool),
 )
 def evaluate(
     dataset,
@@ -174,6 +175,7 @@ def evaluate(
     threshold=0.7,
     eval_whole=False,
     eval_only=False,
+    show_scores=False,
 ):
     """Evaluate a word vectors model by asking providing questions triples:
     is word A more similar to word B, or to word C? If the human mostly agrees
@@ -215,8 +217,13 @@ def evaluate(
         eval_dataset(dataset)
         return None
 
+    def get_html(word, sense, score=None):
+        html = f"{word} <strong style='opacity: 0.75; font-size: 14px; padding-left: 10px'>{sense}</strong>"
+        if show_scores and score:
+            html += f" <span style='opacity: 0.75; font-size: 12px; padding-left: 10px'>{score:.4}</span>"
+        return html
+
     def get_stream():
-        html = "{} <strong style='opacity: 0.75; font-size: 14px; padding-left: 10px'>{}</strong>"
         # Limit to most frequent entries
         keys = [key for key, _ in s2v.frequencies[:n_freq]]
         keys_by_sense = defaultdict(set)
@@ -245,22 +252,24 @@ def evaluate(
                 confidence = 1.0 - (min(sim_ab, sim_ac) / max(sim_ab, sim_ac))
                 task = {
                     "label": "Which one is more similar?",
-                    "html": html.format(*s2v.split_key(key_a)),
+                    "html": get_html(*s2v.split_key(key_a)),
                     "key": key_a,
                     "options": [
                         {
                             "id": key_b,
-                            "html": html.format(*s2v.split_key(key_b)),
+                            "html": get_html(*s2v.split_key(key_b), sim_ab),
                             "score": sim_ab,
                         },
                         {
                             "id": key_c,
-                            "html": html.format(*s2v.split_key(key_c)),
+                            "html": get_html(*s2v.split_key(key_c), sim_ac),
                             "score": sim_ac,
                         },
                     ],
                     "confidence": confidence,
                 }
+                if show_scores:
+                    task["meta"] = {"confidence": f"{confidence:.4}"}
                 yield task
 
     def on_exit(ctrl):
