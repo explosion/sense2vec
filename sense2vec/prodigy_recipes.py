@@ -1,6 +1,7 @@
 import prodigy
 from prodigy.components.db import connect
 from prodigy.util import log, split_string, set_hashes, TASK_HASH_ATTR
+import murmurhash
 from sense2vec import Sense2Vec
 import srsly
 import spacy
@@ -250,6 +251,8 @@ def evaluate(
                 current_keys[sense].remove(key_b)
                 current_keys[sense].remove(key_c)
                 confidence = 1.0 - (min(sim_ab, sim_ac) / max(sim_ab, sim_ac))
+                # Get a more representative hash
+                task_hash = murmurhash.hash(" ".join([key_a] + sorted([key_b, key_c])))
                 task = {
                     "label": "Which one is more similar?",
                     "html": get_html(*s2v.split_key(key_a)),
@@ -267,6 +270,7 @@ def evaluate(
                         },
                     ],
                     "confidence": confidence,
+                    TASK_HASH_ATTR: task_hash,
                 }
                 if show_scores:
                     task["meta"] = {"confidence": f"{confidence:.4}"}
