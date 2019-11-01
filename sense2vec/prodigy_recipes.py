@@ -161,6 +161,7 @@ def to_patterns(
     "sense2vec.evaluate",
     dataset=("Dataset to save annotations to", "positional", None, str),
     vectors_path=("Path to pretrained sense2vec vectors", "positional", None, str),
+    strategy=("Example selection strategy", "option", "st", str,),
     senses=("The senses to use (all if not set)", "option", "s", split_string),
     n_freq=("Number of most frequent entries to limit to", "option", "f", int),
     threshold=("Similarity threshold to consider examples", "option", "t", float),
@@ -171,6 +172,7 @@ def to_patterns(
 def evaluate(
     dataset,
     vectors_path,
+    strategy="most_similar",
     senses=None,
     n_freq=100_000,
     threshold=0.7,
@@ -182,30 +184,35 @@ def evaluate(
     is word A more similar to word B, or to word C? If the human mostly agrees
     with the model, the vectors model is good.
     """
+    msg = Printer()
     random.seed(0)
     log("RECIPE: Starting recipe sense2vec.evaluate", locals())
+    strategies = ["random", "most_similar"]
+    if strategy not in strategies:
+        msg.fail(f"Invalid strategy '{strategy}'. Expected: {strategies}", exits=1)
     s2v = Sense2Vec().from_disk(vectors_path)
     log("RECIPE: Loaded sense2vec vectors", vectors_path)
 
     def eval_dataset(set_id):
         """Output summary about user agreement with the model."""
-        msg = Printer()
         db = connect()
         data = db.get_dataset(set_id)
-        data = [eg for eg in data if eg["answer"] == "accept" and eg.get("accept")]
-        if not data:
+        accepted = [eg for eg in data if eg["answer"] == "accept" and eg.get("accept")]
+        rejected = [eg for eg in data if eg["answer"] == "reject"]
+        if not accepted and not rejected:
             msg.warn("No annotations collected", exits=1)
+        high_conf = 0.8
         agree_count = 0
-        disagree_high_conf = 0
-        for eg in data:
+        disagree_high_conf = len([e for e in rejected if e["confidence"] > high_conf])
+        for eg in accepted:
             choice = eg["accept"][0]
             score_choice = [o["score"] for o in eg["options"] if o["id"] == choice][0]
             score_other = [o["score"] for o in eg["options"] if o["id"] != choice][0]
             if score_choice > score_other:
                 agree_count += 1
-            elif eg["confidence"] > 0.8:
+            elif eg["confidence"] > high_conf:
                 disagree_high_conf += 1
-        pc = agree_count / len(data)
+        pc = agree_count / (len(accepted) + len(rejected))
         text = f"You agreed {agree_count} / {len(data)} times ({pc:.0%})"
         msg.info(f"Evaluating data from '{set_id}'")
         if pc > 0.5:
@@ -213,6 +220,7 @@ def evaluate(
         else:
             msg.fail(text)
         msg.text(f"You disagreed on {disagree_high_conf} high confidence scores")
+        msg.text(f"You rejected {len(rejected)} suggestions as not similar")
 
     if eval_only:
         eval_dataset(dataset)
@@ -240,11 +248,23 @@ def evaluate(
             current_keys = copy.deepcopy(keys_by_sense)
             while any(len(values) >= 3 for values in current_keys.values()):
                 sense = random.choice(all_senses)
-                key_a, key_b, key_c = random.sample(current_keys[sense], 3)
+                if strategy == "most_similar":
+                    key_a = random.choice(list(current_keys[sense]))
+                    most_similar = s2v.most_similar(key_a, n=100)
+                    options = []
+                    for key, score in most_similar:
+                        if key in current_keys[sense]:
+                            options.append((key, score))
+                    if len(options) < 2:
+                        continue
+                    key_b, sim_ab = options[round(len(options) / 2)]
+                    key_c, sim_ac = options[-1]
+                else:
+                    key_a, key_b, key_c = random.sample(current_keys[sense], 3)
+                    sim_ab = s2v.similarity(key_a, key_b)
+                    sim_ac = s2v.similarity(key_a, key_c)
                 if len(set([key_a.lower(), key_b.lower(), key_c.lower()])) != 3:
                     continue
-                sim_ab = s2v.similarity(key_a, key_b)
-                sim_ac = s2v.similarity(key_a, key_c)
                 if sim_ab < threshold or sim_ac < threshold:
                     continue
                 current_keys[sense].remove(key_a)
@@ -273,7 +293,10 @@ def evaluate(
                     TASK_HASH_ATTR: task_hash,
                 }
                 if show_scores:
-                    task["meta"] = {"confidence": f"{confidence:.4}"}
+                    task["meta"] = {
+                        "confidence": f"{confidence:.4}",
+                        "strategy": strategy,
+                    }
                 yield task
 
     def on_exit(ctrl):
