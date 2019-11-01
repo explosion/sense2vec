@@ -78,13 +78,13 @@ most_similar = doc[3:6]._.s2v_most_similar(3)
 sense2vec releases are available on pip:
 
 ```bash
-pip install sense2vec==1.0.0a2
+pip install sense2vec==1.0.0a3
 ```
 
-The Reddit vectors model is attached to the
-[latest release](https://github.com/explosion/sense2vec/releases). To load it
-in, download the `.tar.gz` archive, unpack it and point `from_disk` to the
-extracted data directory:
+The Reddit vectors model is attached to
+[this release](https://github.com/explosion/sense2vec/releases/tag/v1.0.0a2). To
+load it in, download the `.tar.gz` archive, unpack it and point `from_disk` to
+the extracted data directory:
 
 ```python
 from sense2vec import Sense2Vec
