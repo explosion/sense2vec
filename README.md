@@ -601,6 +601,46 @@ prodigy sense2vec.to-patterns tech_phrases en_core_web_sm TECHNOLOGY
 --output-file /path/to/patterns.jsonl
 ```
 
+### <kbd>recipe</kbd> `sense2vec.evaluate`
+
+Evaluate a word vectors model by asking providing questions triples: is word A
+more similar to word B, or to word C? If the human mostly agrees with the model,
+the vectors model is good. The recipe will only ask about vectors with the same
+sense and supports different example selection strategies.
+
+```bash
+prodigy sense2vec.evaluate [dataset] [vectors_path] [--strategy] [--senses]
+[--n-freq] [--threshold] [--eval-whole] [--eval-only] [--show-scores]
+```
+
+| Argument              | Type       | Description                                                                                                   |
+| --------------------- | ---------- | ------------------------------------------------------------------------------------------------------------- |
+| `dataset`             | positional | Dataset to save annotations to.                                                                               |
+| `vectors_path`        | positional | Path to pretrained sense2vec vectors.                                                                         |
+| `--strategy`, `-st`   | option     | Example selection strategy. `most similar` (default) or `random`.                                             |
+| `--senses`, `-s`      | option     | Comma-separated list of senses to limit the selection to. If not set, all senses in the vectors will be used. |
+| `--n-freq`, `-n`      | option     | Number of most frequent entries to limit to.                                                                  |
+| `--threshold`, `-t`   | option     | Minimum similarity threshold to consider examples.                                                            |
+| `--eval-whole`, `-E`  | flag       | Evaluate the whole dataset instead of the current session.                                                    |
+| `--eval-only`, `-O`   | flag       | Don't annotate, only evaluate the current dataset.                                                            |
+| `--show-scores`, `-S` | flag       | Show all scores for debugging.                                                                                |
+
+#### Strategies
+
+| Name           | Description                                                                                                                                                           |
+| -------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `most_similar` | Pick a random word from a random sense and get its most similar entries of the same sense. Ask about the similarity to the last and middle entry from that selection. |
+| `random`       | Pick a random sample of 3 words from the same random sense.                                                                                                           |
+
+#### Example
+
+```bash
+prodigy sense2vec.evaluate vectors_eval /path/to/sense2vec_vectors
+--senses NOUN,ORG,PRODUCT --threshold 0.5
+```
+
+![UI preview of sense2vec.evaluate](https://user-images.githubusercontent.com/13643239/67994212-668cf400-fc44-11e9-8fe2-bf264ae32b0a.png)
+
 ## Pretrained vectors
 
 The pretrained Reddit vectors support the following "senses", either
