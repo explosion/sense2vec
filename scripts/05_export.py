@@ -18,7 +18,7 @@ def _get_shape(file_):
     for line in file_:
         count += 1
     file_.seek(0)
-    shape = (count, len(first_line)-1)
+    shape = (count, len(first_line) - 1)
     return shape, file_
 
 
