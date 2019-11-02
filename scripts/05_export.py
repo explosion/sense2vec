@@ -7,13 +7,27 @@ from wasabi import Printer
 import numpy
 
 
+def _get_shape(file_):
+    """Return a tuple with (number of entries, vector dimensions). Handle
+    both word2vec/FastText format, which has a header with this, or GloVe's
+    format, which doesn't."""
+    first_line = next(file_).split()
+    if len(first_line) == 2:
+        return tuple(int(size) for size in first_line), file_
+    count = 1
+    for line in file_:
+        count += 1
+    file_.seek(0)
+    shape = (count, len(first_line)-1)
+    return shape, file_
+
+
 @plac.annotations(
     in_file=("Vectors file", "positional", None, str),
     vocab_file=("Vocabulary file", "positional", None, str),
     out_dir=("Path to output directory", "positional", None, str),
-    vector_size=("Dimension of word vector representations", "option", "s", int),
 )
-def main(in_file, vocab_file, out_dir, vector_size=128):
+def main(in_file, vocab_file, out_dir):
     """
     Step 5: Export a sense2vec component
 
@@ -32,6 +46,7 @@ def main(in_file, vocab_file, out_dir, vector_size=128):
         output_path.mkdir(parents=True)
         msg.good(f"Created output directory {out_dir}")
     with input_path.open("r", encoding="utf8") as f:
+        (n_vectors, vector_size), f = _get_shape(f)
         vectors_data = f.readlines()
     with vocab_path.open("r", encoding="utf8") as f:
         vocab_data = f.readlines()
@@ -41,6 +56,8 @@ def main(in_file, vocab_file, out_dir, vector_size=128):
         item = item.rstrip().rsplit(" ", vector_size)
         key = item[0]
         if key == "<unk>":
+            continue
+        if "|" not in key:
             continue
         vec = item[1:]
         if len(vec) != vector_size:
