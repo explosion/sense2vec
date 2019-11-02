@@ -263,14 +263,14 @@ def evaluate(
                 sense = random.choice(all_senses)
                 if strategy == "most_similar":
                     key_a = random.choice(list(current_keys[sense]))
-                    most_similar = s2v.most_similar(key_a, n=100)
+                    most_similar = s2v.most_similar(key_a, n=200)
                     options = []
                     for key, score in most_similar:
                         if key in current_keys[sense]:
                             options.append((key, score))
                     if len(options) < 2:
                         continue
-                    key_b, sim_ab = options[len(options) // 2]
+                    key_b, sim_ab = options[len(options) // 4]
                     key_c, sim_ac = options[-1]
                 else:
                     key_a, key_b, key_c = random.sample(current_keys[sense], 3)
