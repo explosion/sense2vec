@@ -151,7 +151,7 @@ class Sense2Vec(object):
         key (unicode / int): The key.
         RETURNS (int): The integer key.
         """
-        return key if isinstance(key, int) else self.strings[key]
+        return key if isinstance(key, int) else self.strings.add(key)
 
     def similarity(
         self,
