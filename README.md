@@ -25,8 +25,8 @@ models.
 - spaCy **pipeline component** and **extension attributes**.
 - Fully **serializable** so you can easily ship your sense2vec vectors with your
   spaCy model packages.
-- **Train your own vectors** using a pretrained spaCy model, raw text of your
-  choice and [GloVe](https://github.com/stanfordnlp/GloVe) or Word2Vec via
+- **Train your own vectors** using a pretrained spaCy model, raw text and
+  [GloVe](https://github.com/stanfordnlp/GloVe) or Word2Vec via
   [fastText](https://github.com/facebookresearch/fastText)
   ([details](#-training-your-own-sense2vec-vectors)).
 - [Prodigy](https://prodi.gy) annotation recipes for creating lists of similar
