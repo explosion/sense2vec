@@ -140,6 +140,8 @@ class Sense2Vec(object):
         key (unicode / int): The key to set the count for.
         freq (int): The frequency count.
         """
+        if not isinstance(freq, int):
+            raise ValueError(f"Invalid frequency count: {repr(freq)} for '{key}'")
         key = self.ensure_int_key(key)
         self.freqs[key] = freq
 
