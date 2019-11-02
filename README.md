@@ -80,7 +80,7 @@ most_similar = doc[3:6]._.s2v_most_similar(3)
 sense2vec releases are available on pip:
 
 ```bash
-pip install sense2vec==1.0.0a4
+pip install sense2vec==1.0.0a5
 ```
 
 The Reddit vectors model is attached to
