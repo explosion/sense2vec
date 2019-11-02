@@ -46,6 +46,8 @@ class Sense2VecComponent(object):
         vocab (Vocab): The shared vocab. Mostly used for the shared StringStore.
         shape (tuple): The vector shape.
         merge_phrases (bool): Merge sense2vec phrases into one token.
+        overrides (dict): Optional custom functions to use, mapped to names
+            registered via the registry, e.g. {"make_key": "custom_make_key"}.
         RETURNS (Sense2VecComponent): The newly constructed object.
         """
         self.first_run = True
@@ -61,14 +63,15 @@ class Sense2VecComponent(object):
         self.s2v.cfg.update(overrides)
 
     @classmethod
-    def from_nlp(cls, nlp: Language, **kwargs):
+    def from_nlp(cls, nlp: Language, **cfg):
         """Initialize the component from an nlp object. Mostly used as the
-        component factory for the entry point (see setup.py).
+        component factory for the entry point (see setup.cfg).
 
         nlp (Language): The nlp object.
+        **cfg: Optional config parameters.
         RETURNS (Sense2VecComponent): The newly constructed object.
         """
-        return cls(vocab=nlp.vocab, **kwargs)
+        return cls(vocab=nlp.vocab, **cfg)
 
     def __call__(self, doc: Doc) -> Doc:
         """Process a Doc object with the component.

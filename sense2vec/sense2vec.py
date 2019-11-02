@@ -25,6 +25,8 @@ class Sense2Vec(object):
         senses (list): Optional list of all available senses. Used in methods
             that generate the best sense or other senses.
         vectors_name (unicode): Optional name to assign to the Vectors object.
+        overrides (dict): Optional custom functions to use, mapped to names
+            registered via the registry, e.g. {"make_key": "custom_make_key"}.
         RETURNS (Sense2Vec): The newly constructed object.
         """
         self.vectors = Vectors(shape=shape, name=vectors_name)
