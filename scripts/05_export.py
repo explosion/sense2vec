@@ -55,14 +55,14 @@ def main(in_file, vocab_file, out_dir):
     for item in vectors_data:
         item = item.rstrip().rsplit(" ", vector_size)
         key = item[0]
-        if key == "<unk>":
-            continue
-        if "|" not in key:
+        try:
+            _, sense = split_key(key)
+        except ValueError:
             continue
         vec = item[1:]
         if len(vec) != vector_size:
             msg.fail(f"Wrong vector size: {len(vec)} (expected {vector_size})", exits=1)
-        all_senses.add(split_key(key)[1])
+        all_senses.add(sense)
         data.append((key, numpy.asarray(vec, dtype=numpy.float32)))
     s2v = Sense2Vec(shape=(len(data), vector_size), senses=all_senses)
     for key, vector in data:
