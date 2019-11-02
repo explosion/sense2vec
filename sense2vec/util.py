@@ -10,14 +10,6 @@ except ImportError:
     import importlib_metadata  # noqa: F401
 
 
-class ATTRS(object):
-    make_key: str = "default_make_key"
-    split_key: str = "default_split_key"
-    make_spacy_key: str = "default_make_spacy_key"
-    get_phrases: str = "default_get_phrases"
-    merge_phrases: str = "default_merge_phrases"
-
-
 class registry(object):
     make_key = catalogue.create("sense2vec", "make_key")
     split_key = catalogue.create("sense2vec", "split_key")
@@ -26,7 +18,7 @@ class registry(object):
     merge_phrases = catalogue.create("sense2vec", "merge_phrases")
 
 
-@registry.make_key.register(ATTRS.make_key)
+@registry.make_key.register("default")
 def make_key(word: str, sense: str) -> str:
     """Create a key from a word and sense, e.g. "usage_example|NOUN".
 
@@ -38,7 +30,7 @@ def make_key(word: str, sense: str) -> str:
     return text + "|" + sense
 
 
-@registry.split_key.register(ATTRS.split_key)
+@registry.split_key.register("default")
 def split_key(key: str) -> Tuple[str, str]:
     """Split a key into word and sense, e.g. ("usage example", "NOUN").
 
@@ -51,7 +43,7 @@ def split_key(key: str) -> Tuple[str, str]:
     return word, sense
 
 
-@registry.make_spacy_key.register(ATTRS.make_spacy_key)
+@registry.make_spacy_key.register("default")
 def make_spacy_key(
     obj: Union[Token, Span], prefer_ents: bool = False
 ) -> Tuple[str, str]:
@@ -102,7 +94,7 @@ def get_noun_phrases(doc: Doc) -> List[Span]:
     return spans
 
 
-@registry.get_phrases.register(ATTRS.get_phrases)
+@registry.get_phrases.register("default")
 def get_phrases(doc: Doc) -> List[Span]:
     """Compile a list of sense2vec phrases based on a processed Doc: named
     entities and noun chunks without determiners.
@@ -133,7 +125,7 @@ def is_particle(
     return token.pos_ in pos or token.dep_ in deps
 
 
-@registry.merge_phrases.register(ATTRS.merge_phrases)
+@registry.merge_phrases.register("default")
 def merge_phrases(doc: Doc) -> Doc:
     """Transform a spaCy Doc to match the sense2vec format: merge entities
     into one token and merge noun chunks without determiners.

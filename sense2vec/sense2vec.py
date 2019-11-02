@@ -5,7 +5,7 @@ from spacy.strings import StringStore
 import numpy
 import srsly
 
-from .util import ATTRS, registry, SimpleFrozenDict
+from .util import registry, SimpleFrozenDict
 
 
 class Sense2Vec(object):
@@ -32,11 +32,7 @@ class Sense2Vec(object):
         self.vectors = Vectors(shape=shape, name=vectors_name)
         self.strings = StringStore() if strings is None else strings
         self.freqs: Dict[int, int] = {}
-        self.cfg = {
-            "senses": senses,
-            "make_key": ATTRS.make_key,
-            "split_key": ATTRS.split_key,
-        }
+        self.cfg = {"senses": senses, "make_key": "default", "split_key": "default"}
         self.cfg.update(overrides)
 
     @property

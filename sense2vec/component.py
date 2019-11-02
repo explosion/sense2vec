@@ -7,7 +7,7 @@ from pathlib import Path
 import numpy
 
 from .sense2vec import Sense2Vec
-from .util import ATTRS, registry, SimpleFrozenDict
+from .util import registry, SimpleFrozenDict
 
 
 @component(
@@ -55,9 +55,9 @@ class Sense2VecComponent(object):
         strings = vocab.strings if vocab is not None else None
         self.s2v = Sense2Vec(shape=shape, strings=strings)
         cfg = {
-            "make_spacy_key": ATTRS.make_spacy_key,
-            "get_phrases": ATTRS.get_phrases,
-            "merge_phrases": ATTRS.merge_phrases,
+            "make_spacy_key": "default",
+            "get_phrases": "default",
+            "merge_phrases": "default",
         }
         self.s2v.cfg.update(cfg)
         self.s2v.cfg.update(overrides)
