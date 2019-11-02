@@ -48,7 +48,7 @@ def main(
     if not output_path.exists():
         output_path.mkdir(parents=True)
         msg.good(f"Created output directory {out_dir}")
-    output_file = output_path / "vectors"
+    output_file = output_path / f"vectors_glove_{vector_size}dim"
     msg.info("Training vectors")
     cmd = (
         f"{glove_dir}/glove -save-file {output_file} -threads {n_threads} "

@@ -45,7 +45,7 @@ def main(
     if not output_path.exists():
         output_path.mkdir(parents=True)
         msg.good(f"Created output directory {out_dir}")
-    output_file = output_path / "vectors"
+    output_file = output_path / f"vectors_w2v_{vector_size}dim"
     # fastText expects only one input file and only reads from disk and not
     # stdin, so we need to create a temporary file that concatenates the inputs
     tmp_path = input_path / "s2v_input.tmp"
