@@ -24,9 +24,9 @@ def main(
     collect unigram counts and construct and shuffle cooccurrence data. See here
     for installation instructions: https://github.com/stanfordnlp/GloVe
 
-    Note that this script will call into GloVe in a subprocess and expects you
-    to pass in the GloVe build directory (/build if you run the Makefile). The
-    commands will also be printed if you want to run them separately.
+    Note that this script will call into GloVe and expects you to pass in the
+    GloVe build directory (/build if you run the Makefile). The commands will
+    also be printed if you want to run them separately.
     """
     msg = Printer()
     input_path = Path(in_dir)
@@ -54,7 +54,7 @@ def main(
     )
     print(cmd)
     vocab_cmd = os.system(cmd)
-    if vocab_cmd == 1 or not Path(vocab_file).exists():
+    if vocab_cmd != 0 or not Path(vocab_file).exists():
         msg.fail("Failed creating vocab counts", exits=1)
     msg.good("Created vocab counts", vocab_file)
 
@@ -66,7 +66,7 @@ def main(
     )
     print(cmd)
     cooccur_cmd = os.system(cmd)
-    if cooccur_cmd == 1 or not Path(cooc_file).exists():
+    if cooccur_cmd != 0 or not Path(cooc_file).exists():
         msg.fail("Failed creating cooccurrence statistics", exits=1)
     msg.good("Created cooccurrence statistics", cooc_file)
 
@@ -77,7 +77,7 @@ def main(
     )
     print(cmd)
     shuffle_cmd = os.system(cmd)
-    if shuffle_cmd == 1 or not Path(cooc_shuffle_file).exists():
+    if shuffle_cmd != 0 or not Path(cooc_shuffle_file).exists():
         msg.fail("Failed to shuffle cooccurrence file", exits=1)
     msg.good("Shuffled cooccurrence file", cooc_shuffle_file)
 
