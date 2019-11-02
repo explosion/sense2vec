@@ -136,7 +136,7 @@ def test_registry():
 
     @registry.make_key.register("custom_make_key")
     def custom_make_key(word, sense):
-        return "{}###{}".format(word, sense)
+        return f"{word}###{sense}"
 
     @registry.split_key.register("custom_split_key")
     def custom_split_key(key):
