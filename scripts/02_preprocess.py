@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-from sense2vec.util import merge_phrases, make_spacy_key
+from sense2vec.util import make_key, make_spacy_key, merge_phrases
 import spacy
 from spacy.tokens import DocBin
 import plac
@@ -51,7 +51,11 @@ def main(in_file, out_dir, spacy_model="en_core_web_sm", n_process=1):
     with output_file.open("w", encoding="utf8") as f:
         for doc in tqdm.tqdm(docs, desc="Docs", unit=""):
             doc = merge_phrases(doc)
-            words = [make_spacy_key(w, prefer_ents=True) for w in doc if not w.is_space]
+            words = []
+            for token in doc:
+                if not token.is_space:
+                    word, sense = make_spacy_key(token, prefer_ents=True)
+                    words.append(make_key(word, sense))
             f.write(" ".join(words) + "\n")
             lines_count += 1
             words_count += len(words)

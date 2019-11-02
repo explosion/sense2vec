@@ -183,25 +183,29 @@ most_similar = s2v.most_similar("natural_language_processing|NOUN", n=10)
 
 ## 🎛 API
 
-### <kbd>method</kbd> `Sense2Vec.__init__`
+### <kbd>class</kbd> `Sense2Vec`
+
+The standalone `Sense2Vec` object that holds the vectors, strings and
+frequencies.
+
+#### <kbd>method</kbd> `Sense2Vec.__init__`
 
 Initialize the `Sense2Vec` object.
 
-| Argument       | Type                        | Description                                                                                                 |
-| -------------- | --------------------------- | ----------------------------------------------------------------------------------------------------------- |
-| `shape`        | tuple                       | The vector shape. Defaults to `(1000, 128)`.                                                                |
-| `strings`      | `spacy.strings.StringStore` | Optional string store. Will be created if it doesn't exist.                                                 |
-| `make_key`     | callable                    | Optional custom function that takes a word and sense string and creates the key (e.g. `"some_word|sense"`). |
-| `split_key`    | callable                    | Optional custom function that takes a key and returns the word and sense (e.g. `("some word", "sense")`).   |
-| `senses`       | list                        | Optional list of all available senses. Used in methods that generate the best sense or other senses.        |
-| `vectors_name` | unicode                     | Optional name to assign to the `Vectors` table, to prevent clashes. Defaults to `"sense2vec"`.              |
-| **RETURNS**    | `Sense2Vec`                 | The newly constructed object.                                                                               |
+| Argument       | Type                        | Description                                                                                                            |
+| -------------- | --------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| `shape`        | tuple                       | The vector shape. Defaults to `(1000, 128)`.                                                                           |
+| `strings`      | `spacy.strings.StringStore` | Optional string store. Will be created if it doesn't exist.                                                            |
+| `senses`       | list                        | Optional list of all available senses. Used in methods that generate the best sense or other senses.                   |
+| `vectors_name` | unicode                     | Optional name to assign to the `Vectors` table, to prevent clashes. Defaults to `"sense2vec"`.                         |
+| `overrides`    | dict                        | Optional custom functions to use, mapped to names registered via the registry, e.g. `{"make_key": "custom_make_key"}`. |
+| **RETURNS**    | `Sense2Vec`                 | The newly constructed object.                                                                                          |
 
 ```python
 s2v = Sense2Vec(shape=(300, 128), senses=["VERB", "NOUN"])
 ```
 
-### <kbd>method</kbd> `Sense2Vec.__len__`
+#### <kbd>method</kbd> `Sense2Vec.__len__`
 
 The number of rows in the vectors table.
 
@@ -214,7 +218,7 @@ s2v = Sense2Vec(shape=(300, 128))
 assert len(s2v) == 300
 ```
 
-### <kbd>method</kbd> `Sense2Vec.__contains__`
+#### <kbd>method</kbd> `Sense2Vec.__contains__`
 
 Check if a key is in the vectors table.
 
@@ -230,7 +234,7 @@ assert "avocado|NOUN" in s2v
 assert "avocado|VERB" not in s2v
 ```
 
-### <kbd>method</kbd> `Sense2Vec.__getitem__`
+#### <kbd>method</kbd> `Sense2Vec.__getitem__`
 
 Retrieve a vector for a given key. Returns None if the key is not in the table.
 
@@ -243,7 +247,7 @@ Retrieve a vector for a given key. Returns None if the key is not in the table.
 vec = s2v["avocado|NOUN"]
 ```
 
-### <kbd>method</kbd> `Sense2Vec.__setitem__`
+#### <kbd>method</kbd> `Sense2Vec.__setitem__`
 
 Set a vector for a given key. Will raise an error if the key doesn't exist. To
 add a new entry, use `Sense2Vec.add`.
@@ -258,7 +262,7 @@ vec = s2v["avocado|NOUN"]
 s2v["avacado|NOUN"] = vec
 ```
 
-### <kbd>method</kbd> `Sense2Vec.add`
+#### <kbd>method</kbd> `Sense2Vec.add`
 
 Add a new vector to the table.
 
@@ -273,7 +277,7 @@ vec = s2v["avocado|NOUN"]
 s2v.add("🥑|NOUN", vec, 1234)
 ```
 
-### <kbd>method</kbd> `Sense2Vec.get_freq`
+#### <kbd>method</kbd> `Sense2Vec.get_freq`
 
 Get the frequency count for a given key.
 
@@ -289,7 +293,7 @@ s2v.add("🥑|NOUN", vec, 1234)
 assert s2v.get_freq("🥑|NOUN") == 1234
 ```
 
-### <kbd>method</kbd> `Sense2Vec.set_freq`
+#### <kbd>method</kbd> `Sense2Vec.set_freq`
 
 Set a frequency count for a given key.
 
@@ -302,7 +306,7 @@ Set a frequency count for a given key.
 s2v.set_freq("avocado|NOUN", 104294)
 ```
 
-### <kbd>method</kbd> `Sense2Vec.__iter__`, `Sense2Vec.items`
+#### <kbd>method</kbd> `Sense2Vec.__iter__`, `Sense2Vec.items`
 
 Iterate over the entries in the vectors table.
 
@@ -318,7 +322,7 @@ for key, vec in s2v.items():
     print(key, vec)
 ```
 
-### <kbd>method</kbd> `Sense2Vec.keys`
+#### <kbd>method</kbd> `Sense2Vec.keys`
 
 Iterate over the keys in the table.
 
@@ -330,7 +334,7 @@ Iterate over the keys in the table.
 all_keys = list(s2v.keys())
 ```
 
-### <kbd>method</kbd> `Sense2Vec.values`
+#### <kbd>method</kbd> `Sense2Vec.values`
 
 Iterate over the vectors in the table.
 
@@ -342,7 +346,7 @@ Iterate over the vectors in the table.
 all_vecs = list(s2v.values())
 ```
 
-### <kbd>property</kbd> `Sense2Vec.senses`
+#### <kbd>property</kbd> `Sense2Vec.senses`
 
 The available senses in the table, e.g. `"NOUN"` or `"VERB"` (added at
 initialization).
@@ -356,7 +360,7 @@ s2v = Sense2Vec(senses=["VERB", "NOUN"])
 assert "VERB" in s2v.senses
 ```
 
-### <kbd>property</kbd> `Sense2vec.frequencies`
+#### <kbd>property</kbd> `Sense2vec.frequencies`
 
 The frequencies of they keys in the table, in descending order.
 
@@ -369,7 +373,7 @@ most_frequent = s2v.frequencies[:10]
 key, score = s2v.frequencies[0]
 ```
 
-### <kbd>method</kbd> `Sense2vec.similarity`
+#### <kbd>method</kbd> `Sense2vec.similarity`
 
 Make a semantic similarity estimate of two keys or two sets of keys. The default
 estimate is cosine similarity using an average of vectors.
@@ -387,7 +391,7 @@ print(s2v.similarity(keys_a, keys_b))
 assert s2v.similarity("machine_learning|NOUN", "machine_learning|NOUN") == 1.0
 ```
 
-### <kbd>method</kbd> `Sense2Vec.most_similar`
+#### <kbd>method</kbd> `Sense2Vec.most_similar`
 
 Get the most similar entries in the table. If more than one key is provided, the
 average of the vectors is used.
@@ -406,7 +410,7 @@ most_similar = s2v.most_similar("natural_language_processing|NOUN", n=3)
 #  ('deep_learning|NOUN', 0.8573361)]
 ```
 
-### <kbd>method</kbd> `Sense2Vec.get_other_senses`
+#### <kbd>method</kbd> `Sense2Vec.get_other_senses`
 
 Find other entries for the same word with a different sense, e.g. `"duck|VERB"`
 for `"duck|NOUN"`.
@@ -422,7 +426,7 @@ other_senses = s2v.get_other_senses("duck|NOUN")
 # ['duck|VERB', 'Duck|ORG', 'Duck|VERB', 'Duck|PERSON', 'Duck|ADJ']
 ```
 
-### <kbd>method</kbd> `Sense2Vec.get_best_sense`
+#### <kbd>method</kbd> `Sense2Vec.get_best_sense`
 
 Find the best-matching sense for a given word based on the available senses and
 frequency counts. Returns `None` if no match is found.
@@ -437,7 +441,7 @@ frequency counts. Returns `None` if no match is found.
 assert s2v.get_best_sense("duck") == "duck|NOUN"
 ```
 
-### <kbd>method</kbd> `Sense2Vec.to_bytes`
+#### <kbd>method</kbd> `Sense2Vec.to_bytes`
 
 Serialize a `Sense2Vec` object to a bytestring.
 
@@ -450,7 +454,7 @@ Serialize a `Sense2Vec` object to a bytestring.
 s2v_bytes = s2v.to_bytes()
 ```
 
-### <kbd>method</kbd> `Sense2Vec.from_bytes`
+#### <kbd>method</kbd> `Sense2Vec.from_bytes`
 
 Load a `Sense2Vec` object from a bytestring.
 
@@ -465,7 +469,7 @@ s2v_bytes = s2v.to_bytes()
 new_s2v = Sense2Vec().from_bytes(s2v_bytes)
 ```
 
-### <kbd>method</kbd> `Sense2Vec.to_disk`
+#### <kbd>method</kbd> `Sense2Vec.to_disk`
 
 Serialize a `Sense2Vec` object to a directory.
 
@@ -478,13 +482,13 @@ Serialize a `Sense2Vec` object to a directory.
 s2v.to_disk("/path/to/sense2vec")
 ```
 
-### <kbd>method</kbd> `Sense2Vec.from_disk`
+#### <kbd>method</kbd> `Sense2Vec.from_disk`
 
 Load a `Sense2Vec` object from a directory.
 
 | Argument    | Type             | Description                               |
 | ----------- | ---------------- | ----------------------------------------- |
-| `path`      | unicode / `Path` | The path. to load from                    |
+| `path`      | unicode / `Path` | The path to load from                     |
 | `exclude`   | list             | Names of serialization fields to exclude. |
 | **RETURNS** | `Sense2Vec`      | The loaded object.                        |
 
@@ -492,6 +496,143 @@ Load a `Sense2Vec` object from a directory.
 s2v.to_disk("/path/to/sense2vec")
 new_s2v = Sense2Vec().from_disk("/path/to/sense2vec")
 ```
+
+---
+
+### <kbd>class</kbd> `Sense2VecComponent`
+
+The pipeline component to add sense2vec to spaCy pipelines.
+
+#### <kbd>method</kbd> `Sense2VecComponent.__init__`
+
+Initialize the pipeline component.
+
+| Argument        | Type                                                                                                                  | Description                                                             |
+| --------------- | --------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------- |
+| `vocab`         | `Vocab`                                                                                                               | The shared `Vocab`. Mostly used for the shared `StringStore`.           |
+| `shape`         | tuple                                                                                                                 | The vector shape.                                                       |
+| `merge_phrases` | bool                                                                                                                  | Whether to merge sense2vec phrases into one token. Defaults to `False`. |
+| `overrides`     | Optional custom functions to use, mapped to names registred via the registry, e.g. `{"make_key": "custom_make_key"}`. |
+| **RETURNS**     | `Sense2VecComponent`                                                                                                  | The newly constructed object.                                           |
+
+```python
+s2v = Sense2VecComponent(nlp.vocab)
+```
+
+#### <kbd>classmethod</kbd> `Sense2VecComponent.from_nlp`
+
+Initialize the component from an nlp object. Mostly used as the component
+factory for the entry point (see setup.cfg) and to auto-register via the
+`@spacy.component` decorator.
+
+| Argument    | Type                 | Description                   |
+| ----------- | -------------------- | ----------------------------- |
+| `nlp`       | `Language`           | The `nlp` object.             |
+| `**cfg`     | -                    | Optional config parameters.   |
+| **RETURNS** | `Sense2VecComponent` | The newly constructed object. |
+
+```python
+s2v = Sense2VecComponent.from_nlp(nlp)
+```
+
+#### <kbd>method</kbd> `Sense2VecComponent.__call__`
+
+Process a `Doc` object with the component. Typically only called as part of the
+spaCy pipeline and not directly.
+
+| Argument    | Type  | Description              |
+| ----------- | ----- | ------------------------ |
+| `doc`       | `Doc` | The document to process. |
+| **RETURNS** | `Doc` | the processed document.  |
+
+#### <kbd>method</kbd> `Sense2Vec.init_component`
+
+Register the component-specific extension attributes here and only if the
+component is added to the pipeline and used – otherwise, tokens will still get
+the attributes even if the component is only created and not added.
+
+#### <kbd>method</kbd> `Sense2VecComponent.to_bytes`
+
+Serialize the component to a bytestring. Also called when the component is added
+to the pipeline and you run `nlp.to_bytes`.
+
+| Argument    | Type  | Description               |
+| ----------- | ----- | ------------------------- |
+| **RETURNS** | bytes | The serialized component. |
+
+#### <kbd>method</kbd> `Sense2VecComponent.from_bytes`
+
+Load a component from a bytestring. Also called when you run `nlp.from_bytes`.
+
+| Argument     | Type                 | Description        |
+| ------------ | -------------------- | ------------------ |
+| `bytes_data` | bytes                | The data to load.  |
+| **RETURNS**  | `Sense2VecComponent` | The loaded object. |
+
+#### <kbd>method</kbd> `Sense2VecComponent.to_disk`
+
+Serialize the component to a directory. Also called when the component is added
+to the pipeline and you run `nlp.to_disk`.
+
+| Argument | Type             | Description |
+| -------- | ---------------- | ----------- |
+| `path`   | unicode / `Path` | The path.   |
+
+#### <kbd>method</kbd> `Sense2VecComponent.from_disk`
+
+Load a `Sense2Vec` object from a directory. Also called when you run
+`nlp.from_disk`.
+
+| Argument    | Type                 | Description           |
+| ----------- | -------------------- | --------------------- |
+| `path`      | unicode / `Path`     | The path to load from |
+| **RETURNS** | `Sense2VecComponent` | The loaded object.    |
+
+---
+
+### <kbd>class</kbd> `registry`
+
+Function registry (powered by
+[`catalogue`](https://github.com/explosion/catalogue)) to easily customize the
+functions used to generate keys and phrases. Allows you to decorate and name
+custom functions, swap them out and serialize the custom names when you save out
+the model. The following registry options are available:
+
+| Name                      | Description                                                                                                                                                                                                                                        |
+| ------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `registry.make_key`       | Given a `word` and `sense`, return a string of the key, e.g. `"word|sense".`                                                                                                                                                                       |
+| `registry.split_key`      | Given a string key, return a `(word, sense)` tuple.                                                                                                                                                                                                |
+| `registry.make_spacy_key` | Given a spaCy object (`Token` or `Span`) and a boolean `prefer_ents` keyword argument (whether to prefer the entity label for single tokens), return a `(word, sense)` tuple. Used in extension attributes to generate a key for tokens and spans. |  |
+| `registry.get_phrases`    | Given a spaCy `Doc`, return a list of `Span` objects used for sense2vec phrases (typically noun phrases and named entities).                                                                                                                       |
+| `registry.merge_phrases`  | Given a spaCy `Doc`, get all sense2vec phrases and merge them into single tokens.                                                                                                                                                                  |
+
+Each registry has a `register` method that can be used as a function decorator
+and takes one argument, the name of the custom function.
+
+```python
+from sense2vec import registry
+
+@registry.make_key.register("custom")
+def custom_make_key(word, sense):
+    return f"{word}###{sense}"
+
+@registry.split_key.register("custom")
+def custom_split_key(key):
+    word, sense = key.split("###")
+    return word, sense
+```
+
+When initializing the `Sense2Vec` object, you can now pass in a dictionary of
+overrides with the names of your custom registered functions.
+
+```python
+overrides = {"make_key": "custom", "split_key": "custom"}
+s2v = Sense2Vec(overrides=overrides)
+```
+
+This makes it easy to experiment with different strategies and serializing the
+strategies as plain strings (instead of having to pass around and/or pickle the
+functions themselves).
 
 ## 🚂 Training your own sense2vec vectors
 

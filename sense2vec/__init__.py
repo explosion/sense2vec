@@ -1,6 +1,6 @@
 from .sense2vec import Sense2Vec  # noqa: F401
 from .component import Sense2VecComponent  # noqa: F401
-from .util import importlib_metadata
+from .util import importlib_metadata, registry  # noqa: F401
 
 try:
     # This needs to be imported in order for the entry points to be loaded

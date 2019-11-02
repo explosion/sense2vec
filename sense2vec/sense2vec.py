@@ -1,11 +1,11 @@
-from typing import Callable, Tuple, List, Union, Sequence, Dict
+from typing import Tuple, List, Union, Sequence, Dict, Callable
 from pathlib import Path
 from spacy.vectors import Vectors
 from spacy.strings import StringStore
 import numpy
 import srsly
 
-from .util import make_key, split_key
+from .util import registry, SimpleFrozenDict
 
 
 class Sense2Vec(object):
@@ -13,34 +13,30 @@ class Sense2Vec(object):
         self,
         shape: tuple = (1000, 128),
         strings: StringStore = None,
-        make_key: Callable[[str, str], str] = make_key,
-        split_key: Callable[[str], Tuple[str, str]] = split_key,
         senses: List[str] = [],
         vectors_name: str = "sense2vec",
+        overrides: Dict[str, str] = SimpleFrozenDict(),
     ):
         """Initialize the Sense2Vec object.
 
         shape (tuple): The vector shape.
         strings (StringStore): Optional string store. Will be created if it
             doesn't exist.
-        make_key (callable): Optional custom function that takes a word and
-            sense string and creates the key (e.g. "some_word|sense").
-        split_key (callable): Optional custom function that takes a key and
-            returns the word and sense (e.g. ("some word", "sense")).
         senses (list): Optional list of all available senses. Used in methods
             that generate the best sense or other senses.
         vectors_name (unicode): Optional name to assign to the Vectors object.
+        overrides (dict): Optional custom functions to use, mapped to names
+            registered via the registry, e.g. {"make_key": "custom_make_key"}.
         RETURNS (Sense2Vec): The newly constructed object.
         """
-        self.make_key = make_key
-        self.split_key = split_key
         self.vectors = Vectors(shape=shape, name=vectors_name)
         self.strings = StringStore() if strings is None else strings
         self.freqs: Dict[int, int] = {}
-        self.cfg = {"senses": senses}
+        self.cfg = {"senses": senses, "make_key": "default", "split_key": "default"}
+        self.cfg.update(overrides)
 
     @property
-    def senses(self) -> List[str]:
+    def senses(self) -> Sequence[str]:
         """RETURNS (list): The available senses."""
         return self.cfg.get("senses", [])
 
@@ -104,6 +100,16 @@ class Sense2Vec(object):
     def values(self):
         """YIELDS (numpy.ndarray): The vectors in the table."""
         yield from self.vectors.values()
+
+    @property
+    def make_key(self) -> Callable:
+        """Get the function to make keys."""
+        return registry.make_key.get(self.cfg["make_key"])
+
+    @property
+    def split_key(self) -> Callable:
+        """Get the function to split keys."""
+        return registry.split_key.get(self.cfg["split_key"])
 
     def add(self, key: Union[str, int], vector: numpy.ndarray, freq: int = None):
         """Add a new vector to the table.
@@ -271,7 +277,7 @@ class Sense2Vec(object):
         data = srsly.msgpack_loads(bytes_data)
         self.vectors = Vectors().from_bytes(data["vectors"])
         self.freqs = dict(data.get("freqs", []))
-        self.cfg = data.get("cfg", {})
+        self.cfg.update(data.get("cfg", {}))
         if "strings" not in exclude and "strings" in data:
             self.strings = StringStore().from_bytes(data["strings"])
         return self
@@ -300,7 +306,7 @@ class Sense2Vec(object):
         strings_path = path / "strings.json"
         freqs_path = path / "freqs.json"
         self.vectors = Vectors().from_disk(path)
-        self.cfg = srsly.read_json(path / "cfg")
+        self.cfg.update(srsly.read_json(path / "cfg"))
         if freqs_path.exists():
             self.freqs = dict(srsly.read_json(freqs_path))
         if "strings" not in exclude and strings_path.exists():
