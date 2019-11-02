@@ -1,7 +1,8 @@
-from typing import Union, Callable, List, Tuple, Set
+from typing import Union, List, Tuple, Set
 import re
 from spacy.tokens import Doc, Token, Span
 from spacy.util import filter_spans
+import catalogue
 
 try:
     import importlib.metadata as importlib_metadata  # Python 3.8
@@ -9,9 +10,23 @@ except ImportError:
     import importlib_metadata  # noqa: F401
 
 
-DEFAULT_SENSE = "?"
+class ATTRS(object):
+    make_key: str = "default_make_key"
+    split_key: str = "default_split_key"
+    make_spacy_key: str = "default_make_spacy_key"
+    get_phrases: str = "default_get_phrases"
+    merge_phrases: str = "default_merge_phrases"
 
 
+class registry(object):
+    make_key = catalogue.create("sense2vec", "make_key")
+    split_key = catalogue.create("sense2vec", "split_key")
+    make_spacy_key = catalogue.create("sense2vec", "make_spacy_key")
+    get_phrases = catalogue.create("sense2vec", "get_phrases")
+    merge_phrases = catalogue.create("sense2vec", "merge_phrases")
+
+
+@registry.make_key.register(ATTRS.make_key)
 def make_key(word: str, sense: str) -> str:
     """Create a key from a word and sense, e.g. "usage_example|NOUN".
 
@@ -23,6 +38,7 @@ def make_key(word: str, sense: str) -> str:
     return text + "|" + sense
 
 
+@registry.split_key.register(ATTRS.split_key)
 def split_key(key: str) -> Tuple[str, str]:
     """Split a key into word and sense, e.g. ("usage example", "NOUN").
 
@@ -35,11 +51,10 @@ def split_key(key: str) -> Tuple[str, str]:
     return word, sense
 
 
+@registry.make_spacy_key.register(ATTRS.make_spacy_key)
 def make_spacy_key(
-    obj: Union[Token, Span],
-    make_key: Callable[[str, str], str] = make_key,
-    prefer_ents: bool = False,
-) -> str:
+    obj: Union[Token, Span], prefer_ents: bool = False
+) -> Tuple[str, str]:
     """Create a key from a spaCy object, i.e. a Token or Span. If the object
     is a token, the part-of-speech tag (Token.pos_) is used for the sense
     and a special string is created for URLs. If the object is a Span and
@@ -47,14 +62,13 @@ def make_spacy_key(
     span's root part-of-speech tag becomes the sense.
 
     obj (Token / Span): The spaCy object to create the key for.
-    make_key (callable): function that takes a word and sense string and
-        creates the key (e.g. "word|sense").
     prefer_ents (bool): Prefer entity types for single tokens (i.e.
         token.ent_type instead of tokens.pos_). Should be enabled if phrases
         are merged into single tokens, because otherwise the entity sense would
         never be used.
     RETURNS (unicode): The key.
     """
+    default_sense = "?"
     text = obj.text
     if isinstance(obj, Token):
         if obj.like_url:
@@ -66,7 +80,7 @@ def make_spacy_key(
             sense = obj.pos_
     elif isinstance(obj, Span):
         sense = obj.label_ or obj.root.pos_
-    return make_key(text, sense or DEFAULT_SENSE)
+    return (text, sense or default_sense)
 
 
 def get_noun_phrases(doc: Doc) -> List[Span]:
@@ -88,6 +102,7 @@ def get_noun_phrases(doc: Doc) -> List[Span]:
     return spans
 
 
+@registry.get_phrases.register(ATTRS.get_phrases)
 def get_phrases(doc: Doc) -> List[Span]:
     """Compile a list of sense2vec phrases based on a processed Doc: named
     entities and noun chunks without determiners.
@@ -118,6 +133,7 @@ def is_particle(
     return token.pos_ in pos or token.dep_ in deps
 
 
+@registry.merge_phrases.register(ATTRS.merge_phrases)
 def merge_phrases(doc: Doc) -> Doc:
     """Transform a spaCy Doc to match the sense2vec format: merge entities
     into one token and merge noun chunks without determiners.
@@ -131,3 +147,24 @@ def merge_phrases(doc: Doc) -> Doc:
         for span in spans:
             retokenizer.merge(span)
     return doc
+
+
+class SimpleFrozenDict(dict):
+    """Simplified implementation of a frozen dict, mainly used as default
+    function or method argument (for arguments that should default to empty
+    dictionary). Will raise an error if user or spaCy attempts to add to dict.
+    """
+
+    err = (
+        "Can't write to frozen dictionary. This is likely an internal error. "
+        "Are you writing to a default function argument?"
+    )
+
+    def __setitem__(self, key, value):
+        raise NotImplementedError(self.err)
+
+    def pop(self, key, default=None):
+        raise NotImplementedError(self.err)
+
+    def update(self, other):
+        raise NotImplementedError(self.err)
