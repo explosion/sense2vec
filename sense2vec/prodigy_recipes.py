@@ -158,8 +158,10 @@ def to_patterns(
     vectors_path=("Path to pretrained sense2vec vectors", "positional", None, str),
     strategy=("Example selection strategy", "option", "st", str,),
     senses=("The senses to use (all if not set)", "option", "s", split_string),
+    exclude_senses=("The senses to exclude", "option", "es", split_string),
     n_freq=("Number of most frequent entries to limit to", "option", "f", int),
     threshold=("Similarity threshold to consider examples", "option", "t", float),
+    batch_size=("The batch size to use", "option", "b", int),
     eval_whole=("Evaluate whole dataset instead of session", "flag", "E", bool),
     eval_only=("Don't annotate, only evaluate current set", "flag", "O", bool),
     show_scores=("Show all scores for debugging", "flag", "S", bool),
@@ -169,8 +171,22 @@ def evaluate(
     vectors_path,
     strategy="most_similar",
     senses=None,
+    exclude_senses=(
+        "SYM",
+        "MONEY",
+        "ORDINAL",
+        "CARDINAL",
+        "DATE",
+        "TIME",
+        "PERCENT",
+        "QUANTITY",
+        "NUM",
+        "X",
+        "PUNCT",
+    ),
     n_freq=100_000,
     threshold=0.7,
+    batch_size=5,
     eval_whole=False,
     eval_only=False,
     show_scores=False,
@@ -235,7 +251,7 @@ def evaluate(
         keys_by_sense = defaultdict(set)
         for key in keys:
             sense = s2v.split_key(key)[1]
-            if senses is None or sense in senses:
+            if (senses is None or sense in senses) and sense not in exclude_senses:
                 keys_by_sense[sense].add(key)
         keys_by_sense = {s: keys for s, keys in keys_by_sense.items() if len(keys) >= 3}
         all_senses = list(keys_by_sense.keys())
@@ -305,5 +321,9 @@ def evaluate(
         "dataset": dataset,
         "stream": get_stream(),
         "on_exit": on_exit,
-        "config": {"choice_style": "single", "choice_auto_accept": True},
+        "config": {
+            "batch_size": batch_size,
+            "choice_style": "single",
+            "choice_auto_accept": True,
+        },
     }
