@@ -23,7 +23,7 @@ def _get_shape(file_):
 
 
 @plac.annotations(
-    in_file=("Vectors file", "positional", None, str),
+    in_file=("Vectors file (text-based)", "positional", None, str),
     vocab_file=("Vocabulary file", "positional", None, str),
     out_dir=("Path to output directory", "positional", None, str),
 )
@@ -40,6 +40,8 @@ def main(in_file, vocab_file, out_dir):
     output_path = Path(out_dir)
     if not input_path.exists():
         msg.fail("Can't find input file", in_file, exits=1)
+    if input_path.suffix == ".bin":
+        msg.fail("Need text-based vectors file, not binary", in_file, exits=1)
     if not vocab_path.exists():
         msg.fail("Can't find vocab file", vocab_file, exits=1)
     if not output_path.exists():
@@ -68,8 +70,14 @@ def main(in_file, vocab_file, out_dir):
     for key, vector in data:
         s2v.add(key, vector)
     for item in vocab_data:
-        key, freq = item.rstrip().rsplit(" ", 1)
-        s2v.set_freq(key, freq)
+        item = item.rstrip()
+        if item.endswith(" word"):  # for fastText vocabs
+            item = item[:-5]
+        try:
+            key, freq = item.rsplit(" ", 1)
+        except ValueError:
+            continue
+        s2v.set_freq(key, int(freq))
     msg.good("Created the sense2vec model")
     msg.info(f"{len(data)} vectors, {len(all_senses)} total senses")
     s2v.to_disk(output_path)

@@ -25,8 +25,10 @@ models.
 - spaCy **pipeline component** and **extension attributes**.
 - Fully **serializable** so you can easily ship your sense2vec vectors with your
   spaCy model packages.
-- **Train your own vectors** using a pretrained spaCy model and raw text of your
-  choice ([details](#-training-your-own-sense2vec-vectors)).
+- **Train your own vectors** using a pretrained spaCy model, raw text and
+  [GloVe](https://github.com/stanfordnlp/GloVe) or Word2Vec via
+  [fastText](https://github.com/facebookresearch/fastText)
+  ([details](#-training-your-own-sense2vec-vectors)).
 - [Prodigy](https://prodi.gy) annotation recipes for creating lists of similar
   multi-word phrases and converting them to match patterns, e.g. for rule-based
   NER or to boostrap NER annotation ([details & examples](#-prodigy-recipes)).
@@ -652,24 +654,27 @@ To train your own sense2vec vectors, you'll need the following:
   [syntax iterator for noun phrases](https://spacy.io/usage/adding-languages#syntax-iterators),
   you'll need to write your own. (The `doc.noun_chunks` and `doc.ents` are what
   sense2vec uses to determine what's a phrase.)
-- [GloVe](https://github.com/stanfordnlp/GloVe) installed and built. You should
-  be able to clone the repo and run `make` in the directory.
+- [GloVe](https://github.com/stanfordnlp/GloVe) or
+  [fastText](https://github.com/facebookresearch/fastText) installed and built.
+  You should be able to clone the repo and run `make` in the respective
+  directory.
 
 ### Step-by-step process
 
 The training process is split up into several steps to allow you to resume at
 any given point. Processing scripts are designed to operate on single files,
-making it easy to paralellize the work. The scripts in this repo require
-[Glove](https://github.com/stanfordnlp/GloVe), which you need to clone and
-`make`.
+making it easy to paralellize the work. The scripts in this repo require either
+[Glove](https://github.com/stanfordnlp/GloVe) or
+[fastText](https://github.com/facebookresearch/fastText), which you need to
+clone and `make`.
 
-|        | Script                                                           | Description                                                                                                                                                                   |
-| ------ | ---------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **1.** | [`01_parse.py`](scripts/01_parse.py)                             | Use spaCy to parse the raw text and output binary collections of `Doc` objects (see [`DocBin`](https://spacy.io/api/docbin)).                                                 |
-| **2.** | [`02_preprocess.py`](scripts/02_preprocess.py)                   | Load a collection of parsed `Doc` objects produced in the previous step and output text files in the sense2vec format (one sentence per line and merged phrases with senses). |
-| **3.** | [`03_glove_build_counts.py`](scripts/03_glove_build_counts.py)   | Use [GloVe](https://github.com/stanfordnlp/GloVe) to build the vocabulary and counts.                                                                                         |
-| **4.** | [`04_glove_train_vectors.py`](scripts/04_glove_train_vectors.py) | Use [GloVe](https://github.com/stanfordnlp/GloVe) to train vectors.                                                                                                           |
-| **5.** | [`05_export.py`](scripts/05_export.py)                           | Load the vectors and frequencies and output a sense2vec component that can be loaded via `Sense2Vec.from_disk`.                                                               |
+|        | Script                                                                                                                                       | Description                                                                                                                                                                                 |
+| ------ | -------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **1.** | [`01_parse.py`](scripts/01_parse.py)                                                                                                         | Use spaCy to parse the raw text and output binary collections of `Doc` objects (see [`DocBin`](https://spacy.io/api/docbin)).                                                               |
+| **2.** | [`02_preprocess.py`](scripts/02_preprocess.py)                                                                                               | Load a collection of parsed `Doc` objects produced in the previous step and output text files in the sense2vec format (one sentence per line and merged phrases with senses).               |
+| **3.** | [`03_glove_build_counts.py`](scripts/03_glove_build_counts.py)                                                                               | Use [GloVe](https://github.com/stanfordnlp/GloVe) to build the vocabulary and counts. Skip this step if you're using Word2Vec via [FastText](https://github.com/facebookresearch/fastText). |
+| **4.** | [`04_glove_train_vectors.py`](scripts/04_glove_train_vectors.py)<br />[`04_fasttext_train_vectors.py`](scripts/04_fasttext_train_vectors.py) | Use [GloVe](https://github.com/stanfordnlp/GloVe) or [FastText](https://github.com/facebookresearch/fastText) to train vectors.                                                             |
+| **5.** | [`05_export.py`](scripts/05_export.py)                                                                                                       | Load the vectors and frequencies and output a sense2vec component that can be loaded via `Sense2Vec.from_disk`.                                                                             |
 
 For more detailed documentation of the scripts, check out the source or run them
 with `--help`. For example, `python scripts/01_parse.py --help`.
