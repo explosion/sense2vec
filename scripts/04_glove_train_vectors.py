@@ -33,9 +33,9 @@ def main(
     Expects a file containing the shuffled cooccurrences and a vocab file and
     will output a plain-text vectors file.
 
-    Note that this script will call into GloVe in a subprocess and expects you
-    to pass in the GloVe build directory (/build if you run the Makefile). The
-    commands will also be printed if you want to run them separately.
+    Note that this script will call into GloVe and expects you to pass in the
+    GloVe build directory (/build if you run the Makefile). The commands will
+    also be printed if you want to run them separately.
     """
     msg = Printer()
     output_path = Path(out_dir)
@@ -48,7 +48,7 @@ def main(
     if not output_path.exists():
         output_path.mkdir(parents=True)
         msg.good(f"Created output directory {out_dir}")
-    output_file = output_path / "vectors"
+    output_file = output_path / f"vectors_glove_{vector_size}dim"
     msg.info("Training vectors")
     cmd = (
         f"{glove_dir}/glove -save-file {output_file} -threads {n_threads} "
@@ -58,7 +58,7 @@ def main(
     )
     print(cmd)
     train_cmd = os.system(cmd)
-    if train_cmd == 1:
+    if train_cmd != 0:
         msg.fail("Failed training vectors", exits=1)
     msg.good("Successfully trained vectors")
 

@@ -1,4 +1,4 @@
-from typing import Tuple, Union, List
+from typing import Tuple, Union, List, Dict
 from spacy import component
 from spacy.tokens import Doc, Token, Span
 from spacy.vocab import Vocab
@@ -7,7 +7,7 @@ from pathlib import Path
 import numpy
 
 from .sense2vec import Sense2Vec
-from .util import merge_phrases, get_phrases, make_spacy_key
+from .util import registry, SimpleFrozenDict
 
 
 @component(
@@ -38,6 +38,7 @@ class Sense2VecComponent(object):
         vocab: Vocab = None,
         shape: Tuple[int, int] = (1000, 128),
         merge_phrases: bool = False,
+        overrides: Dict[str, str] = SimpleFrozenDict(),
         **kwargs,
     ):
         """Initialize the pipeline component.
@@ -45,22 +46,32 @@ class Sense2VecComponent(object):
         vocab (Vocab): The shared vocab. Mostly used for the shared StringStore.
         shape (tuple): The vector shape.
         merge_phrases (bool): Merge sense2vec phrases into one token.
+        overrides (dict): Optional custom functions to use, mapped to names
+            registered via the registry, e.g. {"make_key": "custom_make_key"}.
         RETURNS (Sense2VecComponent): The newly constructed object.
         """
-        strings = vocab.strings if vocab is not None else None
-        self.s2v = Sense2Vec(shape=shape, strings=strings)
         self.first_run = True
         self.merge_phrases = merge_phrases
+        strings = vocab.strings if vocab is not None else None
+        self.s2v = Sense2Vec(shape=shape, strings=strings)
+        cfg = {
+            "make_spacy_key": "default",
+            "get_phrases": "default",
+            "merge_phrases": "default",
+        }
+        self.s2v.cfg.update(cfg)
+        self.s2v.cfg.update(overrides)
 
     @classmethod
-    def from_nlp(cls, nlp: Language, **kwargs):
+    def from_nlp(cls, nlp: Language, **cfg):
         """Initialize the component from an nlp object. Mostly used as the
-        component factory for the entry point (see setup.py).
+        component factory for the entry point (see setup.cfg).
 
         nlp (Language): The nlp object.
+        **cfg: Optional config parameters.
         RETURNS (Sense2VecComponent): The newly constructed object.
         """
-        return cls(vocab=nlp.vocab, **kwargs)
+        return cls(vocab=nlp.vocab, **cfg)
 
     def __call__(self, doc: Doc) -> Doc:
         """Process a Doc object with the component.
@@ -74,6 +85,7 @@ class Sense2VecComponent(object):
         # Store reference to s2v object on Doc to make sure it's right
         doc._._s2v = self.s2v
         if self.merge_phrases:
+            merge_phrases = registry.merge_phrases.get(doc._._s2v.cfg["merge_phrases"])
             doc = merge_phrases(doc)
         return doc
 
@@ -84,7 +96,7 @@ class Sense2VecComponent(object):
         not added.
         """
         Doc.set_extension("_s2v", default=None)
-        Doc.set_extension("s2v_phrases", getter=get_phrases)
+        Doc.set_extension("s2v_phrases", getter=self.get_phrases)
         for obj in [Token, Span]:
             obj.set_extension("s2v_key", getter=self.s2v_key)
             obj.set_extension("in_s2v", getter=self.in_s2v)
@@ -93,6 +105,16 @@ class Sense2VecComponent(object):
             obj.set_extension("s2v_other_senses", getter=self.s2v_other_senses)
             obj.set_extension("s2v_most_similar", method=self.s2v_most_similar)
             obj.set_extension("s2v_similarity", method=self.s2v_similarity)
+
+    def get_phrases(self, doc: Doc) -> List[Span]:
+        """Extension attribute getter. Compile a list of sense2vec phrases based
+        on a processed Doc: named entities and noun chunks without determiners.
+
+        doc (Doc): The Doc to get phrases from.
+        RETURNS (list): The phrases as a list of Span objects.
+        """
+        func = registry.get_phrases.get(doc._._s2v.cfg["get_phrases"])
+        return func(doc)
 
     def in_s2v(self, obj: Union[Token, Span]) -> bool:
         """Extension attribute getter. Check if a token or span has a vector.
@@ -125,9 +147,11 @@ class Sense2VecComponent(object):
         obj (Token / Span): The object to create the key for.
         RETURNS (unicode): The key.
         """
-        return make_spacy_key(
-            obj, obj.doc._._s2v.make_key, prefer_ents=self.merge_phrases
+        make_spacy_key = registry.make_spacy_key.get(
+            obj.doc._._s2v.cfg["make_spacy_key"]
         )
+        word, sense = make_spacy_key(obj, prefer_ents=self.merge_phrases)
+        return obj.doc._._s2v.make_key(word, sense)
 
     def s2v_similarity(
         self, obj: Union[Token, Span], other: Union[Token, Span]

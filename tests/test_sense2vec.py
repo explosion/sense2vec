@@ -1,6 +1,6 @@
 import pytest
 import numpy
-from sense2vec import Sense2Vec
+from sense2vec import Sense2Vec, registry
 
 
 def test_sense2vec_object():
@@ -129,3 +129,29 @@ def test_sense2vec_to_from_bytes():
     assert s2v.strings["test1"] in new_s2v2
     with pytest.raises(KeyError):  # can't resolve hash
         new_s2v2.strings[s2v.strings["test2"]]
+
+
+def test_registry():
+    """Test that custom functions are used internally if they're registered."""
+
+    @registry.make_key.register("custom_make_key")
+    def custom_make_key(word, sense):
+        return f"{word}###{sense}"
+
+    @registry.split_key.register("custom_split_key")
+    def custom_split_key(key):
+        return tuple(key.split("###"))
+
+    overrides = {"make_key": "custom_make_key", "split_key": "custom_split_key"}
+    test_vector = numpy.asarray([1, 2, 3, 4], dtype=numpy.float32)
+    data = [("clear", "NOUN", 100), ("clear", "VERB", 200), ("clear", "ADJ", 300)]
+    s2v = Sense2Vec(shape=(len(data), 4), overrides=overrides)
+    for word, sense, freq in data:
+        s2v.add(custom_make_key(word, sense), test_vector, freq)
+        s2v.cfg["senses"].append(sense)
+    assert "clear###NOUN" in s2v
+    other_senses = s2v.get_other_senses("clear###NOUN")
+    assert len(other_senses) == 2
+    assert "clear###VERB" in other_senses
+    assert "clear###ADJ" in other_senses
+    assert s2v.get_best_sense("clear") == "clear###ADJ"
