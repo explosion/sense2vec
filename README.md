@@ -20,6 +20,8 @@ models.
 
 ## ✨ Features
 
+![](https://user-images.githubusercontent.com/13643239/68089415-db407800-fe68-11e9-9c45-47338dea49a9.jpg)
+
 - Query **vectors for multi-word phrases** based on part-of-speech tags and
   entity labels.
 - spaCy **pipeline component** and **extension attributes**.
@@ -32,8 +34,6 @@ models.
 - [Prodigy](https://prodi.gy) annotation recipes for creating lists of similar
   multi-word phrases and converting them to match patterns, e.g. for rule-based
   NER or to boostrap NER annotation ([details & examples](#-prodigy-recipes)).
-
-![](https://user-images.githubusercontent.com/13643239/68089415-db407800-fe68-11e9-9c45-47338dea49a9.jpg)
 
 ## 🚀 Usage Examples
 
