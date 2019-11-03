@@ -685,7 +685,15 @@ This package also seamlessly integrates with the [Prodigy](https://prodi.gy)
 annotation tool and exposes recipes for using sense2vec vectors to quickly
 generate lists of multi-word phrases and bootstrap NER annotations. To use a
 recipe, `sense2vec` needs to be installed in the same environment as Prodigy.
-The following recipes are available:
+The following recipes are available – see below for more detailed docs.
+
+| Recipe                                                              | Description                                                          |
+| ------------------------------------------------------------------- | -------------------------------------------------------------------- |
+| [`sense2vec.teach`](#recipe-sense2vecteach)                         | Bootstrap a terminology list using sense2vec.                        |
+| [`sense2vec.to-patterns`](#recipe-sense2vecto-patterns)             | Convert phrases dataset to token-based match patterns.               |
+| [`sense2vec.eval`](#recipe-sense2veceval)                           | Evaluate a sense2vec model by asking about phrase triples.           |
+| [`sense2vec.eval-most-similar`](#recipe-sense2veceval-most-similar) | Evaluate a sense2vec model by correcting the most similar entries.   |
+| [`sense2vec.eval-ab`](#recipe-sense2veceval-ab)                     | Perform an A/B evaluation of two pretrained sense2vec vector models. |
 
 ### <kbd>recipe</kbd> `sense2vec.teach`
 
@@ -718,8 +726,8 @@ prodigy sense2vec.teach tech_phrases /path/to/sense2vec_vectors
 
 ### <kbd>recipe</kbd> `sense2vec.to-patterns`
 
-Convert a list of seed phrases to a list of token-based match patterns that can
-be used with
+Convert a dataset of phrases collected with `sense2vec.teach` to token-based
+match patterns that can be used with
 [spaCy's `EntityRuler`](https://spacy.io/usage/rule-based-matching#entityruler)
 or recipes like `ner.match`. If no output file is specified, the patterns are
 written to stdout. The examples are tokenized so that multi-token terms are
@@ -746,6 +754,113 @@ prodigy sense2vec.to-patterns [dataset] [spacy_model] [label] [--output-file]
 prodigy sense2vec.to-patterns tech_phrases en_core_web_sm TECHNOLOGY
 --output-file /path/to/patterns.jsonl
 ```
+
+### <kbd>recipe</kbd> `sense2vec.eval`
+
+Evaluate a sense2vec model by asking about phrase triples: is word A more
+similar to word B, or to word C? If the human mostly agrees with the model, the
+vectors model is good. The recipe will only ask about vectors with the same
+sense and supports different example selection strategies.
+
+```bash
+prodigy sense2vec.eval [dataset] [vectors_path] [--strategy] [--senses]
+[--exclude-senses] [--n-freq] [--threshold] [--batch-size] [--eval-whole]
+[--eval-only] [--show-scores]
+```
+
+| Argument                  | Type       | Description                                                                                                   |
+| ------------------------- | ---------- | ------------------------------------------------------------------------------------------------------------- |
+| `dataset`                 | positional | Dataset to save annotations to.                                                                               |
+| `vectors_path`            | positional | Path to pretrained sense2vec vectors.                                                                         |
+| `--strategy`, `-st`       | option     | Example selection strategy. `most similar` (default) or `random`.                                             |
+| `--senses`, `-s`          | option     | Comma-separated list of senses to limit the selection to. If not set, all senses in the vectors will be used. |
+| `--exclude-senses`, `-es` | option     | Comma-separated list of senses to exclude. See `prodigy_recipes.EVAL_EXCLUDE_SENSES` fro the defaults.        |
+| `--n-freq`, `-f`          | option     | Number of most frequent entries to limit to.                                                                  |
+| `--threshold`, `-t`       | option     | Minimum similarity threshold to consider examples.                                                            |
+| `--batch-size`, `-b`      | option     | Batch size to use.                                                                                            |
+| `--eval-whole`, `-E`      | flag       | Evaluate the whole dataset instead of the current session.                                                    |
+| `--eval-only`, `-O`       | flag       | Don't annotate, only evaluate the current dataset.                                                            |
+| `--show-scores`, `-S`     | flag       | Show all scores for debugging.                                                                                |
+
+#### Strategies
+
+| Name                 | Description                                                                                                                                                           |
+| -------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `most_similar`       | Pick a random word from a random sense and get its most similar entries of the same sense. Ask about the similarity to the last and middle entry from that selection. |
+| `most_least_similar` | Pick a random word from a random sense and get its least similar entry and then the least similar entry of that.                                                      |
+| `random`             | Pick a random sample of 3 words from the same random sense.                                                                                                           |
+
+#### Example
+
+```bash
+prodigy sense2vec.eval vectors_eval /path/to/sense2vec_vectors
+--senses NOUN,ORG,PRODUCT --threshold 0.5
+```
+
+![UI preview of sense2vec.eval](https://user-images.githubusercontent.com/13643239/67994212-668cf400-fc44-11e9-8fe2-bf264ae32b0a.png)
+
+### <kbd>recipe</kbd> `sense2vec.eval-most-similar`
+
+Evaluate a vectors model by looking at the most similar entries it returns for a
+random phrase and unselecting the mistakes.
+
+```bash
+prodigy sense2vec.eval [dataset] [vectors_path] [--senses] [--exclude-senses]
+[--n-freq] [--n-similar] [--batch-size] [--eval-whole] [--eval-only]
+[--show-scores]
+```
+
+| Argument                  | Type       | Description                                                                                                   |
+| ------------------------- | ---------- | ------------------------------------------------------------------------------------------------------------- |
+| `dataset`                 | positional | Dataset to save annotations to.                                                                               |
+| `vectors_path`            | positional | Path to pretrained sense2vec vectors.                                                                         |
+| `--senses`, `-s`          | option     | Comma-separated list of senses to limit the selection to. If not set, all senses in the vectors will be used. |
+| `--exclude-senses`, `-es` | option     | Comma-separated list of senses to exclude. See `prodigy_recipes.EVAL_EXCLUDE_SENSES` fro the defaults.        |
+| `--n-freq`, `-f`          | option     | Number of most frequent entries to limit to.                                                                  |
+| `--n-similar`, `-n`       | option     | Number of similar items to check. Defaults to `10`.                                                           |
+| `--batch-size`, `-b`      | option     | Batch size to use.                                                                                            |
+| `--eval-whole`, `-E`      | flag       | Evaluate the whole dataset instead of the current session.                                                    |
+| `--eval-only`, `-O`       | flag       | Don't annotate, only evaluate the current dataset.                                                            |
+| `--show-scores`, `-S`     | flag       | Show all scores for debugging.                                                                                |
+
+```bash
+prodigy sense2vec.eval-most-similar vectors_eval_sim /path/to/sense2vec_vectors
+--senses NOUN,ORG,PRODUCT
+```
+
+### <kbd>recipe</kbd> `sense2vec.eval-ab`
+
+Perform an A/B evaluation of two pretrained sense2vec vector models by comparing
+the most similar entries they return for a random phrase. The UI shows two
+randomized options with the most similar entries of each model and highlights
+the phrases that differ. At the end of the annotation session the overall stats
+and preferred model are shown.
+
+```bash
+prodigy sense2vec.eval [dataset] [vectors_path_a] [vectors_path_b] [--senses]
+[--exclude-senses] [--n-freq] [--n-similar] [--batch-size] [--eval-whole]
+[--eval-only] [--show-mapping]
+```
+
+| Argument                  | Type       | Description                                                                                                   |
+| ------------------------- | ---------- | ------------------------------------------------------------------------------------------------------------- |
+| `dataset`                 | positional | Dataset to save annotations to.                                                                               |
+| `vectors_path_a`          | positional | Path to pretrained sense2vec vectors.                                                                         |
+| `vectors_path_b`          | positional | Path to pretrained sense2vec vectors.                                                                         |
+| `--senses`, `-s`          | option     | Comma-separated list of senses to limit the selection to. If not set, all senses in the vectors will be used. |
+| `--exclude-senses`, `-es` | option     | Comma-separated list of senses to exclude. See `prodigy_recipes.EVAL_EXCLUDE_SENSES` fro the defaults.        |
+| `--n-freq`, `-f`          | option     | Number of most frequent entries to limit to.                                                                  |
+| `--n-similar`, `-n`       | option     | Number of similar items to check. Defaults to `10`.                                                           |
+| `--batch-size`, `-b`      | option     | Batch size to use.                                                                                            |
+| `--eval-whole`, `-E`      | flag       | Evaluate the whole dataset instead of the current session.                                                    |
+| `--eval-only`, `-O`       | flag       | Don't annotate, only evaluate the current dataset.                                                            |
+| `--show-mapping`, `-S`    | flag       | Show which models are option 1 and option 2 in the UI (for debugging).                                        |
+
+```bash
+prodigy sense2vec.eval-ab vectors_eval_sim /path/to/sense2vec_vectors_a /path/to/sense2vec_vectors_b --senses NOUN,ORG,PRODUCT
+```
+
+![UI preview of sense2vec.eval-ab](https://user-images.githubusercontent.com/13643239/68088514-46d21780-fe60-11e9-9b29-fe313bb2154d.png)
 
 ## Pretrained vectors
 
