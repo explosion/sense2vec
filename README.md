@@ -31,9 +31,10 @@ models.
   [GloVe](https://github.com/stanfordnlp/GloVe) or Word2Vec via
   [fastText](https://github.com/facebookresearch/fastText)
   ([details](#-training-your-own-sense2vec-vectors)).
-- [Prodigy](https://prodi.gy) annotation recipes for creating lists of similar
-  multi-word phrases and converting them to match patterns, e.g. for rule-based
-  NER or to boostrap NER annotation ([details & examples](#-prodigy-recipes)).
+- [Prodigy](https://prodi.gy) **annotation recipes** for evaluating models,
+  creating lists of similar multi-word phrases and converting them to match
+  patterns, e.g. for rule-based NER or to boostrap NER annotation
+  ([details & examples](#-prodigy-recipes)).
 
 ## 🚀 Usage Examples
 
