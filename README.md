@@ -88,7 +88,7 @@ vectors as positional arguments on the command line. For example:
 
 ```bash
 pip install streamlit
-streamlit run scripts/streamlit_sense2vec.py /path/to/vectors
+streamlit run https://raw.githubusercontent.com/explosion/sense2vec/master/scripts/streamlit_sense2vec.py /path/to/vectors
 ```
 
 ## ⏳ Installation & Setup
