@@ -3,7 +3,7 @@ from sense2vec.util import make_key, make_spacy_key, merge_phrases
 import spacy
 from spacy.tokens import DocBin
 import plac
-from wasabi import Printer
+from wasabi import msg
 from pathlib import Path
 import tqdm
 
@@ -30,7 +30,6 @@ def main(in_file, out_dir, spacy_model="en_core_web_sm", n_process=1):
     Rats|NOUN ,|PUNCT mould|NOUN and|CCONJ broken_furniture|NOUN :|PUNCT
     the|DET scandal|NOUN of|ADP the|DET UK|GPE 's|PART refugee_housing|NOUN
     """
-    msg = Printer()
     input_path = Path(in_file)
     output_path = Path(out_dir)
     if not input_path.exists():

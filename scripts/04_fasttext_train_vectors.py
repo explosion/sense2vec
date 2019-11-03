@@ -2,7 +2,7 @@
 import plac
 import os
 from pathlib import Path
-from wasabi import Printer
+from wasabi import msg
 
 
 @plac.annotations(
@@ -35,7 +35,6 @@ def main(
     built fasttext binary. The command will also be printed if you want to run
     it separately.
     """
-    msg = Printer()
     input_path = Path(in_dir)
     output_path = Path(out_dir)
     if not Path(fasttext_bin).exists():

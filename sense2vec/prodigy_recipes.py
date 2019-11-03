@@ -6,7 +6,7 @@ from sense2vec import Sense2Vec
 import srsly
 import spacy
 import random
-from wasabi import Printer
+from wasabi import msg
 from collections import defaultdict, Counter
 import copy
 import catalogue
@@ -193,7 +193,6 @@ def evaluate(
     similar to word B, or to word C? If the human mostly agrees with the model,
     the vectors model is good.
     """
-    msg = Printer()
     random.seed(0)
     log("RECIPE: Starting recipe sense2vec.eval", locals())
     strategies = eval_strategies.get_all()
@@ -392,7 +391,6 @@ def eval_most_similar(
     for a random phrase and unselecting the mistakes.
     """
     log("RECIPE: Starting recipe sense2vec.eval-most-similar", locals())
-    msg = Printer()
     random.seed(0)
     s2v = Sense2Vec().from_disk(vectors_path)
     log("RECIPE: Loaded sense2vec vectors", vectors_path)
@@ -506,7 +504,6 @@ def eval_ab(
     session the overall stats and preferred model are shown.
     """
     log("RECIPE: Starting recipe sense2vec.eval-ab", locals())
-    msg = Printer()
     random.seed(0)
     s2v_a = Sense2Vec().from_disk(vectors_path_a)
     s2v_b = Sense2Vec().from_disk(vectors_path_b)

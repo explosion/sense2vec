@@ -2,7 +2,7 @@
 import plac
 import os
 from pathlib import Path
-from wasabi import Printer
+from wasabi import msg
 
 
 @plac.annotations(
@@ -37,7 +37,6 @@ def main(
     GloVe build directory (/build if you run the Makefile). The commands will
     also be printed if you want to run them separately.
     """
-    msg = Printer()
     output_path = Path(out_dir)
     if not Path(glove_dir).exists():
         msg.fail("Can't find GloVe build directory", glove_dir, exits=1)

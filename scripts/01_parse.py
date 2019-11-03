@@ -2,7 +2,7 @@
 import spacy
 from spacy.tokens import DocBin
 import plac
-from wasabi import Printer
+from wasabi import msg
 from pathlib import Path
 import tqdm
 
@@ -20,7 +20,6 @@ def main(in_file, out_dir, spacy_model="en_core_web_sm", n_process=1):
     Expects an input file with one sentence per line and will output a .spacy
     file of the parsed collection of Doc objects (DocBin).
     """
-    msg = Printer()
     input_path = Path(in_file)
     output_path = Path(out_dir)
     if not input_path.exists():

@@ -3,7 +3,7 @@ from sense2vec import Sense2Vec
 from sense2vec.util import split_key
 from pathlib import Path
 import plac
-from wasabi import Printer
+from wasabi import msg
 import numpy
 
 
@@ -34,7 +34,6 @@ def main(in_file, vocab_file, out_dir):
     Expects a vectors.txt and a vocab file trained with GloVe and exports
     a component that can be loaded with Sense2vec.from_disk.
     """
-    msg = Printer()
     input_path = Path(in_file)
     vocab_path = Path(vocab_file)
     output_path = Path(out_dir)
