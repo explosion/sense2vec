@@ -593,7 +593,7 @@ def eval_ab(
                 counts[model_id] += 1
         preference = max(counts)
         ratio = f"{counts[preference]} / {sum(counts.values()) - counts[preference]}"
-        msg.info(f"Evaluating data from {set_id}")
+        msg.info(f"Evaluating data from '{set_id}'")
         msg.text(f"You rejected {len(rejected)} and ignored {len(ignored)} pair(s)")
         if counts["A"] == counts["B"]:
             msg.warn(f"No preference ({ratio})")
