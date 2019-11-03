@@ -598,7 +598,8 @@ def eval_ab(
         if counts["A"] == counts["B"]:
             msg.warn(f"No preference ({ratio})")
         else:
-            msg.good(f"You preferred vectors {preference} ({ratio})")
+            pc = counts[preference] / sum(counts.values())
+            msg.good(f"You preferred vectors {preference} {ratio} ({pc:.0%})")
             msg.text(mapping[preference])
 
     def on_exit(ctrl):
