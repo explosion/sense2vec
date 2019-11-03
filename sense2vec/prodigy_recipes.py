@@ -575,10 +575,8 @@ def eval_ab(
                 INPUT_HASH_ATTR: task_hash,
             }
             if show_mapping:
-                task["meta"] = {
-                    i + 1: f"{opt['id']} ({mapping[opt['id']]})"
-                    for i, opt in enumerate(options)
-                }
+                opt_map = [f"{opt['id']} ({mapping[opt['id']]})" for opt in options]
+                task["meta"] = {i + 1: opt for i, opt in enumerate(opt_map)}
             yield task
 
     def eval_dataset(set_id):
