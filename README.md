@@ -36,7 +36,7 @@ models.
   patterns, e.g. for rule-based NER or to boostrap NER annotation
   ([details & examples](#-prodigy-recipes)).
 
-## 🚀 Usage Examples
+## 🚀 Quickstart
 
 ### Standalone usage
 
@@ -72,6 +72,23 @@ most_similar = doc[3:6]._.s2v_most_similar(3)
 # [(('machine learning', 'NOUN'), 0.8986967),
 #  (('computer vision', 'NOUN'), 0.8636297),
 #  (('deep learning', 'NOUN'), 0.8573361)]
+```
+
+### Interactive demos
+
+<img width="34%" src="https://user-images.githubusercontent.com/13643239/68093565-1bb6ea80-fe97-11e9-8192-e293acc290fe.png" align="right" />
+
+To try out our pretrained vectors trained on Reddit comments, check out the
+[interactive sense2vec demo](https://explosion.ai/demos/sense2vec).
+
+This repo also includes a [Streamlit](https://streamlit.io) demo script for
+exploring vectors and the most similar phrases. After installing `streamlit`,
+you can run the script with `streamlit run` and one or more paths to pretrained
+vectors as positional arguments on the command line. For example:
+
+```bash
+pip install streamlit
+streamlit run scripts/streamlit_sense2vec.py /path/to/vectors
 ```
 
 ## ⏳ Installation & Setup
