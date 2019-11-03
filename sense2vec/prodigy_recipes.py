@@ -558,8 +558,8 @@ def eval_ab(
                 continue
             if key not in keys_b:
                 continue
-            similar_a = set(s2v_a.most_similar(key, n=n_similar))
-            similar_b = set(s2v_b.most_similar(key, n=n_similar))
+            similar_a = set([k for k, _ in s2v_a.most_similar(key, n=n_similar)])
+            similar_b = set([k for k, _ in s2v_b.most_similar(key, n=n_similar)])
             overlap = similar_a.intersection(similar_b)
             options = [
                 {"id": "A", "html": get_option_html(similar_a, overlap)},
