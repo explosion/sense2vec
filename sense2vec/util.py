@@ -61,7 +61,7 @@ def make_spacy_key(
     RETURNS (unicode): The key.
     """
     default_sense = "?"
-    text = obj.text
+    text = get_true_cased_text(obj)
     if isinstance(obj, Token):
         if obj.like_url:
             text = "%%URL"
@@ -73,6 +73,27 @@ def make_spacy_key(
     elif isinstance(obj, Span):
         sense = obj.label_ or obj.root.pos_
     return (text, sense or default_sense)
+
+
+def get_true_cased_text(obj):
+    if isinstance(obj, Token) and not obj.is_sent_start:
+        return obj.text
+    elif not obj[0].is_sent_start:
+        return obj.text
+    elif obj.ent_type_:
+        return obj.text
+    # Okay we have a non-entity, starting a sentence. Is its first letter upper-case?
+    elif not obj.text[0].isupper():
+        return obj.text
+    # ..Only its first letter?
+    elif any(c.isupper() for c in obj.text[1:]):
+        return obj.text
+    # Is it "I"?
+    elif obj.text.split("|")[0] == "I":
+        return obj.text
+    else:
+        # Okay fix the casing.
+        return obj.text.lower()
 
 
 def get_noun_phrases(doc: Doc) -> List[Span]:
