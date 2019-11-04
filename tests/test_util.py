@@ -1,6 +1,7 @@
+import pytest
 from spacy.tokens import Doc, Span
 from spacy.vocab import Vocab
-from sense2vec.util import get_true_cased_text
+from sense2vec.util import get_true_cased_text, make_key, split_key
 
 
 def get_doc(vocab, words, spaces, pos):
@@ -43,3 +44,16 @@ def test_get_true_cased_text():
     assert get_true_cased_text(doc4[0:8]) == "Ok, Barack Obama was pretty good..."
     assert get_true_cased_text(doc4[2:4]) == "Barack Obama"
     assert get_true_cased_text(doc4[3]) == "Obama"
+
+
+@pytest.mark.parametrize(
+    "word,sense,expected",
+    [
+        ("foo", "bar", "foo|bar"),
+        ("hello world", "TEST", "hello_world|TEST"),
+        ("hello world |test!", "TEST", "hello_world_|test!|TEST"),
+    ],
+)
+def test_make_split_key(word, sense, expected):
+    assert make_key(word, sense) == expected
+    assert split_key(expected) == (word, sense)
