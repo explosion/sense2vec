@@ -61,7 +61,7 @@ def make_spacy_key(
     RETURNS (unicode): The key.
     """
     default_sense = "?"
-    text = obj.text
+    text = get_true_cased_text(obj)
     if isinstance(obj, Token):
         if obj.like_url:
             text = "%%URL"
@@ -73,6 +73,28 @@ def make_spacy_key(
     elif isinstance(obj, Span):
         sense = obj.label_ or obj.root.pos_
     return (text, sense or default_sense)
+
+
+def get_true_cased_text(obj: Union[Token, Span]):
+    """Correct casing so that sentence-initial words are not title-cased. Named
+    entities and other special cases (such as the word "I") should still be
+    title-cased.
+
+    obj (Token / Span): The spaCy object to conver to text.
+    RETURNS (unicode): The converted text.
+    """
+    if isinstance(obj, Token) and (not obj.is_sent_start or obj.ent_type_):
+        return obj.text
+    elif isinstance(obj, Span) and (not obj[0].is_sent_start or obj[0].ent_type):
+        return obj.text
+    elif (  # Okay, we have a non-entity, starting a sentence
+        not obj.text[0].isupper()  # Is its first letter upper-case?
+        or any(c.isupper() for c in obj.text[1:])  # ..Only its first letter?
+        or obj.text[0] == "I"  # Is it "I"?
+    ):
+        return obj.text
+    else:  # Fix the casing
+        return obj.text.lower()
 
 
 def get_noun_phrases(doc: Doc) -> List[Span]:
