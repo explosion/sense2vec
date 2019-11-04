@@ -89,7 +89,7 @@ def get_true_cased_text(obj: Union[Token, Span]):
         return obj.text
     elif (  # Okay, we have a non-entity, starting a sentence
         not obj.text[0].isupper()  # Is its first letter upper-case?
-        or any(c.isupper() for c in obj.text[1:])  # # ..Only its first letter?
+        or any(c.isupper() for c in obj.text[1:])  # ..Only its first letter?
         or obj.text[0] == "I"  # Is it "I"?
     ):
         return obj.text
