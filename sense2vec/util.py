@@ -75,22 +75,25 @@ def make_spacy_key(
     return (text, sense or default_sense)
 
 
-def get_true_cased_text(obj):
+def get_true_cased_text(obj: Union[Token, Span]):
+    """Correct casing so that sentence-initial words are not title-cased. Named
+    entities and other special cases (such as the word "I") should still be
+    title-cased.
+
+    obj (Token / Span): The spaCy object to conver to text.
+    RETURNS (unicode): The converted text.
+    """
     if isinstance(obj, Token) and (not obj.is_sent_start or obj.ent_type_):
         return obj.text
     elif isinstance(obj, Span) and (not obj[0].is_sent_start or obj[0].ent_type):
         return obj.text
-    # Okay we have a non-entity, starting a sentence. Is its first letter upper-case?
-    elif not obj.text[0].isupper():
+    elif (  # Okay, we have a non-entity, starting a sentence
+        not obj.text[0].isupper()  # Is its first letter upper-case?
+        or any(c.isupper() for c in obj.text[1:])  # # ..Only its first letter?
+        or obj.text[0] == "I"  # Is it "I"?
+    ):
         return obj.text
-    # ..Only its first letter?
-    elif any(c.isupper() for c in obj.text[1:]):
-        return obj.text
-    # Is it "I"?
-    elif obj.text.split("|")[0] == "I":
-        return obj.text
-    else:
-        # Okay fix the casing.
+    else:  # Fix the casing
         return obj.text.lower()
 
 
