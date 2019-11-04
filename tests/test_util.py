@@ -26,19 +26,20 @@ def test_get_true_cased_text():
     assert get_true_cased_text(doc2[0:4]) == "I can understand."
     assert get_true_cased_text(doc2[0]) == "I"
     assert get_true_cased_text(doc2[2:4]) == "understand."
-    words3 = ["Obama", "was", "pretty", "good", "..."]
-    spaces3 = [True, True, True, False, False]
-    pos3 = ["PROPN", "VERB", "ADV", "ADJ", "PUNCT"]
+    words3 = ["You", "think", "Obama", "was", "pretty", "good", "..."]
+    spaces3 = [True, True, True, True, True, False, False]
+    pos3 = ["PRON", "VERB", "PROPN", "VERB", "ADV", "ADJ", "PUNCT"]
     doc3 = get_doc(vocab, words3, spaces3, pos3)
-    doc3.ents = [Span(doc3, 0, 1, label="PERSON")]
-    assert get_true_cased_text(doc3[0:5]) == "Obama was pretty good..."
-    assert get_true_cased_text(doc3[0]) == "Obama"
-    assert get_true_cased_text(doc3[2:4]) == "pretty good"
-    words4 = ["Barack", "Obama", "was", "pretty", "good", "..."]
-    spaces4 = [True, True, True, True, False, False]
-    pos4 = ["PROPN", "PROPN", "VERB", "ADV", "ADJ", "PUNCT"]
+    doc3.ents = [Span(doc3, 2, 3, label="PERSON")]
+    assert get_true_cased_text(doc3[0:7]) == "You think Obama was pretty good..."
+    assert get_true_cased_text(doc3[0]) == "you"
+    assert get_true_cased_text(doc3[2]) == "Obama"
+    assert get_true_cased_text(doc3[4:6]) == "pretty good"
+    words4 = ["Ok", ",", "Barack", "Obama", "was", "pretty", "good", "..."]
+    spaces4 = [False, True, True, True, True, True, False, False]
+    pos4 = ["INTJ", "PUNCT", "PROPN", "PROPN", "VERB", "ADV", "ADJ", "PUNCT"]
     doc4 = get_doc(vocab, words4, spaces4, pos4)
-    doc4.ents = [Span(doc4, 0, 2, label="PERSON")]
-    assert get_true_cased_text(doc4[0:6]) == "Barack Obama was pretty good..."
-    assert get_true_cased_text(doc4[0:2]) == "Barack Obama"
-    assert get_true_cased_text(doc4[1]) == "Obama"
+    doc4.ents = [Span(doc4, 2, 4, label="PERSON")]
+    assert get_true_cased_text(doc4[0:8]) == "Ok, Barack Obama was pretty good..."
+    assert get_true_cased_text(doc4[2:4]) == "Barack Obama"
+    assert get_true_cased_text(doc4[3]) == "Obama"
