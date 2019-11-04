@@ -76,11 +76,9 @@ def make_spacy_key(
 
 
 def get_true_cased_text(obj):
-    if isinstance(obj, Token) and not obj.is_sent_start:
+    if isinstance(obj, Token) and (not obj.is_sent_start or obj.ent_type_):
         return obj.text
-    elif not obj[0].is_sent_start:
-        return obj.text
-    elif obj.ent_type_:
+    elif isinstance(obj, Span) and (not obj[0].is_sent_start or obj[0].ent_type):
         return obj.text
     # Okay we have a non-entity, starting a sentence. Is its first letter upper-case?
     elif not obj.text[0].isupper():
