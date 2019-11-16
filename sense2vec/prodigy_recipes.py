@@ -55,7 +55,7 @@ def teach(
     for seed in seeds:
         key = s2v.get_best_sense(seed)
         if key is None:
-            raise ValueError(f"Can't find seed term '{seed}' in vectors")
+            msg.fail(f"Can't find seed term '{seed}' in vectors", exits=1)
         accept_keys.append(key)
         best_word, best_sense = s2v.split_key(key)
         task = {
@@ -147,7 +147,7 @@ def to_patterns(
     log(f"RECIPE: Loaded spaCy model '{spacy_model}'")
     DB = connect()
     if dataset not in DB:
-        raise ValueError(f"Can't find dataset '{dataset}'")
+        msg.fail(f"Can't find dataset '{dataset}'", exits=1)
     examples = DB.get_dataset(dataset)
     terms = set([eg["word"] for eg in examples if eg["answer"] == "accept"])
     if case_sensitive:
