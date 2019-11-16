@@ -44,6 +44,9 @@ def teach(
     suggestions will be adjusted as you annotate and accept similar phrases. For
     each seed term, the best matching sense according to the sense2vec vectors
     will be used.
+
+    If no similar terms are found above the given threshold, the threshold is
+    lowered by 0.1 and similar terms are requested again.
     """
     log("RECIPE: Starting recipe sense2vec.teach", locals())
     s2v = Sense2Vec().from_disk(vectors_path)
@@ -98,6 +101,7 @@ def teach(
         """Continue querying sense2vec whenever we get a new phrase and
         presenting examples to the user with a similarity above the threshold
         parameter."""
+        nonlocal threshold
         while True:
             log(
                 f"RECIPE: Looking for {n_similar} phrases most similar to "
@@ -105,6 +109,7 @@ def teach(
             )
             most_similar = s2v.most_similar(accept_keys, n=n_similar)
             log(f"RECIPE: Found {len(most_similar)} most similar phrases")
+            n_skipped = 0
             for key, score in most_similar:
                 if key not in seen and score > threshold:
                     seen.add(key)
@@ -113,6 +118,20 @@ def teach(
                     # may fail when trying to serialize it to/from JSON
                     meta = {"score": float(score)}
                     yield {"text": key, "word": word, "sense": sense, "meta": meta}
+                else:
+                    n_skipped += 1
+            if n_skipped:
+                log(f"RECIPE: Skipped {n_skipped} phrases below threshold {threshold}")
+            if n_skipped == len(most_similar):
+                # No most similar phrases were found that are above the
+                # threshold, so lower the threshold if it's not already 0 or
+                # return empty list so Prodigy shows "no tasks available"
+                new_threshold = threshold - 0.1
+                if new_threshold <= 0.0:
+                    log(f"RECIPE: No suggestions for threshold {threshold:.2}")
+                    return []
+                log(f"RECIPE: Lowering threshold from {threshold:.2} to {new_threshold:.2}")
+                threshold = new_threshold
 
     stream = get_stream()
 
