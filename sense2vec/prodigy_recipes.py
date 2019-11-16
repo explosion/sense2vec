@@ -149,11 +149,12 @@ def to_patterns(
     if dataset not in DB:
         raise ValueError(f"Can't find dataset '{dataset}'")
     examples = DB.get_dataset(dataset)
-    terms = [eg["text"] for eg in examples if eg["answer"] == "accept"]
+    terms = set([eg["word"] for eg in examples if eg["answer"] == "accept"])
     if case_sensitive:
-        patterns = [{"text": t.text for t in nlp.make_doc(term)} for term in terms]
+        patterns = [[{"text": t.lower_} for t in nlp.make_doc(term)] for term in terms]
     else:
-        patterns = [{"lower": t.lower_ for t in nlp.make_doc(term)} for term in terms]
+        terms = set([word.lower() for word in terms])
+        patterns = [[{"lower": t.lower_} for t in nlp.make_doc(term)] for term in terms]
     patterns = [{"label": label, "pattern": pattern} for pattern in patterns]
     log(f"RECIPE: Generated {len(patterns)} patterns")
     if not dry:
