@@ -27,6 +27,7 @@ EVAL_EXCLUDE_SENSES = ("SYM", "MONEY", "ORDINAL", "CARDINAL", "DATE", "TIME",
     threshold=("Similarity threshold for sense2vec", "option", "t", float),
     n_similar=("Number of similar items to get at once", "option", "n", int),
     batch_size=("Batch size for submitting annotations", "option", "bs", int),
+    case_sensitive=("Show the same terms with different casing", "flag", "CS", bool),
     resume=("Resume from existing phrases dataset", "flag", "R", bool),
 )
 def teach(
@@ -36,6 +37,7 @@ def teach(
     threshold=0.85,
     n_similar=20,
     batch_size=5,
+    case_sensitive=False,
     resume=False,
 ):
     """
@@ -53,7 +55,7 @@ def teach(
     log("RECIPE: Loaded sense2vec vectors", vectors_path)
     html_template = "<span style='font-size: {{theme.largeText}}px'>{{word}}</span>"
     accept_keys = []
-    seen = set(accept_keys)
+    seen = set()
     seed_tasks = []
     for seed in seeds:
         key = s2v.get_best_sense(seed)
@@ -61,6 +63,7 @@ def teach(
             msg.fail(f"Can't find seed term '{seed}' in vectors", exits=1)
         accept_keys.append(key)
         best_word, best_sense = s2v.split_key(key)
+        seen.add(best_word if case_sensitive else best_word.lower())
         task = {
             "text": key,
             "word": best_word,
@@ -81,9 +84,13 @@ def teach(
 
     if resume:
         prev = DB.get_dataset(dataset)
-        prev_accept = [eg["text"] for eg in prev if eg["answer"] == "accept"]
-        accept_keys += prev_accept
-        seen.update(set(accept_keys))
+        prev_accept_keys = [eg["text"] for eg in prev if eg["answer"] == "accept"]
+        prev_words = [
+            eg["word"] if case_sensitive else eg["word"].lower()
+            for eg in prev
+        ]
+        accept_keys += prev_accept_keys
+        seen.update(set(prev_words))
         log(f"RECIPE: Resuming from {len(prev)} previous examples in dataset {dataset}")
 
     def update(answers):
@@ -107,10 +114,16 @@ def teach(
             most_similar = s2v.most_similar(accept_keys, n=n_similar)
             log(f"RECIPE: Found {len(most_similar)} most similar phrases")
             n_skipped = 0
+            n_duplicate = 0
             for key, score in most_similar:
-                if key not in seen and score > threshold:
-                    seen.add(key)
+                if score > threshold:
                     word, sense = s2v.split_key(key)
+                    if (case_sensitive and word in seen) or (
+                        not case_sensitive and word.lower() in seen
+                    ):
+                        n_duplicate += 1
+                        continue
+                    seen.add(word if case_sensitive else word.lower())
                     # Make sure the score is a regular float, otherwise server
                     # may fail when trying to serialize it to/from JSON
                     meta = {"score": float(score), "sense": sense}
@@ -119,7 +132,7 @@ def teach(
                     n_skipped += 1
             if n_skipped:
                 log(f"RECIPE: Skipped {n_skipped} phrases below threshold {threshold}")
-            if n_skipped == len(most_similar):
+            if n_skipped == len(most_similar) - n_duplicate:
                 # No most similar phrases were found that are above the
                 # threshold, so lower the threshold if it's not already 0 or
                 # return empty list so Prodigy shows "no tasks available"
@@ -127,7 +140,9 @@ def teach(
                 if new_threshold <= 0.0:
                     log(f"RECIPE: No suggestions for threshold {threshold:.2}")
                     return []
-                log(f"RECIPE: Lowering threshold from {threshold:.2} to {new_threshold:.2}")
+                log(
+                    f"RECIPE: Lowering threshold from {threshold:.2} to {new_threshold:.2}"
+                )
                 threshold = new_threshold
 
     stream = get_stream()
