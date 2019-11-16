@@ -35,7 +35,7 @@ def teach(
     vectors_path,
     seeds,
     threshold=0.85,
-    n_similar=20,
+    n_similar=100,
     batch_size=5,
     case_sensitive=False,
     resume=False,
