@@ -128,7 +128,7 @@ def teach(
 @prodigy.recipe(
     "sense2vec.to-patterns",
     dataset=("Phrase dataset to convert", "positional", None, str),
-    spacy_model=("spaCy model for tokenization", "positional", None, str),
+    spacy_model=("spaCy model or blank:en (for tokenization)", "positional", None, str),
     label=("Label to apply to all patterns", "positional", None, str),
     output_file=("Optional output file. Defaults to stdout", "option", "o", str),
     case_sensitive=("Make patterns case-sensitive", "flag", "CS", bool),
@@ -144,9 +144,18 @@ def to_patterns(
     stdout. The examples are tokenized so that multi-token terms are represented
     correctly, e.g.:
     {"label": "SHOE_BRAND", "pattern": [{"LOWER": "new"}, {"LOWER": "balance"}]}
+
+    For tokenization, you can either pass in the name of a spaCy model (e.g. if
+    you're using a model with custom tokenization), or "blank:" plus the
+    language code you want to use, e.g. blank:en or blank:de. Make sure to use
+    the same language / tokenizer you're planning to use at runtime – otherwise
+    your patterns may not match.
     """
     log("RECIPE: Starting recipe sense2vec.to-patterns", locals())
-    nlp = spacy.load(spacy_model)
+    if spacy_model.startswith("blank:"):
+        nlp = spacy.blank(spacy_model.replace("blank:", ""))
+    else:
+        nlp = spacy.load(spacy_model)
     log(f"RECIPE: Loaded spaCy model '{spacy_model}'")
     DB = connect()
     if dataset not in DB:
