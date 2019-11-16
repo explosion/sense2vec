@@ -31,7 +31,7 @@ st.sidebar.markdown(
 word = st.sidebar.text_input("Word", DEFAULT_WORD)
 sense_dropdown = st.sidebar.empty()
 n_similar = st.sidebar.slider("Number of similar entries", 1, 100, value=20, step=1)
-case_insensitive = st.sidebar.checkbox("Case-insensitive (filter only)")
+show_senses = st.sidebar.checkbox("Distinguish results by sense")
 vectors_path = st.sidebar.selectbox("Vectors", SENSE2VEC_PATHS)
 
 if not vectors_path:
@@ -48,27 +48,28 @@ streamlit run {sys.argv[0]} /path/to/sense2vec /path/to/other_sense2vec
 else:
     s2v = load_vectors(vectors_path)
     sense = sense_dropdown.selectbox("Sense", ["auto"] + s2v.senses)
-
     key = s2v.get_best_sense(word) if sense == "auto" else s2v.make_key(word, sense)
     st.header(f"{word} ({sense})")
     if key is None or key not in s2v:
         st.error(f"**Not found:** No vector available for '{word}' ({sense}).")
     else:
         most_similar = s2v.most_similar(key, n=n_similar)
-
         rows = []
-        if case_insensitive:
-            filtered = {k.lower(): (k, s) for k, s in most_similar if k.lower() != key}
-            most_similar = filtered.values()
+        seen = set()
         for sim_key, sim_score in most_similar:
             sim_word, sim_sense = s2v.split_key(sim_key)
+            if not show_senses and sim_word in seen:
+                continue
+            seen.add(sim_word)
             sim_freq = s2v.get_freq(sim_key)
-            row = f"| {sim_word} | `{sim_sense}` | `{sim_score:.3f}` | {sim_freq:,} |"
+            if show_senses:
+                sim_word = f"{sim_word} `{sim_sense}`"
+            row = f"| {sim_word} | `{sim_score:.3f}` | {sim_freq:,} |"
             rows.append(row)
         table_rows = "\n".join(rows)
         table = f"""
-        | Word | Sense | Similarity | Frequency |
-        | --- | --- | ---: | ---: |
+        | Word | Similarity | Frequency |
+        | --- | ---: | ---: |
         {table_rows}
         """
         st.markdown(table)
