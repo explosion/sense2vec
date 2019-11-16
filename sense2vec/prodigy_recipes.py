@@ -51,10 +51,7 @@ def teach(
     log("RECIPE: Starting recipe sense2vec.teach", locals())
     s2v = Sense2Vec().from_disk(vectors_path)
     log("RECIPE: Loaded sense2vec vectors", vectors_path)
-    html_template = (
-        "<span style='font-size: {{theme.largeText}}px'>{{word}}</span>"
-        "<strong style='opacity: 0.75; padding-left: 10px'>{{sense}}</strong>"
-    )
+    html_template = "<span style='font-size: {{theme.largeText}}px'>{{word}}</span>"
     accept_keys = []
     seen = set(accept_keys)
     seed_tasks = []
@@ -68,7 +65,7 @@ def teach(
             "text": key,
             "word": best_word,
             "sense": best_sense,
-            "meta": {"score": 1.0},
+            "meta": {"score": 1.0, "sense": best_sense},
             "answer": "accept",
         }
         seed_tasks.append(set_hashes(task))
@@ -116,7 +113,7 @@ def teach(
                     word, sense = s2v.split_key(key)
                     # Make sure the score is a regular float, otherwise server
                     # may fail when trying to serialize it to/from JSON
-                    meta = {"score": float(score)}
+                    meta = {"score": float(score), "sense": sense}
                     yield {"text": key, "word": word, "sense": sense, "meta": meta}
                 else:
                     n_skipped += 1
