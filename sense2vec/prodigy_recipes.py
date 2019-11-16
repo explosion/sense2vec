@@ -48,7 +48,10 @@ def teach(
     log("RECIPE: Starting recipe sense2vec.teach", locals())
     s2v = Sense2Vec().from_disk(vectors_path)
     log("RECIPE: Loaded sense2vec vectors", vectors_path)
-    html_template = "<span style='font-size: {{theme.largeText}}px'>{{word}}</span><strong style='opacity: 0.75'>{{sense}}</strong>"
+    html_template = (
+        "<span style='font-size: {{theme.largeText}}px'>{{word}}</span>"
+        "<strong style='opacity: 0.75; padding-left: 10px'>{{sense}}</strong>"
+    )
     accept_keys = []
     seen = set(accept_keys)
     seed_tasks = []
