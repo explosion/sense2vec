@@ -83,8 +83,9 @@ To try out our pretrained vectors trained on Reddit comments, check out the
 
 This repo also includes a [Streamlit](https://streamlit.io) demo script for
 exploring vectors and the most similar phrases. After installing `streamlit`,
-you can run the script with `streamlit run` and one or more paths to pretrained
-vectors as positional arguments on the command line. For example:
+you can run the script with `streamlit run` and **one or more paths to
+pretrained vectors** as **positional arguments** on the command line. For
+example:
 
 ```bash
 pip install streamlit
