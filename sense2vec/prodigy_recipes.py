@@ -86,8 +86,7 @@ def teach(
         prev = DB.get_dataset(dataset)
         prev_accept_keys = [eg["text"] for eg in prev if eg["answer"] == "accept"]
         prev_words = [
-            eg["word"] if case_sensitive else eg["word"].lower()
-            for eg in prev
+            eg["word"] if case_sensitive else eg["word"].lower() for eg in prev
         ]
         accept_keys += prev_accept_keys
         seen.update(set(prev_words))
