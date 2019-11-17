@@ -2,7 +2,7 @@
 
 # sense2vec: Use NLP to go beyond vanilla word2vec
 
-sense2vec [Trask et. al](https://arxiv.org/abs/1511.06388), 2015) is a nice
+sense2vec ([Trask et. al](https://arxiv.org/abs/1511.06388), 2015) is a nice
 twist on [word2vec](https://en.wikipedia.org/wiki/Word2vec) that lets you learn
 more interesting and detailed word vectors. For an interactive example of the
 technology, see our [sense2vec demo](https://demos.explosion.ai/sense2vec) that
@@ -808,7 +808,7 @@ prodigy sense2vec.eval [dataset] [vectors_path] [--strategy] [--senses]
 | Name                 | Description                                                                                                                                                           |
 | -------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `most_similar`       | Pick a random word from a random sense and get its most similar entries of the same sense. Ask about the similarity to the last and middle entry from that selection. |
-| `most_least_similar` | Pick a random word from a random sense and get its least similar entry and then the least similar entry of that.                                                      |
+| `most_least_similar` | Pick a random word from a random sense and get the least similar entry from its most similar entries, and then the last most similar entry of that.                   |
 | `random`             | Pick a random sample of 3 words from the same random sense.                                                                                                           |
 
 #### Example
