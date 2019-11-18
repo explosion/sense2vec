@@ -631,7 +631,7 @@ def eval_ab(
         for eg in accepted:
             for model_id in eg["accept"]:
                 counts[model_id] += 1
-        preference = max(counts)
+        preference, _ = counts.most_common(1)[0]
         ratio = f"{counts[preference]} / {sum(counts.values()) - counts[preference]}"
         msg.info(f"Evaluating data from '{set_id}'")
         msg.text(f"You rejected {len(rejected)} and ignored {len(ignored)} pair(s)")
@@ -639,7 +639,7 @@ def eval_ab(
             msg.warn(f"No preference ({ratio})")
         else:
             pc = counts[preference] / sum(counts.values())
-            msg.good(f"You preferred vectors {preference} {ratio} ({pc:.0%})")
+            msg.good(f"You preferred vectors {preference} with {ratio} ({pc:.0%})")
             msg.text(mapping[preference])
 
     def on_exit(ctrl):
