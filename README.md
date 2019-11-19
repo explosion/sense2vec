@@ -10,7 +10,7 @@ lets you explore semantic similarities across all Reddit comments of 2015. This
 library is a simple Python implementation for loading and querying sense2vec
 models.
 
-🦆 **Version 1.0 alpha out now!**
+🦆 **Version 1.0 out now!**
 [Read the release notes here.](https://github.com/explosion/sense2vec/releases/)
 
 [![Azure Pipelines](https://img.shields.io/azure-devops/build/explosion-ai/public/12/master.svg?logo=azure-pipelines&style=flat-square&label=build)](https://dev.azure.com/explosion-ai/public/_build?definitionId=12)
@@ -92,22 +92,29 @@ pip install streamlit
 streamlit run https://raw.githubusercontent.com/explosion/sense2vec/master/scripts/streamlit_sense2vec.py /path/to/vectors
 ```
 
-## ⏳ Installation & Setup
+### Pretrained vectors
 
-> ️🚨 **This is an alpha release so you need to specify the explicit version
-> during installation. The pre-packaged vectors are just a converted version of
-> the old model and will be updated for the stable release.**
+To use the vectors, download the `.tar.gz` archive and pass the extracted
+directory to `Sense2Vec.from_disk` or `Sense2VecComponent.from_disk`. The vector
+files are **attached to the GitHub release**. Large files have been split into
+multi-part downloads.
+
+| Vectors              |   Size | Description                  | 📥 Download (zipped)                                                                                                                                                                                                                                                                                 |
+| -------------------- | -----: | ---------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `s2v_reddit_2019_lg` |   4 GB | Reddit comments 2019 (01-07) | [part 1](https://github.com/explosion/sense2vec/releases/download/v1.0.0/s2v_reddit_2019_lg.zip), [part 2](https://github.com/explosion/sense2vec/releases/download/v1.0.0/s2v_reddit_2019_lg.z01), [part 3](https://github.com/explosion/sense2vec/releases/download/v1.0.0/s2v_reddit_2019_lg.z02) |
+| `s2v_reddit_2015_md` | 573 MB | Reddit comments 2015         | [part 1](https://github.com/explosion/sense2vec/releases/download/v1.0.0/s2v_reddit_2015_md.tar.gz)                                                                                                                                                                                                  |
+
+## ⏳ Installation & Setup
 
 sense2vec releases are available on pip:
 
 ```bash
-pip install sense2vec==1.0.0a6
+pip install sense2vec
 ```
 
-The Reddit vectors model is attached to
-[this release](https://github.com/explosion/sense2vec/releases/tag/v1.0.0a2). To
-load it in, download the `.tar.gz` archive, unpack it and point `from_disk` to
-the extracted data directory:
+To use pretrained vectors, download
+[one of the vector packages](#pretrained-vectors), unpack the `.tar.gz` archive
+and point `from_disk` to the extracted data directory:
 
 ```python
 from sense2vec import Sense2Vec
