@@ -233,20 +233,25 @@ class Sense2Vec(object):
                     result.append(new_key)
         return result
 
-    def get_best_sense(self, word: str, ignore_case: bool = True) -> Union[str, None]:
+    def get_best_sense(
+        self, word: str, senses: Sequence[str] = tuple(), ignore_case: bool = True
+    ) -> Union[str, None]:
         """Find the best-matching sense for a given word based on the available
         senses and frequency counts. Returns None if no match is found.
 
         word (unicode): The word to check.
+        senses (list): Limit checks to senses. If not set / empty, all senses
+            in the vectors are used.
         ignore_case (bool): Check for uppercase, lowercase and titlecase.
         RETURNS (unicode): The best-matching key or None.
         """
-        if not self.senses:
+        sense_options = senses or self.senses
+        if not sense_options:
             return None
         versions = [word, word.upper(), word.title()] if ignore_case else [word]
         freqs = []
         for text in versions:
-            for sense in self.senses:
+            for sense in sense_options:
                 key = self.make_key(text, sense)
                 if key in self:
                     freq = self.get_freq(key, -1)

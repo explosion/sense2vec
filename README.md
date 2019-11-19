@@ -454,14 +454,16 @@ other_senses = s2v.get_other_senses("duck|NOUN")
 Find the best-matching sense for a given word based on the available senses and
 frequency counts. Returns `None` if no match is found.
 
-| Argument      | Type    | Description                                                       |
-| ------------- | ------- | ----------------------------------------------------------------- |
-| `word`        | unicode | The word to check.                                                |
-| `ignore_case` | bool    | Check for uppercase, lowercase and titlecase. Defaults to `True`. |
-| **RETURNS**   | unicode | The best-matching key or None.                                    |
+| Argument      | Type    | Description                                                                                             |
+| ------------- | ------- | ------------------------------------------------------------------------------------------------------- |
+| `word`        | unicode | The word to check.                                                                                      |
+| `senses`      | list    | Optional list of senses to limit the search to. If not set / empty, all senses in the vectors are used. |
+| `ignore_case` | bool    | Check for uppercase, lowercase and titlecase. Defaults to `True`.                                       |
+| **RETURNS**   | unicode | The best-matching key or None.                                                                          |
 
 ```python
 assert s2v.get_best_sense("duck") == "duck|NOUN"
+assert s2v.get_best_sense("duck", ["VERB", "ADJ"]) == "duck|VERB"
 ```
 
 #### <kbd>method</kbd> `Sense2Vec.to_bytes`
