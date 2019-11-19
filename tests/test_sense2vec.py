@@ -81,7 +81,8 @@ def test_sense2vec_similarity():
     assert s2v.similarity("a", "e") == 0.0
 
 
-def test_sense2vec_most_similar():
+@pytest.mark.parametrize("build_index", [True, False])
+def test_sense2vec_most_similar(build_index):
     s2v = Sense2Vec(shape=(6, 4))
     s2v.add("a", numpy.asarray([4, 2, 2, 2], dtype=numpy.float32))
     s2v.add("b", numpy.asarray([4, 4, 2, 2], dtype=numpy.float32))
@@ -89,7 +90,8 @@ def test_sense2vec_most_similar():
     s2v.add("d", numpy.asarray([4, 4, 4, 4], dtype=numpy.float32))
     s2v.add("x", numpy.asarray([4, 2, 2, 2], dtype=numpy.float32))
     s2v.add("y", numpy.asarray([0.1, 1, 1, 1], dtype=numpy.float32))
-    s2v.build_index()
+    if build_index:
+        s2v.build_index()
     result1 = s2v.most_similar(["x"], n=2)
     assert len(result1) == 2
     assert result1[0][0] == "a"

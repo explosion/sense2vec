@@ -30,10 +30,9 @@ class Sense2Vec(object):
             registered via the registry, e.g. {"make_key": "custom_make_key"}.
         RETURNS (Sense2Vec): The newly constructed object.
         """
-        self._index_metric = "euclidean"
         self.vectors = Vectors(shape=shape, name=vectors_name)
         self.strings = StringStore() if strings is None else strings
-        self.index = AnnoyIndex(self.vectors.shape[1], self._index_metric)
+        self.index = None
         self.freqs: Dict[int, int] = {}
         self.cfg = {"senses": senses, "make_key": "default", "split_key": "default"}
         self.cfg.update(overrides)
@@ -183,7 +182,8 @@ class Sense2Vec(object):
         batch_size: int = 16,
     ) -> List[Tuple[str, float]]:
         """Get the most similar entries in the table. If more than one key is
-        provided, the average of the vectors is used.
+        provided, the average of the vectors is used. To make this faster,
+        you can run Sense2Vec.build_index, which uses the annoy library.
 
         keys (unicode / int / iterable): The string or integer key(s) to compare to.
         n (int): The number of similar keys to return.
@@ -200,15 +200,24 @@ class Sense2Vec(object):
         if len(self.vectors) < n_similar:
             n_similar = len(self.vectors)
         vecs = numpy.vstack([self[key] for key in keys])
-        average = vecs.mean(axis=0, keepdims=False)
-        nns = self.index.get_nns_by_vector(average, n_similar, include_distances=True)
-        result = []
-        for row, distance in zip(*nns):
-            key = self.strings[self.vectors.find(row=row)[0]]
-            if key not in keys:
-                score = 1.0 if distance == 0.0 else get_similarity(average, self[key])
-                result.append((key, score))
-        return result
+        if self.index is None:  # use the less efficient default way
+            avg = vecs.mean(axis=0, keepdims=True)
+            result_keys, _, scores = self.vectors.most_similar(
+                avg, n=n_similar, batch_size=batch_size
+            )
+            result = list(zip(result_keys.flatten(), scores.flatten()))
+            result = [(self.strings[key], score) for key, score in result if key]
+            return [(key, score) for key, score in result if key not in keys]
+        else:  # index is built, use annoy
+            avg = vecs.mean(axis=0, keepdims=False)
+            nns = self.index.get_nns_by_vector(avg, n_similar, include_distances=True)
+            result = []
+            for row, dist in zip(*nns):
+                key = self.strings[self.vectors.find(row=row)[0]]
+                if key not in keys:
+                    score = 1.0 if dist == 0.0 else get_similarity(avg, self[key])
+                    result.append((key, score))
+            return result
 
     def get_other_senses(
         self, key: Union[str, int], ignore_case: bool = True
@@ -256,17 +265,20 @@ class Sense2Vec(object):
                     freqs.append((freq, key))
         return max(freqs)[1] if freqs else None
 
-    def build_index(self):
-        """Build an AnnoyIndex from the vectors. Used for fast calculation of
-        the approximate nearest neighbors in Sense2Vec.most_similar. This
-        method should be called after modifying the vectors.
+    def build_index(self, metric: str = "euclidean", n_trees: int = 100):
+        """Build an AnnoyIndex from the vectors. Used for faster calculation of
+        the approximate nearest neighbors in Sense2Vec.most_similar. See the
+        annoy docs for more details: https://github.com/spotify/annoy
+
+        metric (unicode): The metric to use.
+        n_trees (int): The number of trees to build.
         """
-        self.index = AnnoyIndex(self.vectors.shape[1], self._index_metric)
+        self.index = AnnoyIndex(self.vectors.shape[1], metric)
         for key, vector in self.vectors.items():
             # The key ints are too big so use the row for annoy
             row = self.vectors.find(key=key)
             self.index.add_item(row, vector)
-        self.index.build(100)
+        self.index.build(n_trees)
 
     def to_bytes(self, exclude: Sequence[str] = tuple()) -> bytes:
         """Serialize a Sense2Vec object to a bytestring.
@@ -294,7 +306,6 @@ class Sense2Vec(object):
         self.cfg.update(data.get("cfg", {}))
         if "strings" not in exclude and "strings" in data:
             self.strings = StringStore().from_bytes(data["strings"])
-        self.build_index()
         return self
 
     def to_disk(self, path: Union[Path, str], exclude: Sequence[str] = tuple()):
@@ -326,5 +337,4 @@ class Sense2Vec(object):
             self.freqs = dict(srsly.read_json(freqs_path))
         if "strings" not in exclude and strings_path.exists():
             self.strings = StringStore().from_disk(strings_path)
-        self.build_index()
         return self
