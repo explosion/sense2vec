@@ -43,7 +43,7 @@ models.
 ```python
 from sense2vec import Sense2Vec
 
-s2v = Sense2Vec().from_disk("/path/to/sense2vec_vectors")
+s2v = Sense2Vec().from_disk("/path/to/s2v_reddit_2015_md")
 query = "natural_language_processing|NOUN"
 assert query in s2v
 vector = s2v[query]
@@ -61,7 +61,7 @@ import spacy
 from sense2vec import Sense2VecComponent
 
 nlp = spacy.load("en_core_web_sm")
-s2v = Sense2VecComponent(nlp.vocab).from_disk("/path/to/sense2vec_vectors")
+s2v = Sense2VecComponent(nlp.vocab).from_disk("/path/to/s2v_reddit_2015_md")
 nlp.add_pipe(s2v)
 
 doc = nlp("A sentence about natural language processing.")
@@ -111,7 +111,7 @@ the extracted data directory:
 
 ```python
 from sense2vec import Sense2Vec
-s2v = Sense2Vec().from_disk("/path/to/sense2vec_vectors")
+s2v = Sense2Vec().from_disk("/path/to/s2v_reddit_2015_md")
 ```
 
 ## 👩‍💻 Usage
@@ -131,7 +131,7 @@ import spacy
 from sense2vec import Sense2VecComponent
 
 nlp = spacy.load("en_core_web_sm")
-s2v = Sense2VecComponent(nlp.vocab).from_disk("/path/to/sense2vec_vectors")
+s2v = Sense2VecComponent(nlp.vocab).from_disk("/path/to/s2v_reddit_2015_md")
 nlp.add_pipe(s2v)
 ```
 
@@ -742,7 +742,7 @@ prodigy sense2vec.teach [dataset] [vectors_path] [--seeds] [--threshold]
 #### Example
 
 ```bash
-prodigy sense2vec.teach tech_phrases /path/to/sense2vec_vectors
+prodigy sense2vec.teach tech_phrases /path/to/s2v_reddit_2015_md
 --seeds "natural language processing, machine learning, artificial intelligence"
 ```
 
@@ -815,7 +815,7 @@ prodigy sense2vec.eval [dataset] [vectors_path] [--strategy] [--senses]
 #### Example
 
 ```bash
-prodigy sense2vec.eval vectors_eval /path/to/sense2vec_vectors
+prodigy sense2vec.eval vectors_eval /path/to/s2v_reddit_2015_md
 --senses NOUN,ORG,PRODUCT --threshold 0.5
 ```
 
@@ -846,7 +846,7 @@ prodigy sense2vec.eval [dataset] [vectors_path] [--senses] [--exclude-senses]
 | `--show-scores`, `-S`     | flag       | Show all scores for debugging.                                                                                |
 
 ```bash
-prodigy sense2vec.eval-most-similar vectors_eval_sim /path/to/sense2vec_vectors
+prodigy sense2vec.eval-most-similar vectors_eval_sim /path/to/s2v_reddit_2015_md
 --senses NOUN,ORG,PRODUCT
 ```
 
@@ -879,7 +879,7 @@ prodigy sense2vec.eval [dataset] [vectors_path_a] [vectors_path_b] [--senses]
 | `--show-mapping`, `-S`    | flag       | Show which models are option 1 and option 2 in the UI (for debugging).                                        |
 
 ```bash
-prodigy sense2vec.eval-ab vectors_eval_sim /path/to/sense2vec_vectors_a /path/to/sense2vec_vectors_b --senses NOUN,ORG,PRODUCT
+prodigy sense2vec.eval-ab vectors_eval_sim /path/to/s2v_reddit_2015_md /path/to/s2v_reddit_2019_md --senses NOUN,ORG,PRODUCT
 ```
 
 ![UI preview of sense2vec.eval-ab](https://user-images.githubusercontent.com/13643239/68088514-46d21780-fe60-11e9-9b29-fe313bb2154d.png)
