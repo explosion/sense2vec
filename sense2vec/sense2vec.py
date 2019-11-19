@@ -34,7 +34,12 @@ class Sense2Vec(object):
         self.strings = StringStore() if strings is None else strings
         self.index = None
         self.freqs: Dict[int, int] = {}
-        self.cfg = {"senses": senses, "make_key": "default", "split_key": "default"}
+        self.cfg = {
+            "senses": senses,
+            "annoy_metric": "euclidean",
+            "make_key": "default",
+            "split_key": "default",
+        }
         self.cfg.update(overrides)
 
     @property
@@ -273,6 +278,7 @@ class Sense2Vec(object):
         metric (unicode): The metric to use.
         n_trees (int): The number of trees to build.
         """
+        self.cfg["annoy_metric"] = metric
         self.index = AnnoyIndex(self.vectors.shape[1], metric)
         for key, vector in self.vectors.items():
             # The key ints are too big so use the row for annoy
@@ -320,6 +326,8 @@ class Sense2Vec(object):
         srsly.write_json(path / "freqs.json", list(self.freqs.items()))
         if "strings" not in exclude:
             self.strings.to_disk(path / "strings.json")
+        if "index" not in exclude and self.index is not None:
+            self.index.save(str(path / "index.ann"))
 
     def from_disk(self, path: Union[Path, str], exclude: Sequence[str] = tuple()):
         """Load a Sense2Vec object from a directory.
@@ -330,6 +338,7 @@ class Sense2Vec(object):
         """
         path = Path(path)
         strings_path = path / "strings.json"
+        index_path = path / "index.ann"
         freqs_path = path / "freqs.json"
         self.vectors = Vectors().from_disk(path)
         self.cfg.update(srsly.read_json(path / "cfg"))
@@ -337,4 +346,7 @@ class Sense2Vec(object):
             self.freqs = dict(srsly.read_json(freqs_path))
         if "strings" not in exclude and strings_path.exists():
             self.strings = StringStore().from_disk(strings_path)
+        if "index" not in exclude and index_path.exists():
+            self.index = AnnoyIndex(self.vectors.shape[1], self.cfg["annoy_metric"])
+            self.index.load(str(index_path))
         return self
