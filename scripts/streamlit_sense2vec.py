@@ -30,7 +30,7 @@ st.sidebar.markdown(
 
 word = st.sidebar.text_input("Word", DEFAULT_WORD)
 sense_dropdown = st.sidebar.empty()
-n_similar = st.sidebar.slider("Number of similar entries", 1, 100, value=20, step=1)
+n_similar = st.sidebar.slider("Max number of similar entries", 1, 100, value=20, step=1)
 show_senses = st.sidebar.checkbox("Distinguish results by sense")
 vectors_path = st.sidebar.selectbox("Vectors", SENSE2VEC_PATHS)
 
