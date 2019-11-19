@@ -240,8 +240,8 @@ class Sense2Vec(object):
         senses and frequency counts. Returns None if no match is found.
 
         word (unicode): The word to check.
-        senses (list): Limit checks to senses. If not set / empty, all senses
-            in the vectors are used.
+        senses (list): Optional list of senses to limit the search to. If not
+            set / empty, all senses in the vectors are used.
         ignore_case (bool): Check for uppercase, lowercase and titlecase.
         RETURNS (unicode): The best-matching key or None.
         """
