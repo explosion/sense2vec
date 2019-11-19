@@ -45,7 +45,7 @@ def split_key(key: str) -> Tuple[str, str]:
 
 @registry.make_spacy_key.register("default")
 def make_spacy_key(
-    obj: Union[Token, Span], prefer_ents: bool = False
+    obj: Union[Token, Span], prefer_ents: bool = False, lemmatize: bool = False
 ) -> Tuple[str, str]:
     """Create a key from a spaCy object, i.e. a Token or Span. If the object
     is a token, the part-of-speech tag (Token.pos_) is used for the sense
@@ -58,10 +58,11 @@ def make_spacy_key(
         token.ent_type instead of tokens.pos_). Should be enabled if phrases
         are merged into single tokens, because otherwise the entity sense would
         never be used.
+    lemmatize (bool): Use the object's lemma instead of its text.
     RETURNS (unicode): The key.
     """
     default_sense = "?"
-    text = get_true_cased_text(obj)
+    text = get_true_cased_text(obj, lemmatize=lemmatize)
     if isinstance(obj, Token):
         if obj.like_url:
             text = "%%URL"
@@ -75,14 +76,17 @@ def make_spacy_key(
     return (text, sense or default_sense)
 
 
-def get_true_cased_text(obj: Union[Token, Span]):
+def get_true_cased_text(obj: Union[Token, Span], lemmatize: bool = False):
     """Correct casing so that sentence-initial words are not title-cased. Named
     entities and other special cases (such as the word "I") should still be
     title-cased.
 
     obj (Token / Span): The spaCy object to conver to text.
+    lemmatize (bool): Use the object's lemma instead of its text.
     RETURNS (unicode): The converted text.
     """
+    if lemmatize:
+        return obj.lemma_
     if isinstance(obj, Token) and (not obj.is_sent_start or obj.ent_type_):
         return obj.text
     elif isinstance(obj, Span) and (not obj[0].is_sent_start or obj[0].ent_type):

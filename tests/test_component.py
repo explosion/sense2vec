@@ -56,6 +56,29 @@ def test_component_similarity(doc):
     assert doc[1:3]._.s2v_similarity(doc[1:3]) == 1.0
 
 
+def test_component_lemmatize(doc):
+    lookups = doc.vocab.lookups.add_table("lemma_lookup")
+    lookups["world"] = "wrld"
+    s2v = Sense2VecComponent(doc.vocab, shape=(4, 4), lemmatize=True)
+    s2v.first_run = False
+    vector = numpy.asarray([4, 2, 2, 2], dtype=numpy.float32)
+    s2v.s2v.add("hello|INTJ", vector)
+    s2v.s2v.add("world|NOUN", vector)
+    s2v.s2v.add("wrld|NOUN", vector)
+    doc = s2v(doc)
+    assert doc[0]._.s2v_key == "hello|INTJ"
+    assert doc[1].lemma_ == "wrld"
+    assert doc[1]._.s2v_key == "wrld|NOUN"
+    lookups["hello"] = "hll"
+    assert doc[0].lemma_ == "hll"
+    assert doc[0]._.s2v_key == "hello|INTJ"
+    s2v.s2v.add("hll|INTJ", vector)
+    assert doc[0]._.s2v_key == "hll|INTJ"
+    new_s2v = Sense2VecComponent().from_bytes(s2v.to_bytes())
+    assert new_s2v.s2v.cfg["lemmatize"] is True
+    doc.vocab.lookups.remove_table("lemma_lookup")
+
+
 def test_component_to_from_bytes(doc):
     s2v = Sense2VecComponent(doc.vocab, shape=(1, 4))
     s2v.first_run = False

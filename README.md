@@ -530,13 +530,14 @@ The pipeline component to add sense2vec to spaCy pipelines.
 
 Initialize the pipeline component.
 
-| Argument        | Type                                                                                                                  | Description                                                             |
-| --------------- | --------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------- |
-| `vocab`         | `Vocab`                                                                                                               | The shared `Vocab`. Mostly used for the shared `StringStore`.           |
-| `shape`         | tuple                                                                                                                 | The vector shape.                                                       |
-| `merge_phrases` | bool                                                                                                                  | Whether to merge sense2vec phrases into one token. Defaults to `False`. |
+| Argument        | Type                                                                                                                  | Description                                                                                                 |
+| --------------- | --------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
+| `vocab`         | `Vocab`                                                                                                               | The shared `Vocab`. Mostly used for the shared `StringStore`.                                               |
+| `shape`         | tuple                                                                                                                 | The vector shape.                                                                                           |
+| `merge_phrases` | bool                                                                                                                  | Whether to merge sense2vec phrases into one token. Defaults to `False`.                                     |
+| `lemmatize`     | bool                                                                                                                  | Always look up lemmas if available in the vectors, otherwise default to original word. Defaults to `False`. |
 | `overrides`     | Optional custom functions to use, mapped to names registred via the registry, e.g. `{"make_key": "custom_make_key"}`. |
-| **RETURNS**     | `Sense2VecComponent`                                                                                                  | The newly constructed object.                                           |
+| **RETURNS**     | `Sense2VecComponent`                                                                                                  | The newly constructed object.                                                                               |
 
 ```python
 s2v = Sense2VecComponent(nlp.vocab)

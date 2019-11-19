@@ -38,6 +38,7 @@ class Sense2VecComponent(object):
         vocab: Vocab = None,
         shape: Tuple[int, int] = (1000, 128),
         merge_phrases: bool = False,
+        lemmatize: bool = False,
         overrides: Dict[str, str] = SimpleFrozenDict(),
         **kwargs,
     ):
@@ -46,6 +47,8 @@ class Sense2VecComponent(object):
         vocab (Vocab): The shared vocab. Mostly used for the shared StringStore.
         shape (tuple): The vector shape.
         merge_phrases (bool): Merge sense2vec phrases into one token.
+        lemmatize (bool): Always look up lemmas if available in the vectors,
+            otherwise default to original word.
         overrides (dict): Optional custom functions to use, mapped to names
             registered via the registry, e.g. {"make_key": "custom_make_key"}.
         RETURNS (Sense2VecComponent): The newly constructed object.
@@ -58,6 +61,7 @@ class Sense2VecComponent(object):
             "make_spacy_key": "default",
             "get_phrases": "default",
             "merge_phrases": "default",
+            "lemmatize": lemmatize,
         }
         self.s2v.cfg.update(cfg)
         self.s2v.cfg.update(overrides)
@@ -150,6 +154,11 @@ class Sense2VecComponent(object):
         make_spacy_key = registry.make_spacy_key.get(
             obj.doc._._s2v.cfg["make_spacy_key"]
         )
+        if obj.doc._._s2v.cfg.get("lemmatize", False):
+            lemma = make_spacy_key(obj, prefer_ents=self.merge_phrases, lemmatize=True)
+            lemma_key = obj.doc._._s2v.make_key(*lemma)
+            if lemma_key in obj.doc._._s2v:
+                return lemma_key
         word, sense = make_spacy_key(obj, prefer_ents=self.merge_phrases)
         return obj.doc._._s2v.make_key(word, sense)
 
