@@ -2,10 +2,11 @@ from typing import Tuple, List, Union, Sequence, Dict, Callable
 from pathlib import Path
 from spacy.vectors import Vectors
 from spacy.strings import StringStore
+from annoy import AnnoyIndex
 import numpy
 import srsly
 
-from .util import registry, SimpleFrozenDict
+from .util import registry, SimpleFrozenDict, get_similarity
 
 
 class Sense2Vec(object):
@@ -29,8 +30,10 @@ class Sense2Vec(object):
             registered via the registry, e.g. {"make_key": "custom_make_key"}.
         RETURNS (Sense2Vec): The newly constructed object.
         """
+        self._index_metric = "euclidean"
         self.vectors = Vectors(shape=shape, name=vectors_name)
         self.strings = StringStore() if strings is None else strings
+        self.index = AnnoyIndex(self.vectors.shape[1], self._index_metric)
         self.freqs: Dict[int, int] = {}
         self.cfg = {"senses": senses, "make_key": "default", "split_key": "default"}
         self.cfg.update(overrides)
@@ -171,13 +174,7 @@ class Sense2Vec(object):
             keys_b = [keys_b]
         average_a = numpy.vstack([self[key] for key in keys_a]).mean(axis=0)
         average_b = numpy.vstack([self[key] for key in keys_b]).mean(axis=0)
-        if average_a.all() == 0 or average_b.all() == 0:
-            return 0.0
-        norm_a = numpy.linalg.norm(average_a)
-        norm_b = numpy.linalg.norm(average_b)
-        if norm_a == norm_b:
-            return 1.0
-        return numpy.dot(average_a, average_b) / (norm_a * norm_b)
+        return get_similarity(average_a, average_b)
 
     def most_similar(
         self,
@@ -203,13 +200,14 @@ class Sense2Vec(object):
         if len(self.vectors) < n_similar:
             n_similar = len(self.vectors)
         vecs = numpy.vstack([self[key] for key in keys])
-        average = vecs.mean(axis=0, keepdims=True)
-        result_keys, _, scores = self.vectors.most_similar(
-            average, n=n_similar, batch_size=batch_size
-        )
-        result = list(zip(result_keys.flatten(), scores.flatten()))
-        result = [(self.strings[key], score) for key, score in result if key]
-        result = [(key, score) for key, score in result if key not in keys]
+        average = vecs.mean(axis=0, keepdims=False)
+        nns = self.index.get_nns_by_vector(average, n_similar, include_distances=True)
+        result = []
+        for row, distance in zip(*nns):
+            key = self.strings[self.vectors.find(row=row)[0]]
+            if key not in keys:
+                score = 1.0 if distance == 0.0 else get_similarity(average, self[key])
+                result.append((key, score))
         return result
 
     def get_other_senses(
@@ -258,6 +256,18 @@ class Sense2Vec(object):
                     freqs.append((freq, key))
         return max(freqs)[1] if freqs else None
 
+    def build_index(self):
+        """Build an AnnoyIndex from the vectors. Used for fast calculation of
+        the approximate nearest neighbors in Sense2Vec.most_similar. This
+        method should be called after modifying the vectors.
+        """
+        self.index = AnnoyIndex(self.vectors.shape[1], self._index_metric)
+        for key, vector in self.vectors.items():
+            # The key ints are too big so use the row for annoy
+            row = self.vectors.find(key=key)
+            self.index.add_item(row, vector)
+        self.index.build(100)
+
     def to_bytes(self, exclude: Sequence[str] = tuple()) -> bytes:
         """Serialize a Sense2Vec object to a bytestring.
 
@@ -284,6 +294,7 @@ class Sense2Vec(object):
         self.cfg.update(data.get("cfg", {}))
         if "strings" not in exclude and "strings" in data:
             self.strings = StringStore().from_bytes(data["strings"])
+        self.build_index()
         return self
 
     def to_disk(self, path: Union[Path, str], exclude: Sequence[str] = tuple()):
@@ -315,4 +326,5 @@ class Sense2Vec(object):
             self.freqs = dict(srsly.read_json(freqs_path))
         if "strings" not in exclude and strings_path.exists():
             self.strings = StringStore().from_disk(strings_path)
+        self.build_index()
         return self

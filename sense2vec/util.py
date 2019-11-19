@@ -3,6 +3,7 @@ import re
 from spacy.tokens import Doc, Token, Span
 from spacy.util import filter_spans
 import catalogue
+import numpy
 
 try:
     import importlib.metadata as importlib_metadata  # Python 3.8
@@ -165,6 +166,22 @@ def merge_phrases(doc: Doc) -> Doc:
         for span in spans:
             retokenizer.merge(span)
     return doc
+
+
+def get_similarity(vec_a: numpy.ndarray, vec_b: numpy.ndarray) -> float:
+    """Calculate the similarity of two vectors.
+
+    vec_a (numpy.ndarray): The vector.
+    vec_b (numpy.ndarray): The other vector.
+    RETURNS (float): The similarity score.
+    """
+    if vec_a.all() == 0 or vec_b.all() == 0:
+        return 0.0
+    norm_a = numpy.linalg.norm(vec_a)
+    norm_b = numpy.linalg.norm(vec_b)
+    if norm_a == norm_b:
+        return 1.0
+    return numpy.dot(vec_a, vec_b) / (norm_a * norm_b)
 
 
 class SimpleFrozenDict(dict):
