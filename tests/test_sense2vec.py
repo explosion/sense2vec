@@ -98,9 +98,9 @@ def test_sense2vec_most_similar(build_index):
     assert result1[0][1] == 1.0
     assert result1[0][1] == pytest.approx(1.0)
     assert result1[1][0] == "b"
-    result2 = s2v.most_similar(["a", "x"], n=2)
-    assert len(result2) == 2
-    assert sorted([key for key, _ in result2]) == ["b", "d"]
+    result2 = s2v.most_similar(["a", "x"], n=3)
+    assert len(result2) == 3
+    assert sorted([key for key, _ in result2]) == ["b", "c", "d"]
     result3 = s2v.most_similar(["a", "b"], n=3)
     assert len(result3) == 3
     assert "y" not in [key for key, _ in result3]
