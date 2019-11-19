@@ -27,6 +27,8 @@ models.
 - spaCy **pipeline component** and **extension attributes**.
 - Fully **serializable** so you can easily ship your sense2vec vectors with your
   spaCy model packages.
+- Use [`annoy`](https://github.com/spotify/annoy) to build an index for super
+  fast approximate calculations of most similar vectors.
 - **Train your own vectors** using a pretrained spaCy model, raw text and
   [GloVe](https://github.com/stanfordnlp/GloVe) or Word2Vec via
   [fastText](https://github.com/facebookresearch/fastText)
