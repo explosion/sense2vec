@@ -3,7 +3,7 @@ spacy>=2.2.2,<3.0.0
 srsly>=0.2.0
 catalogue>=0.0.4
 # Third-party dependencies
-annoy>=1.16.0,<2.0.0
+annoy==1.15.2
 numpy>=1.15.0
 importlib_metadata>=0.20; python_version < "3.8"
 # Development requirements
