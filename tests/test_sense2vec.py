@@ -99,8 +99,7 @@ def test_sense2vec_most_similar():
     result3 = s2v.most_similar(["a", "b"], n=3)
     assert len(result3) == 3
     assert "y" not in [key for key, _ in result3]
-    with pytest.raises(ValueError):
-        s2v.most_similar(["a", "b"], n=10)  # not enough keys left in the table
+    assert len(s2v.most_similar(["a", "b"], n=10)) == 4
     with pytest.raises(ValueError):
         s2v.most_similar(["z"], n=1)  # key not in table
 

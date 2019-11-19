@@ -201,10 +201,7 @@ class Sense2Vec(object):
             if key not in self:
                 raise ValueError(f"Can't find key {key} in table")
         if len(self.vectors) < n_similar:
-            raise ValueError(
-                f"Can't get {n} most similar out of {len(self.vectors)} total "
-                f"entries in the table while excluding the {len(keys)} keys"
-            )
+            n_similar = len(self.vectors)
         vecs = numpy.vstack([self[key] for key in keys])
         average = vecs.mean(axis=0, keepdims=True)
         result_keys, _, scores = self.vectors.most_similar(
