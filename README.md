@@ -417,7 +417,11 @@ assert s2v.similarity("machine_learning|NOUN", "machine_learning|NOUN") == 1.0
 #### <kbd>method</kbd> `Sense2Vec.most_similar`
 
 Get the most similar entries in the table. If more than one key is provided, the
-average of the vectors is used.
+average of the vectors is used. To make this faster, you can run
+`Sense2Vec.build_index`, which uses the
+[annoy](https://github.com/spotify/annoy) library to build an index of the
+vectors. This will make the initial load time slower, but will speed up the most
+similar calculations significantly.
 
 | Argument     | Type                      | Description                                             |
 | ------------ | ------------------------- | ------------------------------------------------------- |
@@ -465,6 +469,17 @@ frequency counts. Returns `None` if no match is found.
 assert s2v.get_best_sense("duck") == "duck|NOUN"
 assert s2v.get_best_sense("duck", ["VERB", "ADJ"]) == "duck|VERB"
 ```
+
+#### <kbd>method</kbd> `Sense2Vec.build_index`
+
+Build an `AnnoyIndex` from the vectors. Used for faster calculation of the
+approximate nearest neighbors in `Sense2Vec.most_similar`. See the
+[`annoy` docs](https://github.com/spotify/annoy) for more details.
+
+| Argument  | Type    | Description                                                                                       |
+| --------- | ------- | ------------------------------------------------------------------------------------------------- |
+| `metric`  | unicode | The [metric](https://github.com/spotify/annoy#full-python-api) to use. Defaults to `"euclidean"`. |
+| `n_trees` | int     | The number of trees to build. Defaults to `100`.                                                  |
 
 #### <kbd>method</kbd> `Sense2Vec.to_bytes`
 
