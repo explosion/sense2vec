@@ -39,7 +39,7 @@ def main(vectors, gpu_id=-1, n_neighbors=100, batch_size=1024, cutoff=0):
         msg.fail(f"Can't load vectors from {vectors}", err, exits=1)
     with msg.loading(f"Loading vectors from {vectors}"):
         vectors = xp.load(str(vectors_file))
-    msg.good(f"Loaded {vectors.shape[0]:;} vectors with dimension {vectors.shape[1]}")
+    msg.good(f"Loaded {vectors.shape[0]:,} vectors with dimension {vectors.shape[1]}")
     norms = xp.linalg.norm(vectors, axis=1, keepdims=True)
     norms[norms == 0] = 1
     # Normalize to unit norm
