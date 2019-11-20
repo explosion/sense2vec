@@ -32,6 +32,7 @@ class Sense2Vec(object):
         self.vectors = Vectors(shape=shape, name=vectors_name)
         self.strings = StringStore() if strings is None else strings
         self.freqs: Dict[int, int] = {}
+        self.cache = None
         self.cfg = {"senses": senses, "make_key": "default", "split_key": "default"}
         self.cfg.update(overrides)
 
@@ -202,6 +203,16 @@ class Sense2Vec(object):
                 raise ValueError(f"Can't find key {key} in table")
         if len(self.vectors) < n_similar:
             n_similar = len(self.vectors)
+        if self.cache:
+            indices = self.cache.get("indices", [])
+            scores = self.cache.get("scores", [])
+            if len(indices) >= n_similar:
+                key_row = self.vectors.find(key=key)
+                result_keys = self.vectors.find(rows=indices[key_row][:n_similar])
+                result_scores = scores[key_row][:n_similar]
+                result = list(zip(result_keys, result_scores))
+                result = [(self.strings[k], s) for k, s in result if k not in keys]
+                return result
         vecs = numpy.vstack([self[key] for key in keys])
         average = vecs.mean(axis=0, keepdims=True)
         result_keys, _, scores = self.vectors.most_similar(
@@ -269,6 +280,8 @@ class Sense2Vec(object):
         data = {"vectors": vectors_bytes, "cfg": self.cfg, "freqs": freqs}
         if "strings" not in exclude:
             data["strings"] = self.strings.to_bytes()
+        if "cache" not in exclude:
+            data["cache"] = self.cache
         return srsly.msgpack_dumps(data)
 
     def from_bytes(self, bytes_data: bytes, exclude: Sequence[str] = tuple()):
@@ -284,6 +297,8 @@ class Sense2Vec(object):
         self.cfg.update(data.get("cfg", {}))
         if "strings" not in exclude and "strings" in data:
             self.strings = StringStore().from_bytes(data["strings"])
+        if "cache" not in exclude and "cache" in data:
+            self.cache = data.get("cache", {})
         return self
 
     def to_disk(self, path: Union[Path, str], exclude: Sequence[str] = tuple()):
@@ -298,6 +313,8 @@ class Sense2Vec(object):
         srsly.write_json(path / "freqs.json", list(self.freqs.items()))
         if "strings" not in exclude:
             self.strings.to_disk(path / "strings.json")
+        if "cache" not in exclude and self.cache:
+            srsly.write_msgpack(path / "cache", self.cache)
 
     def from_disk(self, path: Union[Path, str], exclude: Sequence[str] = tuple()):
         """Load a Sense2Vec object from a directory.
@@ -309,10 +326,13 @@ class Sense2Vec(object):
         path = Path(path)
         strings_path = path / "strings.json"
         freqs_path = path / "freqs.json"
+        cache_path = path / "cache"
         self.vectors = Vectors().from_disk(path)
         self.cfg.update(srsly.read_json(path / "cfg"))
         if freqs_path.exists():
             self.freqs = dict(srsly.read_json(freqs_path))
         if "strings" not in exclude and strings_path.exists():
             self.strings = StringStore().from_disk(strings_path)
+        if "cache" not in exclude and cache_path.exists():
+            self.cache = srsly.read_msgpack(cache_path)
         return self
