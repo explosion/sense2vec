@@ -28,10 +28,8 @@ def test_model_most_similar_cache(s2v):
     honey_bees_row = s2v.vectors.find(key="honey_bees|NOUN")
     scores[query_row, honey_bees_row] = 2.0
     beekeepers_row = s2v.vectors.find(key="Beekepers|NOUN")
-    scores[query_row, 1] = 3.0
+    scores[query_row, beekeepers_row] = 3.0
     s2v.cache["scores"] = scores
-    print(scores)
-    print(s2v.cache["indices"])
     ((key1, score1), (key2, score2)) = s2v.most_similar([query], n=2)
     assert key1 == "honey_bees|NOUN"
     assert score1 == 2.0
