@@ -66,7 +66,7 @@ def main(
         batch = vectors[i : i + size]
         sims = xp.dot(batch, subset.T)
         # Set self-similarities to -inf, so that we don't return them.
-        indices = xp.arange(i, min(i + size, sims.shape[1])).reshape((1, -1))
+        indices = xp.arange(i, min(i + size, sims.shape[1])).reshape((-1, 1))
         xp.put_along_axis(sims, indices, -xp.inf, axis=1)
         # This used to use argpartition, to do a partial sort...But this ended
         # up being a ratsnest of terrible numpy crap. Just sorting the whole
