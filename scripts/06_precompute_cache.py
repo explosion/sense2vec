@@ -83,9 +83,6 @@ def main(
         best_rows = best_rows.get()
     if not isinstance(scores, numpy.ndarray):
         scores = scores.get()
-    # for row in range(best_rows.shape[0]):
-    #    assert best_rows[row, 0] == row
-    #    assert abs(scores[row, 0] - 1.0) < 1e-2, scores[row]
     output = {
         "indices": best_rows,
         "scores": scores.astype("float16"),
