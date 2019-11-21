@@ -34,11 +34,8 @@ def main(
         import cupy.cuda.device
 
         cupy.take_along_axis = take_along_axis
-        cupy.put_along_axis = put_along_axis
-
         device = cupy.cuda.device.Device(gpu_id)
         device.use()
-
     vectors_dir = Path(vectors)
     vectors_file = vectors_dir / "vectors"
     if not vectors_dir.is_dir() or not vectors_file.exists():
@@ -77,9 +74,6 @@ def main(
             # In the last batch we'll have a different size.
             sims = xp.dot(batch, subset.T)
         size = sims.shape[0]
-        # Zero out the self-scores, to avoid returning self as a neighbor.
-        self_indices = xp.arange(i, min(i + size, sims.shape[1])).reshape((1, -1))
-        xp.put_along_axis(sims, self_indices, 0.0, axis=1)
         # Get the indices and scores for the top N most similar for each in the
         # batch. This is a bit complicated, to avoid sorting all of the scores
         # -- we only want the top N to be sorted (which we do later). For now,
@@ -154,48 +148,6 @@ def take_along_axis(a, indices, axis):
             fancy_index.append(cupy.arange(n).reshape(ind_shape))
 
     return a[fancy_index]
-
-
-def put_along_axis(a, indices, value, axis):
-    """Take values from the input array by matching 1d index and data slices.
-
-    Args:
-        a (cupy.ndarray): Array to extract elements.
-        indices (cupy.ndarray): Indices to take along each 1d slice of ``a``.
-        axis (int): The axis to take 1d slices along.
-
-    Returns:
-        cupy.ndarray: The indexed result.
-
-    .. seealso:: :func:`numpy.take_along_axis`
-    """
-    import cupy
-
-    if indices.dtype.kind not in ("i", "u"):
-        raise IndexError("`indices` must be an integer array")
-
-    if axis is None:
-        a = a.ravel()
-        axis = 0
-
-    ndim = a.ndim
-
-    if not (-ndim <= axis < ndim):
-        raise IndexError("Axis overrun")
-
-    axis %= a.ndim
-
-    if ndim != indices.ndim:
-        raise ValueError("`indices` and `a` must have the same number of dimensions")
-
-    fancy_index = []
-    for i, n in enumerate(a.shape):
-        if i == axis:
-            fancy_index.append(indices)
-        else:
-            ind_shape = (1,) * i + (-1,) + (1,) * (ndim - i - 1)
-            fancy_index.append(cupy.arange(n).reshape(ind_shape))
-    a[fancy_index] = value
 
 
 if __name__ == "__main__":

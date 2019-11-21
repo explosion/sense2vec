@@ -210,7 +210,8 @@ class Sense2Vec(object):
                 key_row = self.vectors.find(key=key)
                 sim_keys = self.vectors.find(rows=indices[key_row][:n_similar])
                 sim_scores = scores[key_row][:n_similar]
-                return [(self.strings[k], s) for k, s in zip(sim_keys, sim_scores)]
+                result = [(self.strings[k], s) for k, s in zip(sim_keys, sim_scores)]
+                return [(key, score) for key, score in result if key not in keys]
         vecs = numpy.vstack([self[key] for key in keys])
         average = vecs.mean(axis=0, keepdims=True)
         result_keys, _, scores = self.vectors.most_similar(
