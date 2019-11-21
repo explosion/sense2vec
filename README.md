@@ -103,7 +103,7 @@ streamlit run https://raw.githubusercontent.com/explosion/sense2vec/master/scrip
 sense2vec releases are available on pip:
 
 ```bash
-pip install sense2vec==1.0.0a9
+pip install sense2vec==1.0.0a10
 ```
 
 The Reddit vectors model is attached to
