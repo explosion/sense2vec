@@ -4,11 +4,12 @@
 
 sense2vec ([Trask et. al](https://arxiv.org/abs/1511.06388), 2015) is a nice
 twist on [word2vec](https://en.wikipedia.org/wiki/Word2vec) that lets you learn
-more interesting and detailed word vectors. For an interactive example of the
-technology, see our [sense2vec demo](https://demos.explosion.ai/sense2vec) that
-lets you explore semantic similarities across all Reddit comments of 2015
-and 2019. This library is a simple Python implementation for loading and
-querying sense2vec models.
+more interesting and detailed word vectors. This library is a simple Python
+implementation for loading, querying and training sense2vec models. For more
+details, check out
+[our blog post](https://explosion.ai/blog/sense2vec-reloaded). To explore the
+semantic similarities across all Reddit comments of 2015 and 2019, see the
+[interactive demo](https://demos.explosion.ai/sense2vec).
 
 🦆 **Version 1.0 out now!**
 [Read the release notes here.](https://github.com/explosion/sense2vec/releases/)
@@ -20,7 +21,7 @@ querying sense2vec models.
 
 ## ✨ Features
 
-![](https://user-images.githubusercontent.com/13643239/68089415-db407800-fe68-11e9-9c45-47338dea49a9.jpg)
+![](https://user-images.githubusercontent.com/13643239/69330759-d3981600-0c53-11ea-8f64-e5c075f7ea10.jpg)
 
 - Query **vectors for multi-word phrases** based on part-of-speech tags and
   entity labels.
