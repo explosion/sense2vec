@@ -417,7 +417,9 @@ assert s2v.similarity("machine_learning|NOUN", "machine_learning|NOUN") == 1.0
 #### <kbd>method</kbd> `Sense2Vec.most_similar`
 
 Get the most similar entries in the table. If more than one key is provided, the
-average of the vectors is used.
+average of the vectors is used. To make this method faster, see the
+[script for precomputing a cache](scripts/06_precompute_cache.py) of the nearest
+neighbors.
 
 | Argument     | Type                      | Description                                             |
 | ------------ | ------------------------- | ------------------------------------------------------- |
