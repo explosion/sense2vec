@@ -1,4 +1,4 @@
-from typing import Tuple, List, Union, Sequence, Dict, Callable
+from typing import Tuple, List, Union, Sequence, Dict, Callable, Any
 from pathlib import Path
 from spacy.vectors import Vectors
 from spacy.strings import StringStore
@@ -33,7 +33,11 @@ class Sense2Vec(object):
         self.strings = StringStore() if strings is None else strings
         self.freqs: Dict[int, int] = {}
         self.cache = None
-        self.cfg = {"senses": senses, "make_key": "default", "split_key": "default"}
+        self.cfg: Dict[str, Any] = {
+            "senses": senses,
+            "make_key": "default",
+            "split_key": "default",
+        }
         self.cfg.update(overrides)
 
     @property
