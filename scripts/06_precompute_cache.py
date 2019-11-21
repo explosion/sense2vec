@@ -33,6 +33,8 @@ def main(
         import cupy as xp
         import cupy.cuda.device
 
+        cupy.take_along_axis = take_along_axis
+        cupy.put_along_axis = put_along_axis
         device = cupy.cuda.device.Device(gpu_id)
         device.use()
     vectors_dir = Path(vectors)
@@ -56,35 +58,26 @@ def main(
     msg.good(f"Normalized (mean {mean:,.2f}, variance {var:,.2f})")
     msg.info(f"Finding {n_neighbors:,} neighbors among {cutoff:,} most frequent")
     n = min(n_neighbors, vectors.shape[0])
+    subset = vectors[:cutoff]
     best_rows = xp.zeros((end - start, n), dtype="i")
     scores = xp.zeros((end - start, n), dtype="f")
-    # Pre-allocate this array, so we can use it each time.
-    subset = xp.ascontiguousarray(vectors[:cutoff])
-    sims = xp.zeros((batch_size, cutoff), dtype="f")
-    indices = xp.arange(cutoff).reshape((-1, 1))
     for i in tqdm.tqdm(list(range(start, end, batch_size))):
-        batch = vectors[i : i + batch_size]
-        # batch   e.g. (1024, 300)
-        # vectors e.g. (10000, 300)
-        # sims    e.g. (1024, 10000)
-        if batch.shape[0] == sims.shape[0]:
-            xp.dot(batch, subset.T, out=sims)
-        else:
-            # In the last batch we'll have a different size.
-            sims = xp.dot(batch, subset.T)
-        size = sims.shape[0]
-        # Get the indices and scores for the top N most similar for each in the
-        # batch. This is a bit complicated, to avoid sorting all of the scores
-        # -- we only want the top N to be sorted (which we do later). For now,
-        # we use argpartition to just get the cut point.
-        neighbors = xp.argpartition(sims, -n, axis=1)[:, -n:]
-        neighbor_sims = xp.partition(sims, -n, axis=1)[:, -n:]
-        # Can't figure out how to do this without the loop.
-        for j in range(min(end - i, size)):
-            # Sort in reverse order
-            indices = xp.argsort(neighbor_sims[j], axis=-1)[::-1]
-            best_rows[i + j] = xp.take(neighbors[j], indices)
-            scores[i + j] = xp.take(neighbor_sims[j], indices)
+        size = min(batch_size, end - i)
+        batch = vectors[i : i + size]
+        sims = xp.dot(batch, subset.T)
+        # Set self-similarities to -inf, so that we don't return them.
+        indices = xp.arange(i, min(i + size, sims.shape[1])).reshape((-1, 1))
+        xp.put_along_axis(sims, indices, -xp.inf, axis=1)
+        # This used to use argpartition, to do a partial sort...But this ended
+        # up being a ratsnest of terrible numpy crap. Just sorting the whole
+        # list isn't really slower, and it's much simpler to read.
+        ranks = xp.argsort(sims, axis=1)
+        batch_rows = ranks[:, -n:]
+        # Reverse
+        batch_rows = batch_rows[:, ::-1]
+        batch_scores = xp.take_along_axis(sims, batch_rows, axis=1)
+        best_rows[i : i + size] = batch_rows
+        scores[i : i + size] = batch_scores
     msg.info("Saving output")
     if not isinstance(best_rows, numpy.ndarray):
         best_rows = best_rows.get()
@@ -101,6 +94,81 @@ def main(
     with msg.loading("Saving output..."):
         srsly.write_msgpack(output_file, output)
     msg.good(f"Saved cache to {output_file}")
+
+
+# These functions are missing from cupy, but will be supported in cupy 7.
+def take_along_axis(a, indices, axis):
+    """Take values from the input array by matching 1d index and data slices.
+
+    Args:
+        a (cupy.ndarray): Array to extract elements.
+        indices (cupy.ndarray): Indices to take along each 1d slice of ``a``.
+        axis (int): The axis to take 1d slices along.
+
+    Returns:
+        cupy.ndarray: The indexed result.
+
+    .. seealso:: :func:`numpy.take_along_axis`
+    """
+    import cupy
+
+    if indices.dtype.kind not in ("i", "u"):
+        raise IndexError("`indices` must be an integer array")
+
+    if axis is None:
+        a = a.ravel()
+        axis = 0
+
+    ndim = a.ndim
+
+    if not (-ndim <= axis < ndim):
+        raise IndexError("Axis overrun")
+
+    axis %= a.ndim
+
+    if ndim != indices.ndim:
+        raise ValueError("`indices` and `a` must have the same number of dimensions")
+
+    fancy_index = []
+    for i, n in enumerate(a.shape):
+        if i == axis:
+            fancy_index.append(indices)
+        else:
+            ind_shape = (1,) * i + (-1,) + (1,) * (ndim - i - 1)
+            fancy_index.append(cupy.arange(n).reshape(ind_shape))
+
+    return a[fancy_index]
+
+
+def put_along_axis(a, indices, value, axis):
+    import cupy
+
+    if indices.dtype.kind not in ("i", "u"):
+        raise IndexError("`indices` must be an integer array")
+
+    if axis is None:
+        a = a.ravel()
+        axis = 0
+
+    ndim = a.ndim
+
+    if not (-ndim <= axis < ndim):
+        raise IndexError("Axis overrun")
+
+    axis %= a.ndim
+
+    if ndim != indices.ndim:
+        raise ValueError("`indices` and `a` must have the same number of dimensions")
+
+    fancy_index = []
+    for i, n in enumerate(a.shape):
+        if i == axis:
+            fancy_index.append(indices)
+        else:
+            ind_shape = (1,) * i + (-1,) + (1,) * (ndim - i - 1)
+            fancy_index.append(cupy.arange(n).reshape(ind_shape))
+
+    a[fancy_index] = value
 
 
 if __name__ == "__main__":
