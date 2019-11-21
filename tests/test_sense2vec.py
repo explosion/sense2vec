@@ -62,6 +62,8 @@ def test_sense2vec_best_sense():
     assert s2v.get_best_sense("c") is None
     s2v.cfg["senses"] = []
     assert s2v.get_best_sense("a") is None
+    assert s2v.get_best_sense("b", ["A"]) == "b|A"
+    assert s2v.get_best_sense("b", ["A", "C"]) == "B|C"
 
 
 def test_sense2vec_similarity():
