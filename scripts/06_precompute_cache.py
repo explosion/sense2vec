@@ -15,7 +15,7 @@ from pathlib import Path
     start=("Index of vectors to start at.", "option", "s", int),
     end=("Index of vectors to stop at.", "option", "e", int),
 )
-def main(vectors, gpu_id=-1, n_neighbors=100, batch_size=1024, cutoff=0):
+def main(vectors, gpu_id=-1, n_neighbors=100, batch_size=1024, cutoff=0, start=0, end=None):
     if gpu_id == -1:
         xp = numpy
     else:
@@ -44,14 +44,16 @@ def main(vectors, gpu_id=-1, n_neighbors=100, batch_size=1024, cutoff=0):
         cutoff = vectors.shape[0]
     if end is None:
         end = vectors.shape[0]
-    msg.good(f"Normalized (mean {norms.mean():,.2f}, variance {norms.var():,.2f})")
+    mean = float(norms.mean())
+    var = float(norms.var())
+    msg.good(f"Normalized (mean {mean:,.2f}, variance {var:,.2f})")
     msg.info(f"Finding {n_neighbors:,} neighbors among {cutoff:,} most frequent")
-    best_rows = xp.zeros((end - start, n_neighbors), dtype="i")
-    scores = xp.zeros((end - start, n_neighbors), dtype="f")
+    n = min(n_neighbors, vectors.shape[0])
+    best_rows = xp.zeros((end - start, n), dtype="i")
+    scores = xp.zeros((end - start, n), dtype="f")
     # Pre-allocate this array, so we can use it each time.
     subset = xp.ascontiguousarray(vectors[:cutoff])
     sims = xp.zeros((batch_size, cutoff), dtype="f")
-    n = n_neighbors
     indices = xp.arange(cutoff).reshape((-1, 1))
     for i in tqdm.tqdm(list(range(start, end, batch_size))):
         batch = vectors[i : i + batch_size]
