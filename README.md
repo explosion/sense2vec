@@ -96,10 +96,10 @@ streamlit run https://raw.githubusercontent.com/explosion/sense2vec/master/scrip
 
 ### Pretrained vectors
 
-To use the vectors, download the `.tar.gz` archive and pass the extracted
-directory to `Sense2Vec.from_disk` or `Sense2VecComponent.from_disk`. The vector
-files are **attached to the GitHub release**. Large files have been split into
-multi-part downloads.
+To use the vectors, download the archive(s) and pass the extracted directory to
+`Sense2Vec.from_disk` or `Sense2VecComponent.from_disk`. The vector files are
+**attached to the GitHub release**. Large files have been split into multi-part
+downloads.
 
 | Vectors              |   Size | Description                  | 📥 Download (zipped)                                                                                                                                                                                                                                                                                 |
 | -------------------- | -----: | ---------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
