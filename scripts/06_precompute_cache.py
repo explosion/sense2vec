@@ -33,7 +33,6 @@ def main(
         import cupy as xp
         import cupy.cuda.device
 
-        cupy.take_along_axis = take_along_axis
         device = cupy.cuda.device.Device(gpu_id)
         device.use()
     vectors_dir = Path(vectors)
@@ -82,12 +81,10 @@ def main(
         neighbor_sims = xp.partition(sims, -n, axis=1)[:, -n:]
         # Can't figure out how to do this without the loop.
         for j in range(min(end - i, size)):
-            best_rows[i + j] = neighbors[j]
-            scores[i + j] = neighbor_sims[j]
-    # Sort in reverse order
-    indices = xp.argsort(scores, axis=1)[:, ::-1]
-    scores = xp.take_along_axis(scores, indices, axis=1)
-    best_rows = xp.take_along_axis(best_rows, indices, axis=1)
+            # Sort in reverse order
+            indices = xp.argsort(neighbor_sims[j], axis=-1)[::-1]
+            best_rows[i + j] = xp.take(neighbors[j], indices)
+            scores[i + j] = xp.take(neighbor_sims[j], indices)
     msg.info("Saving output")
     if not isinstance(best_rows, numpy.ndarray):
         best_rows = best_rows.get()
@@ -104,50 +101,6 @@ def main(
     with msg.loading("Saving output..."):
         srsly.write_msgpack(output_file, output)
     msg.good(f"Saved cache to {output_file}")
-
-
-# These functions are missing from cupy, but will be supported in cupy 7.
-def take_along_axis(a, indices, axis):
-    """Take values from the input array by matching 1d index and data slices.
-
-    Args:
-        a (cupy.ndarray): Array to extract elements.
-        indices (cupy.ndarray): Indices to take along each 1d slice of ``a``.
-        axis (int): The axis to take 1d slices along.
-
-    Returns:
-        cupy.ndarray: The indexed result.
-
-    .. seealso:: :func:`numpy.take_along_axis`
-    """
-    import cupy
-
-    if indices.dtype.kind not in ("i", "u"):
-        raise IndexError("`indices` must be an integer array")
-
-    if axis is None:
-        a = a.ravel()
-        axis = 0
-
-    ndim = a.ndim
-
-    if not (-ndim <= axis < ndim):
-        raise IndexError("Axis overrun")
-
-    axis %= a.ndim
-
-    if ndim != indices.ndim:
-        raise ValueError("`indices` and `a` must have the same number of dimensions")
-
-    fancy_index = []
-    for i, n in enumerate(a.shape):
-        if i == axis:
-            fancy_index.append(indices)
-        else:
-            ind_shape = (1,) * i + (-1,) + (1,) * (ndim - i - 1)
-            fancy_index.append(cupy.arange(n).reshape(ind_shape))
-
-    return a[fancy_index]
 
 
 if __name__ == "__main__":
