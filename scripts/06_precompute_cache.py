@@ -15,7 +15,18 @@ from pathlib import Path
     start=("Index of vectors to start at.", "option", "s", int),
     end=("Index of vectors to stop at.", "option", "e", int),
 )
-def main(vectors, gpu_id=-1, n_neighbors=100, batch_size=1024, cutoff=0, start=0, end=None):
+def main(
+    vectors, gpu_id=-1, n_neighbors=100, batch_size=1024, cutoff=0, start=0, end=None
+):
+    """
+    Step 6: Precompute nearest-neighbor queries (optional)
+
+    Precompute nearest-neighbor queries for every entry in the vocab to make
+    Sense2Vec.most_similar faster. The --cutoff option lets you define the
+    number of earliest rows to limit the neighbors to. For instance, if cutoff
+    is 100000, no word will have a nearest neighbor outside of the top 100k
+    vectors.
+    """
     if gpu_id == -1:
         xp = numpy
     else:
@@ -127,7 +138,7 @@ def take_along_axis(a, indices, axis):
     ndim = a.ndim
 
     if not (-ndim <= axis < ndim):
-        raise _errors._AxisError("Axis overrun")
+        raise IndexError("Axis overrun")
 
     axis %= a.ndim
 
@@ -170,7 +181,7 @@ def put_along_axis(a, indices, value, axis):
     ndim = a.ndim
 
     if not (-ndim <= axis < ndim):
-        raise _errors._AxisError("Axis overrun")
+        raise IndexError("Axis overrun")
 
     axis %= a.ndim
 
