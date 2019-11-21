@@ -27,6 +27,8 @@ models.
 - spaCy **pipeline component** and **extension attributes**.
 - Fully **serializable** so you can easily ship your sense2vec vectors with your
   spaCy model packages.
+- Optional **caching of nearest neighbors** for super fast "most similar"
+  queries.
 - **Train your own vectors** using a pretrained spaCy model, raw text and
   [GloVe](https://github.com/stanfordnlp/GloVe) or Word2Vec via
   [fastText](https://github.com/facebookresearch/fastText)
@@ -417,7 +419,9 @@ assert s2v.similarity("machine_learning|NOUN", "machine_learning|NOUN") == 1.0
 #### <kbd>method</kbd> `Sense2Vec.most_similar`
 
 Get the most similar entries in the table. If more than one key is provided, the
-average of the vectors is used.
+average of the vectors is used. To make this method faster, see the
+[script for precomputing a cache](scripts/06_precompute_cache.py) of the nearest
+neighbors.
 
 | Argument     | Type                      | Description                                             |
 | ------------ | ------------------------- | ------------------------------------------------------- |
@@ -699,6 +703,7 @@ clone and `make`.
 | **3.** | [`03_glove_build_counts.py`](scripts/03_glove_build_counts.py)                                                                               | Use [GloVe](https://github.com/stanfordnlp/GloVe) to build the vocabulary and counts. Skip this step if you're using Word2Vec via [FastText](https://github.com/facebookresearch/fastText). |
 | **4.** | [`04_glove_train_vectors.py`](scripts/04_glove_train_vectors.py)<br />[`04_fasttext_train_vectors.py`](scripts/04_fasttext_train_vectors.py) | Use [GloVe](https://github.com/stanfordnlp/GloVe) or [FastText](https://github.com/facebookresearch/fastText) to train vectors.                                                             |
 | **5.** | [`05_export.py`](scripts/05_export.py)                                                                                                       | Load the vectors and frequencies and output a sense2vec component that can be loaded via `Sense2Vec.from_disk`.                                                                             |
+| **6.** | [`06_precompute_cache.py`](scripts/06_precompute_cache.py)                                                                                   | **Optional:** Precompute nearest-neighbor queries for every entry in the vocab to make `Sense2Vec.most_similar` faster.                                                                     |
 
 For more detailed documentation of the scripts, check out the source or run them
 with `--help`. For example, `python scripts/01_parse.py --help`.
