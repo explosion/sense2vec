@@ -30,6 +30,7 @@ class Sense2Vec(object):
         RETURNS (Sense2Vec): The newly constructed object.
         """
         self.vectors = Vectors(shape=shape, name=vectors_name)
+        self._row2key = None
         self.strings = StringStore() if strings is None else strings
         self.freqs: Dict[int, int] = {}
         self.cache = None
@@ -87,6 +88,7 @@ class Sense2Vec(object):
         if key not in self.vectors:
             raise ValueError(f"Can't find key {key} in table")
         self.vectors[key] = vector
+        self._row2key = None
 
     def __iter__(self):
         """YIELDS (tuple): String key and vector pairs in the table."""
@@ -105,6 +107,11 @@ class Sense2Vec(object):
     def values(self):
         """YIELDS (numpy.ndarray): The vectors in the table."""
         yield from self.vectors.values()
+
+    def row2key(self):
+        if not self._row2key:
+            self._row2key = {row: key for row, key in self.vectors.key2row.items()}
+        return self._row2key
 
     @property
     def make_key(self) -> Callable:
@@ -128,6 +135,7 @@ class Sense2Vec(object):
         self.vectors.add(key, vector=vector)
         if freq is not None:
             self.set_freq(key, freq)
+        self._row2key = None
 
     def get_freq(self, key: Union[str, int], default=None) -> Union[int, None]:
         """Get the frequency count for a given key.
@@ -207,15 +215,15 @@ class Sense2Vec(object):
                 raise ValueError(f"Can't find key {key} in table")
         if len(self.vectors) < n_similar:
             n_similar = len(self.vectors)
-        if self.cache:
-            indices = self.cache.get("indices", [])
-            scores = self.cache.get("scores", [])
-            if len(indices) >= n_similar:
-                key_row = self.vectors.find(key=key)
-                sim_keys = self.vectors.find(rows=indices[key_row][:n_similar])
-                sim_scores = scores[key_row][:n_similar]
-                result = [(self.strings[k], s) for k, s in zip(sim_keys, sim_scores)]
-                return [(key, score) for key, score in result if key not in keys]
+        if self.cache and self.cache["indices"].shape[1] >= n_similar:
+            key = self.ensure_int_key(key)
+            key_row = self.vectors.find(key=key)
+            rows = self.cache["indices"][key_row, :n_similar]
+            scores = self.cache["indices"][key_row, :n_similar]
+            keys = [self.row2key[k] for k in rows]
+            result = [(self.strings[k], s) for k, s in zip(sim_keys, sim_scores)]
+                      if k != key]
+            return result
         vecs = numpy.vstack([self[key] for key in keys])
         average = vecs.mean(axis=0, keepdims=True)
         result_keys, _, scores = self.vectors.most_similar(
