@@ -722,6 +722,10 @@ This package also seamlessly integrates with the [Prodigy](https://prodi.gy)
 annotation tool and exposes recipes for using sense2vec vectors to quickly
 generate lists of multi-word phrases and bootstrap NER annotations. To use a
 recipe, `sense2vec` needs to be installed in the same environment as Prodigy.
+For an example of a real-world use case, check out this
+[NER project](https://github.com/explosion/projects/tree/master/ner-fashion-brands)
+with downloadable datasets.
+
 The following recipes are available – see below for more detailed docs.
 
 | Recipe                                                              | Description                                                          |
