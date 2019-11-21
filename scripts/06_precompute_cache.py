@@ -66,7 +66,7 @@ def main(
         batch = vectors[i : i + size]
         sims = xp.dot(batch, subset.T)
         # Set self-similarities to -inf, so that we don't return them.
-        indices = xp.arange(i, min(i+size, sims.shape[1])).reshape((1, -1))
+        indices = xp.arange(i, min(i + size, sims.shape[1])).reshape((1, -1))
         xp.put_along_axis(sims, indices, -xp.inf, axis=1)
         # This used to use argpartition, to do a partial sort...But this ended
         # up being a ratsnest of terrible numpy crap. Just sorting the whole
@@ -76,14 +76,14 @@ def main(
         # Reverse
         batch_rows = batch_rows[:, ::-1]
         batch_scores = xp.take_along_axis(sims, batch_rows, axis=1)
-        best_rows[i:i+size] = batch_rows
-        scores[i:i+size] = batch_scores
+        best_rows[i : i + size] = batch_rows
+        scores[i : i + size] = batch_scores
     msg.info("Saving output")
     if not isinstance(best_rows, numpy.ndarray):
         best_rows = best_rows.get()
     if not isinstance(scores, numpy.ndarray):
         scores = scores.get()
-    #for row in range(best_rows.shape[0]):
+    # for row in range(best_rows.shape[0]):
     #    assert best_rows[row, 0] == row
     #    assert abs(scores[row, 0] - 1.0) < 1e-2, scores[row]
     output = {
@@ -141,6 +141,7 @@ def take_along_axis(a, indices, axis):
             fancy_index.append(cupy.arange(n).reshape(ind_shape))
 
     return a[fancy_index]
+
 
 def put_along_axis(a, indices, value, axis):
     import cupy
