@@ -6,9 +6,9 @@ sense2vec ([Trask et. al](https://arxiv.org/abs/1511.06388), 2015) is a nice
 twist on [word2vec](https://en.wikipedia.org/wiki/Word2vec) that lets you learn
 more interesting and detailed word vectors. For an interactive example of the
 technology, see our [sense2vec demo](https://demos.explosion.ai/sense2vec) that
-lets you explore semantic similarities across all Reddit comments of 2015. This
-library is a simple Python implementation for loading and querying sense2vec
-models.
+lets you explore semantic similarities across all Reddit comments of 2015
+and 2019. This library is a simple Python implementation for loading and
+querying sense2vec models.
 
 🦆 **Version 1.0 out now!**
 [Read the release notes here.](https://github.com/explosion/sense2vec/releases/)
