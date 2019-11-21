@@ -1,6 +1,6 @@
 <a href="https://explosion.ai"><img src="https://explosion.ai/assets/img/logo.svg" width="125" height="125" align="right" /></a>
 
-# sense2vec: Use NLP to go beyond vanilla word2vec
+# sense2vec: Contextually-keyed word vectors
 
 sense2vec ([Trask et. al](https://arxiv.org/abs/1511.06388), 2015) is a nice
 twist on [word2vec](https://en.wikipedia.org/wiki/Word2vec) that lets you learn
