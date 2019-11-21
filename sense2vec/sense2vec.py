@@ -108,9 +108,10 @@ class Sense2Vec(object):
         """YIELDS (numpy.ndarray): The vectors in the table."""
         yield from self.vectors.values()
 
+    @property
     def row2key(self):
         if not self._row2key:
-            self._row2key = {row: key for row, key in self.vectors.key2row.items()}
+            self._row2key = {row: key for key, row in self.vectors.key2row.items()}
         return self._row2key
 
     @property
@@ -208,30 +209,32 @@ class Sense2Vec(object):
         """
         if isinstance(keys, (str, int)):
             keys = [keys]
-        # Always ask for more because we'll always get the keys themselves
-        n_similar = n + len(keys)
         for key in keys:
             if key not in self:
                 raise ValueError(f"Can't find key {key} in table")
-        if len(self.vectors) < n_similar:
-            n_similar = len(self.vectors)
-        if self.cache and self.cache["indices"].shape[1] >= n_similar:
+        if self.cache and self.cache["indices"].shape[1] >= n:
+            n = min(len(self.vectors), n)
             key = self.ensure_int_key(key)
             key_row = self.vectors.find(key=key)
-            rows = self.cache["indices"][key_row, :n_similar]
-            scores = self.cache["indices"][key_row, :n_similar]
-            keys = [self.strings[self.row2key[k]] for k in rows]
+            rows = self.cache["indices"][key_row, :n]
+            scores = self.cache["indices"][key_row, :n]
+            keys = [self.row2key[r] for r in rows]
+            keys = [self.strings[k] for k in keys]
             assert len(keys) == len(scores)
             return list(zip(keys, scores))
-        vecs = numpy.vstack([self[key] for key in keys])
-        average = vecs.mean(axis=0, keepdims=True)
-        result_keys, _, scores = self.vectors.most_similar(
-            average, n=n_similar, batch_size=batch_size
-        )
-        result = list(zip(result_keys.flatten(), scores.flatten()))
-        result = [(self.strings[key], score) for key, score in result if key]
-        result = [(key, score) for key, score in result if key not in keys]
-        return result
+        else:
+            # Always ask for more because we'll always get the keys themselves
+            n = min(len(self.vectors), n + len(keys))
+            rows = numpy.asarray(self.vectors.find(keys=keys))
+            vecs = self.vectors.data[rows]
+            average = vecs.mean(axis=0, keepdims=True)
+            result_keys, _, scores = self.vectors.most_similar(
+                average, n=n, batch_size=batch_size
+            )
+            result = list(zip(result_keys.flatten(), scores.flatten()))
+            result = [(self.strings[key], score) for key, score in result if key]
+            result = [(key, score) for key, score in result if key not in keys]
+            return result
 
     def get_other_senses(
         self, key: Union[str, int], ignore_case: bool = True
@@ -309,6 +312,7 @@ class Sense2Vec(object):
             self.strings = StringStore().from_bytes(data["strings"])
         if "cache" not in exclude and "cache" in data:
             self.cache = data.get("cache", {})
+        self._row2key = None
         return self
 
     def to_disk(self, path: Union[Path, str], exclude: Sequence[str] = tuple()):
@@ -345,4 +349,5 @@ class Sense2Vec(object):
             self.strings = StringStore().from_disk(strings_path)
         if "cache" not in exclude and cache_path.exists():
             self.cache = srsly.read_msgpack(cache_path)
+        self._row2key = None
         return self
