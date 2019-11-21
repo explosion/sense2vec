@@ -11,7 +11,7 @@ from pathlib import Path
     gpu_id=("GPU device (-1 for CPU)", "option", "g", int),
     n_neighbors=("Number of neighbors to cache", "option", "n", int),
     batch_size=("Batch size for to reduce memory usage.", "option", "b", int),
-    cutoff=("Limit neighbors to this many earliest rows", "option", "C", int,),
+    cutoff=("Limit neighbors to this many earliest rows", "option", "c", int,),
 )
 def main(vectors, gpu_id=-1, n_neighbors=100, batch_size=1024, cutoff=0):
     """
