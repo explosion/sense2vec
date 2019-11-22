@@ -4,13 +4,14 @@
 
 sense2vec ([Trask et. al](https://arxiv.org/abs/1511.06388), 2015) is a nice
 twist on [word2vec](https://en.wikipedia.org/wiki/Word2vec) that lets you learn
-more interesting and detailed word vectors. For an interactive example of the
-technology, see our [sense2vec demo](https://demos.explosion.ai/sense2vec) that
-lets you explore semantic similarities across all Reddit comments of 2015. This
-library is a simple Python implementation for loading and querying sense2vec
-models.
+more interesting and detailed word vectors. This library is a simple Python
+implementation for loading, querying and training sense2vec models. For more
+details, check out
+[our blog post](https://explosion.ai/blog/sense2vec-reloaded). To explore the
+semantic similarities across all Reddit comments of 2015 and 2019, see the
+[interactive demo](https://demos.explosion.ai/sense2vec).
 
-🦆 **Version 1.0 alpha out now!**
+🦆 **Version 1.0 out now!**
 [Read the release notes here.](https://github.com/explosion/sense2vec/releases/)
 
 [![Azure Pipelines](https://img.shields.io/azure-devops/build/explosion-ai/public/12/master.svg?logo=azure-pipelines&style=flat-square&label=build)](https://dev.azure.com/explosion-ai/public/_build?definitionId=12)
@@ -20,7 +21,7 @@ models.
 
 ## ✨ Features
 
-![](https://user-images.githubusercontent.com/13643239/68089415-db407800-fe68-11e9-9c45-47338dea49a9.jpg)
+![](https://user-images.githubusercontent.com/13643239/69330759-d3981600-0c53-11ea-8f64-e5c075f7ea10.jpg)
 
 - Query **vectors for multi-word phrases** based on part-of-speech tags and
   entity labels.
@@ -94,22 +95,35 @@ pip install streamlit
 streamlit run https://raw.githubusercontent.com/explosion/sense2vec/master/scripts/streamlit_sense2vec.py /path/to/vectors
 ```
 
-## ⏳ Installation & Setup
+### Pretrained vectors
 
-> ️🚨 **This is an alpha release so you need to specify the explicit version
-> during installation. The pre-packaged vectors are just a converted version of
-> the old model and will be updated for the stable release.**
+To use the vectors, download the archive(s) and pass the extracted directory to
+`Sense2Vec.from_disk` or `Sense2VecComponent.from_disk`. The vector files are
+**attached to the GitHub release**. Large files have been split into multi-part
+downloads.
+
+| Vectors              |   Size | Description                  | 📥 Download (zipped)                                                                                                                                                                                                                                                                                                      |
+| -------------------- | -----: | ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `s2v_reddit_2019_lg` |   4 GB | Reddit comments 2019 (01-07) | [part 1](https://github.com/explosion/sense2vec/releases/download/v1.0.0/s2v_reddit_2019_lg.tar.gz.001), [part 2](https://github.com/explosion/sense2vec/releases/download/v1.0.0/s2v_reddit_2019_lg.tar.gz.002), [part 3](https://github.com/explosion/sense2vec/releases/download/v1.0.0/s2v_reddit_2019_lg.tar.gz.003) |
+| `s2v_reddit_2015_md` | 573 MB | Reddit comments 2015         | [part 1](https://github.com/explosion/sense2vec/releases/download/v1.0.0/s2v_reddit_2015_md.tar.gz)                                                                                                                                                                                                                       |
+
+To merge the multi-part archives, you can run the following:
+
+```bash
+cat s2v_reddit_2019_lg.tar.gz.* > s2v_reddit_2019_lg.tar.gz
+```
+
+## ⏳ Installation & Setup
 
 sense2vec releases are available on pip:
 
 ```bash
-pip install sense2vec==1.0.0a10
+pip install sense2vec
 ```
 
-The Reddit vectors model is attached to
-[this release](https://github.com/explosion/sense2vec/releases/tag/v1.0.0a2). To
-load it in, download the `.tar.gz` archive, unpack it and point `from_disk` to
-the extracted data directory:
+To use pretrained vectors, download
+[one of the vector packages](#pretrained-vectors), unpack the `.tar.gz` archive
+and point `from_disk` to the extracted data directory:
 
 ```python
 from sense2vec import Sense2Vec
@@ -714,6 +728,10 @@ This package also seamlessly integrates with the [Prodigy](https://prodi.gy)
 annotation tool and exposes recipes for using sense2vec vectors to quickly
 generate lists of multi-word phrases and bootstrap NER annotations. To use a
 recipe, `sense2vec` needs to be installed in the same environment as Prodigy.
+For an example of a real-world use case, check out this
+[NER project](https://github.com/explosion/projects/tree/master/ner-fashion-brands)
+with downloadable datasets.
+
 The following recipes are available – see below for more detailed docs.
 
 | Recipe                                                              | Description                                                          |
