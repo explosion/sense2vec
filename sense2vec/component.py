@@ -89,7 +89,8 @@ class Sense2VecComponent(object):
         # Store reference to s2v object on Doc to make sure it's right
         doc._._s2v = self.s2v
         if self.merge_phrases:
-            merge_phrases = registry.merge_phrases.get(doc._._s2v.cfg["merge_phrases"])
+            merge_phrases_id = doc._._s2v.cfg.get("merge_phrases", "default")
+            merge_phrases = registry.merge_phrases.get(merge_phrases_id)
             doc = merge_phrases(doc)
         return doc
 
@@ -117,7 +118,7 @@ class Sense2VecComponent(object):
         doc (Doc): The Doc to get phrases from.
         RETURNS (list): The phrases as a list of Span objects.
         """
-        func = registry.get_phrases.get(doc._._s2v.cfg["get_phrases"])
+        func = registry.get_phrases.get(doc._._s2v.cfg.get("get_phrases", "default"))
         return func(doc)
 
     def in_s2v(self, obj: Union[Token, Span]) -> bool:
@@ -151,9 +152,8 @@ class Sense2VecComponent(object):
         obj (Token / Span): The object to create the key for.
         RETURNS (unicode): The key.
         """
-        make_spacy_key = registry.make_spacy_key.get(
-            obj.doc._._s2v.cfg["make_spacy_key"]
-        )
+        make_space_key_id = obj.doc._._s2v.cfg.get("make_spacy_key", "default")
+        make_spacy_key = registry.make_spacy_key.get(make_space_key_id)
         if obj.doc._._s2v.cfg.get("lemmatize", False):
             lemma = make_spacy_key(obj, prefer_ents=self.merge_phrases, lemmatize=True)
             lemma_key = obj.doc._._s2v.make_key(*lemma)
