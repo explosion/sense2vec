@@ -15,7 +15,7 @@ semantic similarities across all Reddit comments of 2015 and 2019, see the
 [Read the release notes here.](https://github.com/explosion/sense2vec/releases/)
 
 [![Azure Pipelines](https://img.shields.io/azure-devops/build/explosion-ai/public/12/master.svg?logo=azure-pipelines&style=flat-square&label=build)](https://dev.azure.com/explosion-ai/public/_build?definitionId=12)
-[![Current Release Version](https://img.shields.io/github/v/release/explosion/sense2vec.svg?style=flat-square&include_prereleases&logo=github)](https://github.com/explosion/sense2vec/releases)
+[![Current Release Version](https://img.shields.io/github/v/release/explosion/sense2vec.svg?style=flat-square&logo=github)](https://github.com/explosion/sense2vec/releases)
 [![pypi Version](https://img.shields.io/pypi/v/sense2vec.svg?style=flat-square&logo=pypi&logoColor=white)](https://pypi.org/project/sense2vec/)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg?style=flat-square)](https://github.com/ambv/black)
 
