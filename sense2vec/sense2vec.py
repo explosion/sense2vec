@@ -217,7 +217,7 @@ class Sense2Vec(object):
             key = self.ensure_int_key(key)
             key_row = self.vectors.find(key=key)
             rows = self.cache["indices"][key_row, :n]
-            scores = self.cache["indices"][key_row, :n]
+            scores = self.cache["scores"][key_row, :n]
             keys = [self.row2key[r] for r in rows]
             keys = [self.strings[k] for k in keys]
             assert len(keys) == len(scores)
