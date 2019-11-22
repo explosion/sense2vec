@@ -22,13 +22,18 @@ def test_model_most_similar_cache(s2v):
     query = "beekeepers|NOUN"
     assert s2v.cache
     assert query in s2v
+    indices = s2v.cache["indices"]
     # Modify cache to test that the cache is used and values aren't computed
     query_row = s2v.vectors.find(key=s2v.ensure_int_key(query))
     scores = numpy.array(s2v.cache["scores"], copy=True)  # otherwise not writable
     honey_bees_row = s2v.vectors.find(key="honey_bees|NOUN")
-    scores[query_row, honey_bees_row] = 2.0
-    beekeepers_row = s2v.vectors.find(key="Beekepers|NOUN")
-    scores[query_row, beekeepers_row] = 3.0
+    beekeepers_row = s2v.vectors.find(key="Beekeepers|NOUN")
+    for i in range(indices.shape[0]):
+        for j in range(indices.shape[1]):
+            if indices[i, j] == honey_bees_row:
+                scores[i, j] = 2.0
+            elif indices[i, j] == beekeepers_row:
+                scores[i, j] = 3.0
     s2v.cache["scores"] = scores
     ((key1, score1), (key2, score2)) = s2v.most_similar([query], n=2)
     assert key1 == "honey_bees|NOUN"
