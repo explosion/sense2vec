@@ -55,8 +55,7 @@ class Sense2VecComponent(object):
         """
         self.first_run = True
         self.merge_phrases = merge_phrases
-        strings = vocab.strings if vocab is not None else None
-        self.s2v = Sense2Vec(shape=shape, strings=strings)
+        self.s2v = Sense2Vec(shape=shape)
         cfg = {
             "make_spacy_key": "default",
             "get_phrases": "default",
@@ -212,7 +211,7 @@ class Sense2VecComponent(object):
         bytes_data (bytes): The data to load.
         RETURNS (Sense2VecComponent): The loaded object.
         """
-        self.s2v = Sense2Vec().from_bytes(bytes_data, exclude=["strings"])
+        self.s2v = Sense2Vec().from_bytes(bytes_data)
         return self
 
     def to_disk(self, path: Union[str, Path]):
@@ -228,5 +227,5 @@ class Sense2VecComponent(object):
         path (unicode / Path): The path to load from.
         RETURNS (Sense2VecComponent): The loaded object.
         """
-        self.s2v = Sense2Vec().from_disk(path, exclude=["strings"])
+        self.s2v = Sense2Vec().from_disk(path)
         return self
