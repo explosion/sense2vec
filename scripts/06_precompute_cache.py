@@ -34,7 +34,6 @@ def main(
         import cupy.cuda.device
 
         cupy.take_along_axis = take_along_axis
-        cupy.put_along_axis = put_along_axis
         device = cupy.cuda.device.Device(gpu_id)
         device.use()
     vectors_dir = Path(vectors)
@@ -66,8 +65,9 @@ def main(
         batch = vectors[i : i + size]
         sims = xp.dot(batch, subset.T)
         # Set self-similarities to -inf, so that we don't return them.
-        indices = xp.arange(i, min(i + size, sims.shape[1])).reshape((-1, 1))
-        xp.put_along_axis(sims, indices, -xp.inf, axis=1)
+        for j in range(size):
+            if i+j < sims.shape[1]:
+                sims[j, i+j] = -xp.inf
         # This used to use argpartition, to do a partial sort...But this ended
         # up being a ratsnest of terrible numpy crap. Just sorting the whole
         # list isn't really slower, and it's much simpler to read.
@@ -138,37 +138,6 @@ def take_along_axis(a, indices, axis):
             fancy_index.append(cupy.arange(n).reshape(ind_shape))
 
     return a[fancy_index]
-
-
-def put_along_axis(a, indices, value, axis):
-    import cupy
-
-    if indices.dtype.kind not in ("i", "u"):
-        raise IndexError("`indices` must be an integer array")
-
-    if axis is None:
-        a = a.ravel()
-        axis = 0
-
-    ndim = a.ndim
-
-    if not (-ndim <= axis < ndim):
-        raise IndexError("Axis overrun")
-
-    axis %= a.ndim
-
-    if ndim != indices.ndim:
-        raise ValueError("`indices` and `a` must have the same number of dimensions")
-
-    fancy_index = []
-    for i, n in enumerate(a.shape):
-        if i == axis:
-            fancy_index.append(indices)
-        else:
-            ind_shape = (1,) * i + (-1,) + (1,) * (ndim - i - 1)
-            fancy_index.append(cupy.arange(n).reshape(ind_shape))
-
-    a[fancy_index] = value
 
 
 if __name__ == "__main__":
