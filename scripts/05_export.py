@@ -35,7 +35,7 @@ def read_vocab(vocab_file):
             continue
         freqs[key] = int(freq)
     return freqs
- 
+
 
 def get_minority_keys(freqs, min_ratio):
     """Remove keys that are too infrequent relative to a main sense."""
@@ -79,7 +79,7 @@ def get_redundant_keys(vocab, vectors, min_distance):
             for freq2, key2 in values[1:]:
                 vector2 = vectors[key2]
                 sim = cosine_similarity(vector1, vector2)
-                if sim >= (1-min_distance):
+                if sim >= (1 - min_distance):
                     too_similar.append(key2)
     return too_similar
 
@@ -88,8 +88,18 @@ def get_redundant_keys(vocab, vectors, min_distance):
     in_file=("Vectors file (text-based)", "positional", None, str),
     vocab_file=("Vocabulary file", "positional", None, str),
     out_dir=("Path to output directory", "positional", None, str),
-    min_freq_ratio=("Frequency ratio threshold for discarding minority senses or casings.", "option", "r", float),
-    min_distance=("Similarity threshold for discarding redundant keys.", "option", "s", float)
+    min_freq_ratio=(
+        "Frequency ratio threshold for discarding minority senses or casings.",
+        "option",
+        "r",
+        float,
+    ),
+    min_distance=(
+        "Similarity threshold for discarding redundant keys.",
+        "option",
+        "s",
+        float,
+    ),
 )
 def main(in_file, vocab_file, out_dir, min_freq_ratio=0.0, min_distance=0.0):
     """

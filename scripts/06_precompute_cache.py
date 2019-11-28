@@ -11,7 +11,7 @@ from pathlib import Path
     gpu_id=("GPU device (-1 for CPU)", "option", "g", int),
     n_neighbors=("Number of neighbors to cache", "option", "n", int),
     batch_size=("Batch size for to reduce memory usage.", "option", "b", int),
-    cutoff=("Limit neighbors to this many earliest rows", "option", "c", int,),
+    cutoff=("Limit neighbors to this many earliest rows", "option", "c", int),
     start=("Index of vectors to start at.", "option", "s", int),
     end=("Index of vectors to stop at.", "option", "e", int),
 )
@@ -32,6 +32,7 @@ def main(
     else:
         import cupy as xp
         import cupy.cuda.device
+
         xp.take_along_axis = take_along_axis
         device = cupy.cuda.device.Device(gpu_id)
         cupy.cuda.get_cublas_handle()
@@ -66,8 +67,8 @@ def main(
         sims = xp.dot(batch, subset.T)
         # Set self-similarities to -inf, so that we don't return them.
         for j in range(size):
-            if i+j < sims.shape[1]:
-                sims[j, i+j] = -xp.inf
+            if i + j < sims.shape[1]:
+                sims[j, i + j] = -xp.inf
         # This used to use argpartition, to do a partial sort...But this ended
         # up being a ratsnest of terrible numpy crap. Just sorting the whole
         # list isn't really slower, and it's much simpler to read.
