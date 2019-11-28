@@ -210,25 +210,25 @@ class Sense2Vec(object):
             n = min(len(self.vectors), n)
             key = self.ensure_int_key(key)
             key_row = self.vectors.find(key=key)
-            rows = self.cache["indices"][key_row, :n]
-            scores = self.cache["scores"][key_row, :n]
-            keys = [self.row2key[r] for r in rows]
-            keys = [self.strings[k] for k in keys]
-            assert len(keys) == len(scores)
-            return list(zip(keys, scores))
-        else:
-            # Always ask for more because we'll always get the keys themselves
-            n = min(len(self.vectors), n + len(keys))
-            rows = numpy.asarray(self.vectors.find(keys=keys))
-            vecs = self.vectors.data[rows]
-            average = vecs.mean(axis=0, keepdims=True)
-            result_keys, _, scores = self.vectors.most_similar(
-                average, n=n, batch_size=batch_size
-            )
-            result = list(zip(result_keys.flatten(), scores.flatten()))
-            result = [(self.strings[key], score) for key, score in result if key]
-            result = [(key, score) for key, score in result if key not in keys]
-            return result
+            if key_row < self.cache["indices"].shape[0]:
+                rows = self.cache["indices"][key_row, :n]
+                scores = self.cache["scores"][key_row, :n]
+                entries = zip(rows, scores)
+                entries = [(self.strings[self.row2key[r]], score) for r, score in entries
+                            if r in self.row2key]
+                return entries
+        # Always ask for more because we'll always get the keys themselves
+        n = min(len(self.vectors), n + len(keys))
+        rows = numpy.asarray(self.vectors.find(keys=keys))
+        vecs = self.vectors.data[rows]
+        average = vecs.mean(axis=0, keepdims=True)
+        result_keys, _, scores = self.vectors.most_similar(
+            average, n=n, batch_size=batch_size
+        )
+        result = list(zip(result_keys.flatten(), scores.flatten()))
+        result = [(self.strings[key], score) for key, score in result if key]
+        result = [(key, score) for key, score in result if key not in keys]
+        return result
 
     def get_other_senses(
         self, key: Union[str, int], ignore_case: bool = True
