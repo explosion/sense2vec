@@ -186,7 +186,7 @@ class Sense2Vec(object):
         average_a = numpy.vstack([self[key] for key in keys_a]).mean(axis=0)
         average_b = numpy.vstack([self[key] for key in keys_b]).mean(axis=0)
         return cosine_similarity(average_a, average_b)
-    
+
     def most_similar(
         self,
         keys: Union[Sequence[Union[str, int]], str, int],
@@ -214,8 +214,11 @@ class Sense2Vec(object):
                 rows = self.cache["indices"][key_row, :n]
                 scores = self.cache["scores"][key_row, :n]
                 entries = zip(rows, scores)
-                entries = [(self.strings[self.row2key[r]], score) for r, score in entries
-                            if r in self.row2key]
+                entries = [
+                    (self.strings[self.row2key[r]], score)
+                    for r, score in entries
+                    if r in self.row2key
+                ]
                 return entries
         # Always ask for more because we'll always get the keys themselves
         n = min(len(self.vectors), n + len(keys))
