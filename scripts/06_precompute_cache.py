@@ -32,9 +32,9 @@ def main(
     else:
         import cupy as xp
         import cupy.cuda.device
-
-        cupy.take_along_axis = take_along_axis
+        xp.take_along_axis = take_along_axis
         device = cupy.cuda.device.Device(gpu_id)
+        cupy.cuda.get_cublas_handle()
         device.use()
     vectors_dir = Path(vectors)
     vectors_file = vectors_dir / "vectors"
