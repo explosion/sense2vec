@@ -193,7 +193,7 @@ def to_patterns(
     examples = DB.get_dataset(dataset)
     terms = set([eg["word"] for eg in examples if eg["answer"] == "accept"])
     if case_sensitive:
-        patterns = [[{"text": t.lower_} for t in nlp.make_doc(term)] for term in terms]
+        patterns = [[{"text": t.text} for t in nlp.make_doc(term)] for term in terms]
     else:
         terms = set([word.lower() for word in terms])
         patterns = [[{"lower": t.lower_} for t in nlp.make_doc(term)] for term in terms]
