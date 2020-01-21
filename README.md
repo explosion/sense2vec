@@ -36,7 +36,7 @@ semantic similarities across all Reddit comments of 2015 and 2019, see the
   ([details](#-training-your-own-sense2vec-vectors)).
 - [Prodigy](https://prodi.gy) **annotation recipes** for evaluating models,
   creating lists of similar multi-word phrases and converting them to match
-  patterns, e.g. for rule-based NER or to boostrap NER annotation
+  patterns, e.g. for rule-based NER or to bootstrap NER annotation
   ([details & examples](#-prodigy-recipes)).
 
 ## 🚀 Quickstart
@@ -151,7 +151,7 @@ s2v = Sense2VecComponent(nlp.vocab).from_disk("/path/to/s2v_reddit_2015_md")
 nlp.add_pipe(s2v)
 ```
 
-The component will add serveral
+The component will add several
 [extension attributes and methods](https://spacy.io/usage/processing-pipelines#custom-components-attributes)
 to spaCy's `Token` and `Span` objects that let you retrieve vectors and
 frequencies, as well as most similar terms.
@@ -401,7 +401,7 @@ assert "VERB" in s2v.senses
 
 #### <kbd>property</kbd> `Sense2vec.frequencies`
 
-The frequencies of they keys in the table, in descending order.
+The frequencies of the keys in the table, in descending order.
 
 | Argument    | Type | Description                                        |
 | ----------- | ---- | -------------------------------------------------- |
@@ -745,7 +745,7 @@ The following recipes are available – see below for more detailed docs.
 ### <kbd>recipe</kbd> `sense2vec.teach`
 
 Bootstrap a terminology list using sense2vec. Prodigy will suggest similar terms
-based on the the most similar phrases from sense2vec, and the suggestions will
+based on the most similar phrases from sense2vec, and the suggestions will
 be adjusted as you annotate and accept similar phrases. For each seed term, the
 best matching sense according to the sense2vec vectors will be used.
 
