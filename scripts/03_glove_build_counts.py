@@ -61,7 +61,7 @@ def main(
     cmd = (
         f"cat {' '.join(input_files)} | {glove_dir}/cooccur -memory {memory} "
         f"-vocab-file {vocab_file} -verbose {verbose} "
-        "-window-size {window_size} > {cooc_file}"
+        f"-window-size {window_size} > {cooc_file}"
     )
     print(cmd)
     cooccur_cmd = os.system(cmd)
