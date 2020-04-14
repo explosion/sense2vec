@@ -2,6 +2,7 @@ from typing import Union, List, Tuple, Set
 import re
 from spacy.tokens import Doc, Token, Span
 from spacy.util import filter_spans
+from thinc.neural.util import get_array_module
 import catalogue
 
 try:
@@ -165,6 +166,18 @@ def merge_phrases(doc: Doc) -> Doc:
         for span in spans:
             retokenizer.merge(span)
     return doc
+
+
+def cosine_similarity(vec1, vec2) -> float:
+    """Compute the cosine similarity of two vectors."""
+    if vec1.all() == 0 or vec2.all() == 0:
+        return 0.0
+    xp = get_array_module(vec1)
+    norm1 = xp.linalg.norm(vec1)
+    norm2 = xp.linalg.norm(vec2)
+    if norm1 == norm2:
+        return 1.0
+    return xp.dot(vec1, vec2) / (norm1 * norm2)
 
 
 class SimpleFrozenDict(dict):

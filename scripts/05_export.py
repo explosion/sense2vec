@@ -1,6 +1,7 @@
 #!/usr/bin/env python
+from collections import OrderedDict, defaultdict
 from sense2vec import Sense2Vec
-from sense2vec.util import split_key
+from sense2vec.util import split_key, cosine_similarity
 from pathlib import Path
 import plac
 from wasabi import msg
@@ -22,12 +23,85 @@ def _get_shape(file_):
     return shape, file_
 
 
+def read_vocab(vocab_file):
+    freqs = OrderedDict()
+    for line in vocab_file:
+        item = line.rstrip()
+        if item.endswith(" word"):  # for fastText vocabs
+            item = item[:-5]
+        try:
+            key, freq = item.rsplit(" ", 1)
+        except ValueError:
+            continue
+        freqs[key] = int(freq)
+    return freqs
+
+
+def get_minority_keys(freqs, min_ratio):
+    """Remove keys that are too infrequent relative to a main sense."""
+    by_word = defaultdict(list)
+    for key, freq in freqs.items():
+        try:
+            term, sense = split_key(key)
+        except ValueError:
+            continue
+        if freq:
+            by_word[term.lower()].append((freq, key))
+    discarded = []
+    for values in by_word.values():
+        if len(values) >= 2:
+            values.sort(reverse=True)
+            freq1, key1 = values[0]
+            for freq2, key2 in values[1:]:
+                ratio = freq2 / freq1
+                if ratio < min_ratio:
+                    discarded.append(key2)
+    return discarded
+
+
+def get_redundant_keys(vocab, vectors, min_distance):
+    if min_distance <= 0.0:
+        return []
+    by_word = defaultdict(list)
+    for key, freq in vocab.items():
+        try:
+            term, sense = split_key(key)
+        except ValueError:
+            continue
+        term = term.split("_")[-1]
+        by_word[term.lower()].append((freq, key))
+    too_similar = []
+    for values in by_word.values():
+        if len(values) >= 2:
+            values.sort(reverse=True)
+            freq1, key1 = values[0]
+            vector1 = vectors[key1]
+            for freq2, key2 in values[1:]:
+                vector2 = vectors[key2]
+                sim = cosine_similarity(vector1, vector2)
+                if sim >= (1 - min_distance):
+                    too_similar.append(key2)
+    return too_similar
+
+
 @plac.annotations(
     in_file=("Vectors file (text-based)", "positional", None, str),
     vocab_file=("Vocabulary file", "positional", None, str),
     out_dir=("Path to output directory", "positional", None, str),
+    min_freq_ratio=(
+        "Frequency ratio threshold for discarding minority senses or casings.",
+        "option",
+        "r",
+        float,
+    ),
+    min_distance=(
+        "Similarity threshold for discarding redundant keys.",
+        "option",
+        "s",
+        float,
+    ),
 )
-def main(in_file, vocab_file, out_dir):
+def main(in_file, vocab_file, out_dir, min_freq_ratio=0.0, min_distance=0.0):
     """
     Step 5: Export a sense2vec component
 
@@ -50,8 +124,8 @@ def main(in_file, vocab_file, out_dir):
         (n_vectors, vector_size), f = _get_shape(f)
         vectors_data = f.readlines()
     with vocab_path.open("r", encoding="utf8") as f:
-        vocab_data = f.readlines()
-    data = []
+        vocab = read_vocab(f)
+    vectors = {}
     all_senses = set()
     for item in vectors_data:
         item = item.rstrip().rsplit(" ", vector_size)
@@ -64,21 +138,18 @@ def main(in_file, vocab_file, out_dir):
         if len(vec) != vector_size:
             msg.fail(f"Wrong vector size: {len(vec)} (expected {vector_size})", exits=1)
         all_senses.add(sense)
-        data.append((key, numpy.asarray(vec, dtype=numpy.float32)))
-    s2v = Sense2Vec(shape=(len(data), vector_size), senses=all_senses)
-    for key, vector in data:
-        s2v.add(key, vector)
-    for item in vocab_data:
-        item = item.rstrip()
-        if item.endswith(" word"):  # for fastText vocabs
-            item = item[:-5]
-        try:
-            key, freq = item.rsplit(" ", 1)
-        except ValueError:
-            continue
-        s2v.set_freq(key, int(freq))
+        vectors[key] = numpy.asarray(vec, dtype=numpy.float32)
+    discarded = set()
+    discarded.update(get_minority_keys(vocab, min_freq_ratio))
+    discarded.update(get_redundant_keys(vocab, vectors, min_distance))
+    n_vectors = len(vectors) - len(discarded)
+    s2v = Sense2Vec(shape=(n_vectors, vector_size), senses=all_senses)
+    for key, vector in vectors.items():
+        if key not in discarded:
+            s2v.add(key, vector)
+            s2v.set_freq(key, vocab[key])
     msg.good("Created the sense2vec model")
-    msg.info(f"{len(data)} vectors, {len(all_senses)} total senses")
+    msg.info(f"{n_vectors} vectors, {len(all_senses)} total senses")
     s2v.to_disk(output_path)
     msg.good("Saved model to directory", out_dir)
 

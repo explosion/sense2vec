@@ -5,7 +5,7 @@ from spacy.strings import StringStore
 import numpy
 import srsly
 
-from .util import registry, SimpleFrozenDict
+from .util import registry, cosine_similarity, SimpleFrozenDict
 
 
 class Sense2Vec(object):
@@ -185,13 +185,7 @@ class Sense2Vec(object):
             keys_b = [keys_b]
         average_a = numpy.vstack([self[key] for key in keys_a]).mean(axis=0)
         average_b = numpy.vstack([self[key] for key in keys_b]).mean(axis=0)
-        if average_a.all() == 0 or average_b.all() == 0:
-            return 0.0
-        norm_a = numpy.linalg.norm(average_a)
-        norm_b = numpy.linalg.norm(average_b)
-        if norm_a == norm_b:
-            return 1.0
-        return numpy.dot(average_a, average_b) / (norm_a * norm_b)
+        return cosine_similarity(average_a, average_b)
 
     def most_similar(
         self,
@@ -216,25 +210,28 @@ class Sense2Vec(object):
             n = min(len(self.vectors), n)
             key = self.ensure_int_key(key)
             key_row = self.vectors.find(key=key)
-            rows = self.cache["indices"][key_row, :n]
-            scores = self.cache["scores"][key_row, :n]
-            keys = [self.row2key[r] for r in rows]
-            keys = [self.strings[k] for k in keys]
-            assert len(keys) == len(scores)
-            return list(zip(keys, scores))
-        else:
-            # Always ask for more because we'll always get the keys themselves
-            n = min(len(self.vectors), n + len(keys))
-            rows = numpy.asarray(self.vectors.find(keys=keys))
-            vecs = self.vectors.data[rows]
-            average = vecs.mean(axis=0, keepdims=True)
-            result_keys, _, scores = self.vectors.most_similar(
-                average, n=n, batch_size=batch_size
-            )
-            result = list(zip(result_keys.flatten(), scores.flatten()))
-            result = [(self.strings[key], score) for key, score in result if key]
-            result = [(key, score) for key, score in result if key not in keys]
-            return result
+            if key_row < self.cache["indices"].shape[0]:
+                rows = self.cache["indices"][key_row, :n]
+                scores = self.cache["scores"][key_row, :n]
+                entries = zip(rows, scores)
+                entries = [
+                    (self.strings[self.row2key[r]], score)
+                    for r, score in entries
+                    if r in self.row2key
+                ]
+                return entries
+        # Always ask for more because we'll always get the keys themselves
+        n = min(len(self.vectors), n + len(keys))
+        rows = numpy.asarray(self.vectors.find(keys=keys))
+        vecs = self.vectors.data[rows]
+        average = vecs.mean(axis=0, keepdims=True)
+        result_keys, _, scores = self.vectors.most_similar(
+            average, n=n, batch_size=batch_size
+        )
+        result = list(zip(result_keys.flatten(), scores.flatten()))
+        result = [(self.strings[key], score) for key, score in result if key]
+        result = [(key, score) for key, score in result if key not in keys]
+        return result
 
     def get_other_senses(
         self, key: Union[str, int], ignore_case: bool = True
