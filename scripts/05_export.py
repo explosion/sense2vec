@@ -12,7 +12,7 @@ def _get_shape(file_):
     """Return a tuple with (number of entries, vector dimensions). Handle
     both word2vec/FastText format, which has a header with this, or GloVe's
     format, which doesn't."""
-    first_line = next(file_).split()
+    first_line = next(file_).replace('\ufeff','').split()
     if len(first_line) == 2:
         return tuple(int(size) for size in first_line), file_
     count = 1
