@@ -1,7 +1,7 @@
 # Our packages
 spacy>=2.2.3,<3.0.0
-srsly>=0.2.0
-catalogue>=0.0.4
+srsly>=1.0.2,<1.1.0
+catalogue>=0.0.7,<1.1.0
 # Third-party dependencies
 numpy>=1.15.0
 importlib_metadata>=0.20; python_version < "3.8"
