@@ -705,7 +705,7 @@ To train your own sense2vec vectors, you'll need the following:
 
 The training process is split up into several steps to allow you to resume at
 any given point. Processing scripts are designed to operate on single files,
-making it easy to paralellize the work. The scripts in this repo require either
+making it easy to parallellize the work. The scripts in this repo require either
 [Glove](https://github.com/stanfordnlp/GloVe) or
 [fastText](https://github.com/facebookresearch/fastText), which you need to
 clone and `make`.
