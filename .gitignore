@@ -70,3 +70,6 @@ target/
 
 #Ipython Notebook
 .ipynb_checkpoints
+
+# Pycharm project files
+/.idea/
