@@ -11,7 +11,7 @@ details, check out
 semantic similarities across all Reddit comments of 2015 and 2019, see the
 [interactive demo](https://demos.explosion.ai/sense2vec).
 
-🦆 **Version 1.0 out now!**
+🦆 **Version 2.0 (for spaCy v3) out now!**
 [Read the release notes here.](https://github.com/explosion/sense2vec/releases/)
 
 [![Azure Pipelines](https://img.shields.io/azure-devops/build/explosion-ai/public/12/master.svg?logo=azure-pipelines&style=flat-square&label=build)](https://dev.azure.com/explosion-ai/public/_build?definitionId=12)
@@ -59,13 +59,14 @@ most_similar = s2v.most_similar(query, n=3)
 
 ### Usage as a spaCy pipeline component
 
+> ⚠️ Note that this example describes usage with [spaCy v3](https://spacy.io/usage/v3). For usage with spaCy v2, download `sense2vec==1.0.3` and check out the [`v1.x`](https://github.com/explosion/sense2vec/tree/v1.x) branch of this repo.
+
 ```python
 import spacy
-from sense2vec import Sense2VecComponent
 
 nlp = spacy.load("en_core_web_sm")
-s2v = Sense2VecComponent(nlp.vocab).from_disk("/path/to/s2v_reddit_2015_md")
-nlp.add_pipe(s2v)
+s2v = nlp.add_pipe("sense2vec")
+s2v.from_disk("/path/to/s2v_reddit_2015_md")
 
 doc = nlp("A sentence about natural language processing.")
 assert doc[3:6].text == "natural language processing"
@@ -132,7 +133,7 @@ s2v = Sense2Vec().from_disk("/path/to/s2v_reddit_2015_md")
 
 ## 👩‍💻 Usage
 
-### Usage with spaCy v2.2+
+### Usage with spaCy v3
 
 The easiest way to use the library and vectors is to plug it into your spaCy
 pipeline. The `sense2vec` package exposes a `Sense2VecComponent`, which can be
@@ -147,8 +148,8 @@ import spacy
 from sense2vec import Sense2VecComponent
 
 nlp = spacy.load("en_core_web_sm")
-s2v = Sense2VecComponent(nlp.vocab).from_disk("/path/to/s2v_reddit_2015_md")
-nlp.add_pipe(s2v)
+s2v = nlp.add_pipe("sense2vec")
+s2v.from_disk("/path/to/s2v_reddit_2015_md")
 ```
 
 The component will add several
@@ -203,6 +204,17 @@ The following attributes are available via the `._` property of `Token` and
 > likely won't have a key for the respective text. `Span` objects also don't
 > have a part-of-speech tag, so if no entity label is present, the "sense"
 > defaults to the root's part-of-speech tag.
+
+#### Adding sense2vec to a trained pipeline
+
+If you're training and packaging a spaCy pipeline and want to include a sense2vec component in it, you can load in the data via the [`[initialize]` block](https://spacy.io/usage/training#config-lifecycle) of the training config:
+
+```ini
+[initialize.components]
+
+[initialize.components.sense2vec]
+data_path = "/path/to/s2v_reddit_2015_md"
+```
 
 ### Standalone usage
 
@@ -708,12 +720,12 @@ any given point. Processing scripts are designed to operate on single files,
 making it easy to parallellize the work. The scripts in this repo require either
 [Glove](https://github.com/stanfordnlp/GloVe) or
 [fastText](https://github.com/facebookresearch/fastText) which you need to
-clone and `make`. 
+clone and `make`.
 
-For Fasttext, the scripts will require the path to the created binary file. 
-If you're working on Windows, you can build with `cmake`, or alternatively 
-use the `.exe` file from this **unofficial** 
-repo with FastText binary builds for Windows: 
+For Fasttext, the scripts will require the path to the created binary file.
+If you're working on Windows, you can build with `cmake`, or alternatively
+use the `.exe` file from this **unofficial**
+repo with FastText binary builds for Windows:
 https://github.com/xiamx/fastText/releases.
 
 
