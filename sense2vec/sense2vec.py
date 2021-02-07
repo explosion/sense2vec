@@ -1,7 +1,5 @@
-from typing import Tuple, List, Union, Sequence, Dict, Callable, Any, Iterable
-from typing import Optional
+from typing import Tuple, List, Union, Sequence, Dict, Callable, Any
 from pathlib import Path
-from spacy.language import Language
 from spacy.vectors import Vectors
 from spacy.strings import StringStore
 from spacy.util import SimpleFrozenDict
@@ -296,24 +294,6 @@ class Sense2Vec(object):
         if "cache" not in exclude:
             data["cache"] = self.cache
         return srsly.msgpack_dumps(data)
-
-    def initialize(
-        self,
-        get_examples: Callable[[], Iterable],
-        *,
-        nlp: Optional[Language] = None,
-        data_path: Optional[str] = None
-    ):
-        """Initialize the component and load in data. Can be used to add the
-        component with vectors to a pipeline before training.
-
-        get_examples (Callable[[], Iterable[Example]]): Function that
-            returns a representative sample of gold-standard Example objects.
-        nlp (Language): The current nlp object the component is part of.
-        data_path (Optional[str]): Optional path to sense2vec model.
-        """
-        if data_path is not None:
-            self.from_disk(data_path)
 
     def from_bytes(self, bytes_data: bytes, exclude: Sequence[str] = tuple()):
         """Load a Sense2Vec object from a bytestring.

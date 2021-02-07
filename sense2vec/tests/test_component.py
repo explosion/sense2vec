@@ -1,8 +1,10 @@
 import pytest
 import numpy
+import spacy
 from spacy.vocab import Vocab
 from spacy.tokens import Doc, Span
 from sense2vec import Sense2VecComponent
+from pathlib import Path
 
 
 @pytest.fixture
@@ -103,3 +105,33 @@ def test_component_to_from_bytes(doc):
     assert doc[0]._.in_s2v is False
     new_doc = new_s2v(doc)
     assert new_doc[0]._.in_s2v is True
+
+
+def test_component_initialize():
+    data_path = Path(__file__).parent / "data"
+    # With from_disk
+    nlp = spacy.blank("en")
+    s2v = nlp.add_pipe("sense2vec")
+    if Doc.has_extension("s2v_phrases"):
+        s2v.first_run = False  # don't set up extensions again
+    s2v.from_disk(data_path)
+    doc = Doc(nlp.vocab, words=["beekeepers"], pos=["NOUN"])
+    s2v(doc)
+    assert doc[0]._.s2v_key == "beekeepers|NOUN"
+    most_similar = [item for item, score in doc[0]._.s2v_most_similar(2)]
+    assert most_similar[0] == ("honey bees", "NOUN")
+    assert most_similar[1] == ("Beekeepers", "NOUN")
+
+    # With initialize
+    nlp = spacy.blank("en")
+    s2v = nlp.add_pipe("sense2vec")
+    s2v.first_run = False  # don't set up extensions again
+    init_cfg = {"sense2vec": {"data_path": str(data_path)}}
+    nlp.config["initialize"]["components"] = init_cfg
+    nlp.initialize()
+    doc = Doc(nlp.vocab, words=["beekeepers"], pos=["NOUN"])
+    s2v(doc)
+    assert doc[0]._.s2v_key == "beekeepers|NOUN"
+    most_similar = [item for item, score in doc[0]._.s2v_most_similar(2)]
+    assert most_similar[0] == ("honey bees", "NOUN")
+    assert most_similar[1] == ("Beekeepers", "NOUN")
