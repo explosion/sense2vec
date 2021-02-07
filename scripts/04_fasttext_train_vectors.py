@@ -1,33 +1,26 @@
 #!/usr/bin/env python
-import plac
+from typing import Optional
 from pathlib import Path
 from wasabi import msg
 import fasttext
 from errno import EPIPE
+import typer
+
 # python 04_fasttext_train_vectors.py /path/to/output/director/ -in /path/to/input/directory
 
 
-@plac.annotations(
-    out_dir=("Path to output directory", "positional", None, str),
-    in_dir=("Path to directory with preprocessed .s2v file(s)", "option", "in", str),
-    n_threads=("Number of threads", "option", "t", int),
-    min_count=("Minimum count for inclusion in vocab", "option", "c", int),
-    vector_size=("Dimension of word vector representations", "option", "s", int),
-    epoch=("Number of times the fastText model will loop over your data", "option", "e", int),
-    save_fasttext_model=("Save fastText model to output directory as a binary file to avoid retraining", "flag", "sv"),
-    fasttext_filepath=("Path to saved fastText model .bin file", "option", "ft", str),
-    verbose=("Set verbosity: 0, 1, or 2", "option", "v", int),
-)
 def main(
-    out_dir,
-    in_dir=None,
-    n_threads=10,
-    min_count=50,
-    vector_size=300,
-    epoch=5,
-    save_fasttext_model=False,
-    fasttext_filepath=None,
-    verbose=2,
+    # fmt: off
+    out_dir: str = typer.Argument(..., help="Path to output directory"),
+    in_dir: Optional[str] = typer.Argument(None, help="Path to directory with preprocessed .s2v file(s)"),
+    n_threads: int = typer.Option(10, "--n-threads", "-t", help="Number of threads"),
+    min_count: int = typer.Option(50, "--min-count", "-c", help="Minimum count for inclusion in vocab"),
+    vector_size: int = typer.Option(300, "--vector-size", "-s", help="Dimension of word vector representations"),
+    epoch: int = typer.Option(5, "--epoch", "-e", help="Number of times the fastText model will loop over your data"),
+    save_fasttext_model: bool = typer.Option(False, "--save-fasttext-model", "-sv", help="Save fastText model to output directory as a binary file to avoid retraining"),
+    fasttext_filepath: Optional[str] = typer.Option(None, "--fasttext-filepath", "-ft", help="Path to saved fastText model .bin file"),
+    verbose: int = typer.Option(2, "--verbose", "-v", help="Set verbosity: 0, 1, or 2"),
+    # fmt: on
 ):
     """
     Step 4: Train the vectors
@@ -41,7 +34,6 @@ def main(
     built fasttext binary. The command will also be printed if you want to run
     it separately.
     """
-
     output_path = Path(out_dir)
     if not output_path.exists():
         output_path.mkdir(parents=True)
@@ -50,10 +42,18 @@ def main(
     if fasttext_filepath:
         msg.info("Loading fastText model vectors from .bin file")
         if in_dir:
-            msg.warn(f"Warning: Providing a fastText filepath overrides fastText vector training")
+            msg.warn(
+                f"Warning: Providing a fastText filepath overrides fastText vector training"
+            )
         fasttext_filepath = Path(fasttext_filepath)
-        if not fasttext_filepath.exists() or not fasttext_filepath.is_file() or not (fasttext_filepath.suffix == '.bin'):
-            msg.fail("Error: fasttext_filepath expects a fastText model .bin file", exits=1)
+        if (
+            not fasttext_filepath.exists()
+            or not fasttext_filepath.is_file()
+            or not (fasttext_filepath.suffix == ".bin")
+        ):
+            msg.fail(
+                "Error: fasttext_filepath expects a fastText model .bin file", exits=1
+            )
         fasttext_model = fasttext.load_model(str(fasttext_filepath))
         msg.good("Successfully loaded fastText model")
     elif in_dir:
@@ -73,8 +73,16 @@ def main(
                 with input_file.open("r", encoding="utf8") as f:
                     tmp_file.write(f.read())
         msg.info("Created temporary merged input file", tmp_path)
-        fasttext_model = fasttext.train_unsupervised(str(tmp_path), thread=n_threads, epoch=epoch, dim=vector_size,
-                                                     minn=0, maxn=0, minCount=min_count, verbose=verbose)
+        fasttext_model = fasttext.train_unsupervised(
+            str(tmp_path),
+            thread=n_threads,
+            epoch=epoch,
+            dim=vector_size,
+            minn=0,
+            maxn=0,
+            minCount=min_count,
+            verbose=verbose,
+        )
         msg.good("Successfully trained fastText model vectors")
 
         tmp_path.unlink()
@@ -92,7 +100,7 @@ def main(
     msg.info("Creating vocabulary file")
     vocab_file = output_path / "vocab.txt"
     words, freqs = fasttext_model.get_words(include_freq=True)
-    with vocab_file.open('w', encoding='utf8') as f:
+    with vocab_file.open("w", encoding="utf8") as f:
         for i in range(len(words)):
             f.write(words[i] + " " + str(freqs[i]) + " word\n")
     if not vocab_file.exists() or not vocab_file.is_file():
@@ -102,9 +110,11 @@ def main(
     msg.info("Creating vectors file")
     vectors_file = output_path / "vectors.txt"
     # Adapted from https://github.com/facebookresearch/fastText/blob/master/python/doc/examples/bin_to_vec.py#L31
-    with vectors_file.open('w', encoding='utf-8') as file_out:
+    with vectors_file.open("w", encoding="utf-8") as file_out:
         # the first line must contain the number of total words and vector dimension
-        file_out.write(str(len(words)) + " " + str(fasttext_model.get_dimension()) + '\n')
+        file_out.write(
+            str(len(words)) + " " + str(fasttext_model.get_dimension()) + "\n"
+        )
         # line by line, append vector to vectors file
         for w in words:
             v = fasttext_model.get_word_vector(w)
@@ -112,7 +122,7 @@ def main(
             for vi in v:
                 vstr += " " + str(vi)
             try:
-                file_out.write(w + vstr + '\n')
+                file_out.write(w + vstr + "\n")
             except IOError as e:
                 if e.errno == EPIPE:
                     pass
@@ -122,4 +132,4 @@ def main(
 
 
 if __name__ == "__main__":
-    plac.call(main)
+    typer.run(main)

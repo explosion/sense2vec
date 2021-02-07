@@ -1,31 +1,22 @@
 #!/usr/bin/env python
-import plac
 import os
 from pathlib import Path
 from wasabi import msg
+import typer
 
 
-@plac.annotations(
-    glove_dir=("Directory containing the GloVe build", "positional", None, str),
-    in_file=("Input file (shuffled cooccurrences)", "positional", None, str),
-    vocab_file=("Vocabulary file", "positional", None, str),
-    out_dir=("Path to output directory", "positional", None, str),
-    n_threads=("Number of threads", "option", "t", int),
-    n_iter=("Number of iterations", "option", "n", int),
-    x_max=("Parameter specifying cutoff in weighting function", "option", "x", int),
-    vector_size=("Dimension of word vector representations", "option", "s", int),
-    verbose=("Set verbosity: 0, 1, or 2", "option", "v", int),
-)
 def main(
-    glove_dir,
-    in_file,
-    vocab_file,
-    out_dir,
-    n_threads=8,
-    n_iter=15,
-    x_max=10,
-    vector_size=128,
-    verbose=2,
+    # fmt: off
+    glove_dir: str = typer.Argument(..., help="Directory containing the GloVe build"),
+    in_file: str = typer.Argument(..., help="Input file (shuffled cooccurrences)"),
+    vocab_file: str = typer.Argument(..., help="Vocabulary file"),
+    out_dir: str = typer.Argument(..., help="Path to output directory"),
+    n_threads: int = typer.Option(8, "--n-threads", "-t", help="Number of threads"),
+    n_iter: int = typer.Option(15, "--n-iter", "-n", help="Number of iterations"),
+    x_max: int = typer.Option(10, "--x-max", "-x", help="Parameter specifying cutoff in weighting function"),
+    vector_size: int = typer.Option(128, "--vector-size", "-s", help="Dimension of word vector representations"),
+    verbose: int = typer.Option(2, "--verbose", "-v", help="Set verbosity: 0, 1, or 2"),
+    # fmt: on
 ):
     """
     Step 4: Train the vectors
@@ -63,4 +54,4 @@ def main(
 
 
 if __name__ == "__main__":
-    plac.call(main)
+    typer.run(main)

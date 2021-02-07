@@ -1,21 +1,20 @@
 #!/usr/bin/env python
-import plac
 import os
 from pathlib import Path
 from wasabi import msg
+import typer
 
 
-@plac.annotations(
-    glove_dir=("Directory containing the GloVe build", "positional", None, str),
-    in_dir=("Directory with preprocessed .s2v files", "positional", None, str),
-    out_dir=("Path to output directory", "positional", None, str),
-    min_count=("Minimum count for inclusion in vocab", "option", "c", int),
-    memory=("Soft limit for memory consumption, in GB", "option", "m", float),
-    window_size=("Number of context words on either side", "option", "w", int),
-    verbose=("Set verbosity: 0, 1, or 2", "option", "v", int),
-)
 def main(
-    glove_dir, in_dir, out_dir, min_count=5, memory=4.0, window_size=15, verbose=2
+    # fmt: off
+    glove_dir: str = typer.Argument(..., help="Directory containing the GloVe build"),
+    in_dir: str = typer.Argument(..., help="Directory with preprocessed .s2v files"),
+    out_dir: str = typer.Argument(..., help="Path to output directory"),
+    min_count: int = typer.Option(5, "--min-count", "-c", help="Minimum count for inclusion in vocab"),
+    memory: float = typer.Option(4.0, "--memory", "-m", help="Soft limit for memory consumption, in GB"),
+    window_size: int = typer.Option(15, "--window-size", "-w", help="Number of context words on either side"),
+    verbose: int = typer.Option(2, "--verbose", "-v", help="Set verbosity: 0, 1, or 2"),
+    # fmt: on
 ):
     """
     Step 3: Build vocabulary and frequency counts
@@ -82,4 +81,4 @@ def main(
 
 
 if __name__ == "__main__":
-    plac.call(main)
+    typer.run(main)

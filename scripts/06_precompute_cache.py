@@ -1,22 +1,23 @@
-import plac
+#!/usr/bin/env python
+from typing import Optional
 import tqdm
 import numpy
 import srsly
 from wasabi import msg
 from pathlib import Path
+import typer
 
 
-@plac.annotations(
-    vectors=("Path to sense2vec component directory", "positional", None, str),
-    gpu_id=("GPU device (-1 for CPU)", "option", "g", int),
-    n_neighbors=("Number of neighbors to cache", "option", "n", int),
-    batch_size=("Batch size for to reduce memory usage.", "option", "b", int),
-    cutoff=("Limit neighbors to this many earliest rows", "option", "c", int),
-    start=("Index of vectors to start at.", "option", "s", int),
-    end=("Index of vectors to stop at.", "option", "e", int),
-)
 def main(
-    vectors, gpu_id=-1, n_neighbors=100, batch_size=1024, cutoff=0, start=0, end=None
+    # fmt: off
+    vectors: str = typer.Argument(..., help="Path to sense2vec component directory"),
+    gpu_id: int = typer.Option(-1, "--gpu-id", "-g", help="GPU device (-1 for CPU)"),
+    n_neighbors: int = typer.Option(100, "--n-neighbors", "-n", help="Number of neighbors to cache"),
+    batch_size: int = typer.Option(1024, "--batch-size", "-b", help="Batch size for to reduce memory usage"),
+    cutoff: int = typer.Option(0, "--cutoff", "-c", help="Limit neighbors to this many earliest rows"),
+    start: int = typer.Option(0, "--start", "-s", help="Index of vectors to start at"),
+    end: Optional[int] = typer.Option(None, "--end", "-e", help="Index of vectors to stop at"),
+    # fmt: on
 ):
     """
     Step 6: Precompute nearest-neighbor queries (optional)
@@ -142,7 +143,4 @@ def take_along_axis(a, indices, axis):
 
 
 if __name__ == "__main__":
-    try:
-        plac.call(main)
-    except KeyboardInterrupt:
-        msg.warn("Cancelled.")
+    typer.run(main)
