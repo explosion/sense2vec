@@ -196,7 +196,7 @@ class Sense2VecComponent(object):
         RETURNS (list): A list of other senses.
         """
         key = self.s2v_key(obj)
-        return obj._._s2v.get_other_senses(key)
+        return obj.doc._._s2v.get_other_senses(key)
 
     def to_bytes(self) -> bytes:
         """Serialize the component to a bytestring.
