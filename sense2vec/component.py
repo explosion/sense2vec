@@ -1,16 +1,16 @@
 from typing import Tuple, Union, List, Dict
-from spacy import component
+from spacy.language import Language
 from spacy.tokens import Doc, Token, Span
 from spacy.vocab import Vocab
-from spacy.language import Language
+from spacy.util import SimpleFrozenDict
 from pathlib import Path
 import numpy
 
 from .sense2vec import Sense2Vec
-from .util import registry, SimpleFrozenDict
+from .util import registry
 
 
-@component(
+@Language.factory(
     "sense2vec",
     requires=["token.pos", "token.dep", "token.ent_type", "token.ent_iob", "doc.ents"],
     assigns=[
@@ -32,6 +32,23 @@ from .util import registry, SimpleFrozenDict
         "span._.s2v_similarity",
     ],
 )
+def make_sense2vec(
+    nlp: Language,
+    name: str,
+    shape: Tuple[int, int] = (100, 128),
+    merge_phrases: bool = False,
+    lemmatize: bool = False,
+    overrides: Dict[str, str] = SimpleFrozenDict(),
+):
+    return Sense2VecComponent(
+        nlp.vocab,
+        shape=shape,
+        merge_phrases=merge_phrases,
+        lemmatize=lemmatize,
+        overrides=overrides,
+    )
+
+
 class Sense2VecComponent(object):
     def __init__(
         self,

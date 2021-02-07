@@ -2,7 +2,7 @@ from typing import Union, List, Tuple, Set
 import re
 from spacy.tokens import Doc, Token, Span
 from spacy.util import filter_spans
-from thinc.neural.util import get_array_module
+from thinc.api import get_array_module
 import catalogue
 
 try:
@@ -113,7 +113,7 @@ def get_noun_phrases(doc: Doc) -> List[Span]:
     """
     trim_labels = ("advmod", "amod", "compound")
     spans = []
-    if doc.is_parsed:
+    if doc.has_annotation("DEP"):
         for np in doc.noun_chunks:
             while len(np) > 1 and np[0].dep_ not in trim_labels:
                 np = np[1:]
@@ -178,24 +178,3 @@ def cosine_similarity(vec1, vec2) -> float:
     if norm1 == norm2:
         return 1.0
     return xp.dot(vec1, vec2) / (norm1 * norm2)
-
-
-class SimpleFrozenDict(dict):
-    """Simplified implementation of a frozen dict, mainly used as default
-    function or method argument (for arguments that should default to empty
-    dictionary). Will raise an error if user or spaCy attempts to add to dict.
-    """
-
-    err = (
-        "Can't write to frozen dictionary. This is likely an internal error. "
-        "Are you writing to a default function argument?"
-    )
-
-    def __setitem__(self, key, value):
-        raise NotImplementedError(self.err)
-
-    def pop(self, key, default=None):
-        raise NotImplementedError(self.err)
-
-    def update(self, other):
-        raise NotImplementedError(self.err)
