@@ -51,14 +51,12 @@ def main(
                     f.write(doc_bin_bytes)
                 msg.good(f"Saved parsed docs to file", output_file.resolve())
                 doc_bin = DocBin(attrs=["POS", "TAG", "DEP", "ENT_TYPE", "ENT_IOB"])
+        batch_num += 1
+        output_file = output_path / f"{input_path.stem}-{batch_num}.spacy"
+        doc_bin_bytes = doc_bin.to_bytes()
         with output_file.open("wb") as f:
-            batch_num += 1
-            output_file = output_path / f"{input_path.stem}-{batch_num}.spacy"
-            doc_bin_bytes = doc_bin.to_bytes()
             f.write(doc_bin_bytes)
-            msg.good(
-                f"Complete. Saved final parsed docs to file", output_file.resolve()
-            )
+        msg.good(f"Complete. Saved final parsed docs to file", output_file.resolve())
 
 
 if __name__ == "__main__":
