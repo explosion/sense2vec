@@ -58,7 +58,7 @@ def main(
     discarded.update(get_minority_keys(vocab, min_freq_ratio))
     discarded.update(get_redundant_keys(vocab, vectors, min_distance))
     n_vectors = len(vectors) - len(discarded)
-    s2v = Sense2Vec(shape=(n_vectors, vector_size), senses=all_senses)
+    s2v = Sense2Vec(shape=(n_vectors, vector_size), senses=list(all_senses))
     for key, vector in vectors.items():
         if key not in discarded:
             s2v.add(key, vector)
