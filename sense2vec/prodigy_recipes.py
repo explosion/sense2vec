@@ -60,7 +60,8 @@ def teach(
     for seed in seeds:
         key = s2v.get_best_sense(seed)
         if key is None:
-            msg.fail(f"Can't find seed term '{seed}' in vectors", exits=1)
+            msg.warn(f"Can't find seed term '{seed}' in vectors")
+            continue
         accept_keys.append(key)
         best_word, best_sense = s2v.split_key(key)
         seen.add(best_word if case_sensitive else best_word.lower())
@@ -72,6 +73,13 @@ def teach(
             "answer": "accept",
         }
         seed_tasks.append(set_hashes(task))
+    if len(accept_keys) == 0:
+        msg.fail(
+            "No seeds available. This typically happens if none of your seed "
+            "terms are found in the vectors. Try using more generic terms or "
+            "different vectors that cover the expressions you're looking for.",
+            exits=1,
+        )
     print(f"Starting with seed keys: {accept_keys}")
     DB = connect()
     if dataset not in DB:
