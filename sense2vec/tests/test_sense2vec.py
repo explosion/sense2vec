@@ -47,6 +47,8 @@ def test_sense2vec_other_senses():
     assert sorted(others) == ["a|B", "a|C"]
     others = s2v.get_other_senses("b|C")
     assert others == ["b|A"]
+    others = s2v.get_other_senses("B|C")
+    assert others == ["b|A"]
     others = s2v.get_other_senses("c|A")
     assert others == []
 
@@ -57,6 +59,7 @@ def test_sense2vec_best_sense():
     for key, freq in [("a|A", 100), ("a|B", 50), ("a|C", 10), ("b|A", 1), ("B|C", 2)]:
         s2v.add(key, numpy.asarray([4, 2, 2, 2], dtype=numpy.float32), freq)
     assert s2v.get_best_sense("a") == "a|A"
+    assert s2v.get_best_sense("A") == "a|A"
     assert s2v.get_best_sense("b") == "B|C"
     assert s2v.get_best_sense("b", ignore_case=False) == "b|A"
     assert s2v.get_best_sense("c") is None

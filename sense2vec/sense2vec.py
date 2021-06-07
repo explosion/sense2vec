@@ -247,7 +247,7 @@ class Sense2Vec(object):
         result = []
         key = key if isinstance(key, str) else self.strings[key]
         word, orig_sense = self.split_key(key)
-        versions = [word, word.upper(), word.title()] if ignore_case else [word]
+        versions = set([word, word.lower(), word.upper(), word.title()]) if ignore_case else [word]
         for text in versions:
             for sense in self.senses:
                 new_key = self.make_key(text, sense)
@@ -270,7 +270,7 @@ class Sense2Vec(object):
         sense_options = senses or self.senses
         if not sense_options:
             return None
-        versions = [word, word.upper(), word.title()] if ignore_case else [word]
+        versions = set([word, word.lower(), word.upper(), word.title()]) if ignore_case else [word]
         freqs = []
         for text in versions:
             for sense in sense_options:
