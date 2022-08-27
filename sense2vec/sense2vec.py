@@ -204,6 +204,8 @@ class Sense2Vec(object):
         """
         if isinstance(keys, (str, int)):
             keys = [keys]
+        if keys == None:
+            return [] 
         for key in keys:
             if key not in self:
                 raise ValueError(f"Can't find key {key} in table")
