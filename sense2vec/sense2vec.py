@@ -204,7 +204,7 @@ class Sense2Vec(object):
         """
         if isinstance(keys, (str, int)):
             keys = [keys]
-        if keys == None:
+        if keys is None:
             return [] 
         for key in keys:
             if key not in self:
