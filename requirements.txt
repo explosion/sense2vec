@@ -1,10 +1,10 @@
 # Our packages
 spacy>=3.0.0,<4.0.0
-wasabi>=0.8.1,<1.1.0
+wasabi>=0.8.1,<1.2.0
 srsly>=2.4.0,<3.0.0
 catalogue>=2.0.1,<2.1.0
 # Third-party dependencies
 numpy>=1.15.0
 importlib_metadata>=0.20; python_version < "3.8"
 # Development requirements
-pytest>=5.2.0,<6.0.0
+pytest>=5.2.0,!=7.1.0

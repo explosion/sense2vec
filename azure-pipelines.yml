@@ -9,23 +9,20 @@ jobs:
   strategy:
     matrix:
       Python36Linux:
-        imageName: 'ubuntu-16.04'
+        imageName: 'ubuntu-20.04'
         python.version: '3.6'
       Python36Windows:
-        imageName: 'vs2017-win2016'
-        python.version: '3.6'
-      Python36Mac:
-        imageName: 'macos-10.14'
+        imageName: 'windows-2019'
         python.version: '3.6'
       Python38Linux:
-        imageName: 'ubuntu-16.04'
+        imageName: 'ubuntu-latest'
         python.version: '3.8'
-      Python38Windows:
-        imageName: 'vs2017-win2016'
-        python.version: '3.8'
-      Python38Mac:
-        imageName: 'macos-10.14'
-        python.version: '3.8'
+      Python39Windows:
+        imageName: 'windows-latest'
+        python.version: '3.9'
+      Python311Mac:
+        imageName: 'macos-latest'
+        python.version: '3.11'
     maxParallel: 4
   pool:
     vmImage: $(imageName)
