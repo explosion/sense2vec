@@ -60,5 +60,7 @@ jobs:
 
   - script: |
       pip install -r requirements.txt
+      # TEMP: test with latest wasabi
+      pip install -U wasabi
       python -m pytest --pyargs sense2vec
     displayName: "Run tests"
