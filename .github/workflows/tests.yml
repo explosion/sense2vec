@@ -1,0 +1,82 @@
+name: tests
+
+on:
+  push:
+    paths-ignore:
+      - "*.md"
+  pull_request:
+    types: [opened, synchronize, reopened, edited]
+    paths-ignore:
+      - "*.md"
+
+env:
+  MODULE_NAME: 'sense2vec'
+  RUN_MYPY: 'false'
+
+jobs:
+  tests:
+    name: Test
+    if: github.repository_owner == 'explosion'
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        python_version: ["3.7", "3.8", "3.9", "3.10", "3.11"]
+        include:
+          - os: windows-2019
+            python_version: "3.6"
+          - os: ubuntu-20.04
+            python_version: "3.6"
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - name: Check out repo
+        uses: actions/checkout@v3
+
+      - name: Configure Python version
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python_version }}
+          architecture: x64
+
+      - name: Build sdist
+        run: |
+          python -m pip install -U build pip setuptools
+          python -m pip install -U -r requirements.txt
+          python -m build --sdist
+
+      - name: Run mypy
+        shell: bash
+        if: ${{ env.RUN_MYPY == 'true' }}
+        run: |
+          python -m mypy $MODULE_NAME
+
+      - name: Delete source directory
+        shell: bash
+        run: |
+          rm -rf $MODULE_NAME
+
+      - name: Uninstall all packages
+        run: |
+          python -m pip freeze > installed.txt
+          python -m pip uninstall -y -r installed.txt
+
+      - name: Install from sdist
+        shell: bash
+        run: |
+          SDIST=$(python -c "import os;print(os.listdir('./dist')[-1])" 2>&1)
+          pip install dist/$SDIST
+
+      - name: Test import
+        shell: bash
+        run: |
+          python -c "import $MODULE_NAME" -Werror
+
+      - name: Install test requirements
+        run: |
+          python -m pip install -U -r requirements.txt
+
+      - name: Run tests
+        shell: bash
+        run: |
+          python -m pytest --pyargs $MODULE_NAME -Werror
