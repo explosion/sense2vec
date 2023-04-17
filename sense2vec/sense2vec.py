@@ -313,7 +313,7 @@ class Sense2Vec(object):
         """
         data = srsly.msgpack_loads(bytes_data)
         self.vectors = Vectors().from_bytes(data["vectors"])
-        # Pin vectors to the CPU so that we don't get up comparing
+        # Pin vectors to the CPU so that we don't end up comparing
         # numpy and cupy arrays.
         self.vectors.to_ops(NumpyOps())
         self.freqs = dict(data.get("freqs", []))
@@ -352,7 +352,7 @@ class Sense2Vec(object):
         freqs_path = path / "freqs.json"
         cache_path = path / "cache"
         self.vectors = Vectors().from_disk(path)
-        # Pin vectors to the CPU so that we don't get up comparing
+        # Pin vectors to the CPU so that we don't end up comparing
         # numpy and cupy arrays.
         self.vectors.to_ops(NumpyOps())
         self.cfg.update(srsly.read_json(path / "cfg"))
