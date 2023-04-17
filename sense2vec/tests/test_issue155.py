@@ -9,3 +9,6 @@ def test_issue155():
 
     s2v = Sense2Vec().from_disk(data_path)
     s2v.most_similar("beekeepers|NOUN")
+
+    # Restore CPU ops for the rest of the session
+    spacy.require_cpu()
