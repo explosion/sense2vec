@@ -3,6 +3,7 @@ from pathlib import Path
 from spacy.vectors import Vectors
 from spacy.strings import StringStore
 from spacy.util import SimpleFrozenDict
+from thinc.api import NumpyOps
 import numpy
 import srsly
 
@@ -247,7 +248,11 @@ class Sense2Vec(object):
         result = []
         key = key if isinstance(key, str) else self.strings[key]
         word, orig_sense = self.split_key(key)
-        versions = set([word, word.lower(), word.upper(), word.title()]) if ignore_case else [word]
+        versions = (
+            set([word, word.lower(), word.upper(), word.title()])
+            if ignore_case
+            else [word]
+        )
         for text in versions:
             for sense in self.senses:
                 new_key = self.make_key(text, sense)
@@ -270,7 +275,11 @@ class Sense2Vec(object):
         sense_options = senses or self.senses
         if not sense_options:
             return None
-        versions = set([word, word.lower(), word.upper(), word.title()]) if ignore_case else [word]
+        versions = (
+            set([word, word.lower(), word.upper(), word.title()])
+            if ignore_case
+            else [word]
+        )
         freqs = []
         for text in versions:
             for sense in sense_options:
@@ -304,6 +313,9 @@ class Sense2Vec(object):
         """
         data = srsly.msgpack_loads(bytes_data)
         self.vectors = Vectors().from_bytes(data["vectors"])
+        # Pin vectors to the CPU so that we don't get up comparing
+        # numpy and cupy arrays.
+        self.vectors.to_ops(NumpyOps())
         self.freqs = dict(data.get("freqs", []))
         self.cfg.update(data.get("cfg", {}))
         if "strings" not in exclude and "strings" in data:
@@ -340,6 +352,9 @@ class Sense2Vec(object):
         freqs_path = path / "freqs.json"
         cache_path = path / "cache"
         self.vectors = Vectors().from_disk(path)
+        # Pin vectors to the CPU so that we don't get up comparing
+        # numpy and cupy arrays.
+        self.vectors.to_ops(NumpyOps())
         self.cfg.update(srsly.read_json(path / "cfg"))
         if freqs_path.exists():
             self.freqs = dict(srsly.read_json(freqs_path))
