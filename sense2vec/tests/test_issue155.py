@@ -1,8 +1,11 @@
 from pathlib import Path
+import pytest
 import spacy
 from sense2vec.sense2vec import Sense2Vec
+from thinc.util import has_cupy_gpu
 
 
+@pytest.mark.skipif(not has_cupy_gpu, reason="requires Cupy/GPU")
 def test_issue155():
     data_path = Path(__file__).parent / "data"
     spacy.require_gpu()
