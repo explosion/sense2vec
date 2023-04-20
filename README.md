@@ -14,7 +14,7 @@ semantic similarities across all Reddit comments of 2015 and 2019, see the
 🦆 **Version 2.0 (for spaCy v3) out now!**
 [Read the release notes here.](https://github.com/explosion/sense2vec/releases/)
 
-[![Azure Pipelines](https://img.shields.io/azure-devops/build/explosion-ai/public/12/master.svg?logo=azure-pipelines&style=flat-square&label=build)](https://dev.azure.com/explosion-ai/public/_build?definitionId=12)
+[![tests](https://github.com/explosion/sense2vec/actions/workflows/tests.yml/badge.svg)](https://github.com/explosion/sense2vec/actions/workflows/tests.yml)
 [![Current Release Version](https://img.shields.io/github/v/release/explosion/sense2vec.svg?style=flat-square&logo=github)](https://github.com/explosion/sense2vec/releases)
 [![pypi Version](https://img.shields.io/pypi/v/sense2vec.svg?style=flat-square&logo=pypi&logoColor=white)](https://pypi.org/project/sense2vec/)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg?style=flat-square)](https://github.com/ambv/black)
@@ -59,7 +59,11 @@ most_similar = s2v.most_similar(query, n=3)
 
 ### Usage as a spaCy pipeline component
 
-> ⚠️ Note that this example describes usage with [spaCy v3](https://spacy.io/usage/v3). For usage with spaCy v2, download `sense2vec==1.0.3` and check out the [`v1.x`](https://github.com/explosion/sense2vec/tree/v1.x) branch of this repo.
+> ⚠️ Note that this example describes usage with
+> [spaCy v3](https://spacy.io/usage/v3). For usage with spaCy v2, download
+> `sense2vec==1.0.3` and check out the
+> [`v1.x`](https://github.com/explosion/sense2vec/tree/v1.x) branch of this
+> repo.
 
 ```python
 import spacy
@@ -188,12 +192,12 @@ The following attributes are available via the `._` property of `Token` and
 `Span` objects – for example `token._.in_s2v`:
 
 | Name               | Attribute Type | Return Type        | Description                                                                        |
-| ------------------ | -------------- | ------------------ | ---------------------------------------------------------------------------------- |
+| ------------------ | -------------- | ------------------ | ---------------------------------------------------------------------------------- | --------------- | ------- |
 | `in_s2v`           | property       | bool               | Whether a key exists in the vector map.                                            |
-| `s2v_key`          | property       | unicode            | The sense2vec key of the given object, e.g. `"duck|NOUN"`.                         |
+| `s2v_key`          | property       | unicode            | The sense2vec key of the given object, e.g. `"duck                                 | NOUN"`.         |
 | `s2v_vec`          | property       | `ndarray[float32]` | The vector of the given key.                                                       |
 | `s2v_freq`         | property       | int                | The frequency of the given key.                                                    |
-| `s2v_other_senses` | property       | list               | Available other senses, e.g. `"duck|VERB"` for `"duck|NOUN"`.                      |
+| `s2v_other_senses` | property       | list               | Available other senses, e.g. `"duck                                                | VERB"`for`"duck | NOUN"`. |
 | `s2v_most_similar` | method         | list               | Get the `n` most similar terms. Returns a list of `((word, sense), score)` tuples. |
 | `s2v_similarity`   | method         | float              | Get the similarity to another `Token` or `Span`.                                   |
 
@@ -207,7 +211,10 @@ The following attributes are available via the `._` property of `Token` and
 
 #### Adding sense2vec to a trained pipeline
 
-If you're training and packaging a spaCy pipeline and want to include a sense2vec component in it, you can load in the data via the [`[initialize]` block](https://spacy.io/usage/training#config-lifecycle) of the training config:
+If you're training and packaging a spaCy pipeline and want to include a
+sense2vec component in it, you can load in the data via the
+[`[initialize]` block](https://spacy.io/usage/training#config-lifecycle) of the
+training config:
 
 ```ini
 [initialize.components]
@@ -655,10 +662,10 @@ custom functions, swap them out and serialize the custom names when you save out
 the model. The following registry options are available:
 
 | Name                      | Description                                                                                                                                                                                                                                        |
-| ------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `registry.make_key`       | Given a `word` and `sense`, return a string of the key, e.g. `"word|sense".`                                                                                                                                                                       |
+| ------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- |
+| `registry.make_key`       | Given a `word` and `sense`, return a string of the key, e.g. `"word                                                                                                                                                                                | sense".` |
 | `registry.split_key`      | Given a string key, return a `(word, sense)` tuple.                                                                                                                                                                                                |
-| `registry.make_spacy_key` | Given a spaCy object (`Token` or `Span`) and a boolean `prefer_ents` keyword argument (whether to prefer the entity label for single tokens), return a `(word, sense)` tuple. Used in extension attributes to generate a key for tokens and spans. |  |
+| `registry.make_spacy_key` | Given a spaCy object (`Token` or `Span`) and a boolean `prefer_ents` keyword argument (whether to prefer the entity label for single tokens), return a `(word, sense)` tuple. Used in extension attributes to generate a key for tokens and spans. |          |
 | `registry.get_phrases`    | Given a spaCy `Doc`, return a list of `Span` objects used for sense2vec phrases (typically noun phrases and named entities).                                                                                                                       |
 | `registry.merge_phrases`  | Given a spaCy `Doc`, get all sense2vec phrases and merge them into single tokens.                                                                                                                                                                  |
 
@@ -719,15 +726,13 @@ The training process is split up into several steps to allow you to resume at
 any given point. Processing scripts are designed to operate on single files,
 making it easy to parallellize the work. The scripts in this repo require either
 [Glove](https://github.com/stanfordnlp/GloVe) or
-[fastText](https://github.com/facebookresearch/fastText) which you need to
-clone and `make`.
+[fastText](https://github.com/facebookresearch/fastText) which you need to clone
+and `make`.
 
-For Fasttext, the scripts will require the path to the created binary file.
-If you're working on Windows, you can build with `cmake`, or alternatively
-use the `.exe` file from this **unofficial**
-repo with FastText binary builds for Windows:
-https://github.com/xiamx/fastText/releases.
-
+For Fasttext, the scripts will require the path to the created binary file. If
+you're working on Windows, you can build with `cmake`, or alternatively use the
+`.exe` file from this **unofficial** repo with FastText binary builds for
+Windows: https://github.com/xiamx/fastText/releases.
 
 |        | Script                                                                                                                                       | Description                                                                                                                                                                                 |
 | ------ | -------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -764,8 +769,8 @@ The following recipes are available – see below for more detailed docs.
 ### <kbd>recipe</kbd> `sense2vec.teach`
 
 Bootstrap a terminology list using sense2vec. Prodigy will suggest similar terms
-based on the most similar phrases from sense2vec, and the suggestions will
-be adjusted as you annotate and accept similar phrases. For each seed term, the
+based on the most similar phrases from sense2vec, and the suggestions will be
+adjusted as you annotate and accept similar phrases. For each seed term, the
 best matching sense according to the sense2vec vectors will be used.
 
 ```bash
