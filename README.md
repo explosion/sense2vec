@@ -191,15 +191,15 @@ property:
 The following attributes are available via the `._` property of `Token` and
 `Span` objects – for example `token._.in_s2v`:
 
-| Name               | Attribute Type | Return Type        | Description                                                                                                        |
-| ------------------ | -------------- | ------------------ | ------------------------------------------------------------------------------------------------------------------ |
-| `in_s2v`           | property       | bool               | Whether a key exists in the vector map.                                                                            |
-| `s2v_key`          | property       | unicode            | The sense2vec key of the given object, e.g. `"duck                                 \| NOUN"`.                      |
-| `s2v_vec`          | property       | `ndarray[float32]` | The vector of the given key.                                                                                       |
-| `s2v_freq`         | property       | int                | The frequency of the given key.                                                                                    |
-| `s2v_other_senses` | property       | list               | Available other senses, e.g. `"duck                                                \| VERB"` for `"duck \| NOUN"`. |
-| `s2v_most_similar` | method         | list               | Get the `n` most similar terms. Returns a list of `((word, sense), score)` tuples.                                 |
-| `s2v_similarity`   | method         | float              | Get the similarity to another `Token` or `Span`.                                                                   |
+| Name               | Attribute Type | Return Type        | Description                                                                        |
+| ------------------ | -------------- | ------------------ | ---------------------------------------------------------------------------------- |
+| `in_s2v`           | property       | bool               | Whether a key exists in the vector map.                                            |
+| `s2v_key`          | property       | unicode            | The sense2vec key of the given object, e.g. `"duck\|NOUN"`.                        |
+| `s2v_vec`          | property       | `ndarray[float32]` | The vector of the given key.                                                       |
+| `s2v_freq`         | property       | int                | The frequency of the given key.                                                    |
+| `s2v_other_senses` | property       | list               | Available other senses, e.g. `"duck\|VERB"` for `"duck\|NOUN"`.                    |
+| `s2v_most_similar` | method         | list               | Get the `n` most similar terms. Returns a list of `((word, sense), score)` tuples. |
+| `s2v_similarity`   | method         | float              | Get the similarity to another `Token` or `Span`.                                   |
 
 > ⚠️ **A note on span attributes:** Under the hood, entities in `doc.ents` are
 > `Span` objects. This is why the pipeline component also adds attributes and
