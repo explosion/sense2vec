@@ -662,10 +662,10 @@ custom functions, swap them out and serialize the custom names when you save out
 the model. The following registry options are available:
 
 | Name                      | Description                                                                                                                                                                                                                                        |
-| ------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- |
-| `registry.make_key`       | Given a `word` and `sense`, return a string of the key, e.g. `"word                                                                                                                                                                                | sense".` |
+| ------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `registry.make_key`       | Given a `word` and `sense`, return a string of the key, e.g. `"word\|sense".` |
 | `registry.split_key`      | Given a string key, return a `(word, sense)` tuple.                                                                                                                                                                                                |
-| `registry.make_spacy_key` | Given a spaCy object (`Token` or `Span`) and a boolean `prefer_ents` keyword argument (whether to prefer the entity label for single tokens), return a `(word, sense)` tuple. Used in extension attributes to generate a key for tokens and spans. |          |
+| `registry.make_spacy_key` | Given a spaCy object (`Token` or `Span`) and a boolean `prefer_ents` keyword argument (whether to prefer the entity label for single tokens), return a `(word, sense)` tuple. Used in extension attributes to generate a key for tokens and spans. |
 | `registry.get_phrases`    | Given a spaCy `Doc`, return a list of `Span` objects used for sense2vec phrases (typically noun phrases and named entities).                                                                                                                       |
 | `registry.merge_phrases`  | Given a spaCy `Doc`, get all sense2vec phrases and merge them into single tokens.                                                                                                                                                                  |
 
