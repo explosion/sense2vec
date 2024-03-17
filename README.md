@@ -107,7 +107,7 @@ To use the vectors, download the archive(s) and pass the extracted directory to
 **attached to the GitHub release**. Large files have been split into multi-part
 downloads.
 
-| Vectors              |   Size | Description                  | 📥 Download (zipped)                                                                                                                                                                                                                                                                                                      |
+| Vectors              |   Size | Description                  | 📥 Download (zipped)                                                                                                                                                                                                                                                                                                       |
 | -------------------- | -----: | ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `s2v_reddit_2019_lg` |   4 GB | Reddit comments 2019 (01-07) | [part 1](https://github.com/explosion/sense2vec/releases/download/v1.0.0/s2v_reddit_2019_lg.tar.gz.001), [part 2](https://github.com/explosion/sense2vec/releases/download/v1.0.0/s2v_reddit_2019_lg.tar.gz.002), [part 3](https://github.com/explosion/sense2vec/releases/download/v1.0.0/s2v_reddit_2019_lg.tar.gz.003) |
 | `s2v_reddit_2015_md` | 573 MB | Reddit comments 2015         | [part 1](https://github.com/explosion/sense2vec/releases/download/v1.0.0/s2v_reddit_2015_md.tar.gz)                                                                                                                                                                                                                       |
@@ -191,15 +191,15 @@ property:
 The following attributes are available via the `._` property of `Token` and
 `Span` objects – for example `token._.in_s2v`:
 
-| Name               | Attribute Type | Return Type        | Description                                                                        |
-| ------------------ | -------------- | ------------------ | ---------------------------------------------------------------------------------- | --------------- | ------- |
-| `in_s2v`           | property       | bool               | Whether a key exists in the vector map.                                            |
-| `s2v_key`          | property       | unicode            | The sense2vec key of the given object, e.g. `"duck                                 | NOUN"`.         |
-| `s2v_vec`          | property       | `ndarray[float32]` | The vector of the given key.                                                       |
-| `s2v_freq`         | property       | int                | The frequency of the given key.                                                    |
-| `s2v_other_senses` | property       | list               | Available other senses, e.g. `"duck                                                | VERB"`for`"duck | NOUN"`. |
-| `s2v_most_similar` | method         | list               | Get the `n` most similar terms. Returns a list of `((word, sense), score)` tuples. |
-| `s2v_similarity`   | method         | float              | Get the similarity to another `Token` or `Span`.                                   |
+| Name               | Attribute Type | Return Type        | Description                                                                                                        |
+| ------------------ | -------------- | ------------------ | ------------------------------------------------------------------------------------------------------------------ |
+| `in_s2v`           | property       | bool               | Whether a key exists in the vector map.                                                                            |
+| `s2v_key`          | property       | unicode            | The sense2vec key of the given object, e.g. `"duck                                 \| NOUN"`.                      |
+| `s2v_vec`          | property       | `ndarray[float32]` | The vector of the given key.                                                                                       |
+| `s2v_freq`         | property       | int                | The frequency of the given key.                                                                                    |
+| `s2v_other_senses` | property       | list               | Available other senses, e.g. `"duck                                                \| VERB"` for `"duck \| NOUN"`. |
+| `s2v_most_similar` | method         | list               | Get the `n` most similar terms. Returns a list of `((word, sense), score)` tuples.                                 |
+| `s2v_similarity`   | method         | float              | Get the similarity to another `Token` or `Span`.                                                                   |
 
 > ⚠️ **A note on span attributes:** Under the hood, entities in `doc.ents` are
 > `Span` objects. This is why the pipeline component also adds attributes and
@@ -456,12 +456,12 @@ average of the vectors is used. To make this method faster, see the
 [script for precomputing a cache](scripts/06_precompute_cache.py) of the nearest
 neighbors.
 
-| Argument     | Type                      | Description                                             |
-| ------------ | ------------------------- | ------------------------------------------------------- |
-| `keys`       | unicode / int / iterable  | The string or integer key(s) to compare to.             |
-| `n`          | int                       | The number of similar keys to return. Defaults to `10`. |
-| `batch_size` | int                       | The batch size to use. Defaults to `16`.                |
-| **RETURNS**  | list                      | The `(key, score)` tuples of the most similar vectors.  |
+| Argument     | Type                     | Description                                             |
+| ------------ | ------------------------ | ------------------------------------------------------- |
+| `keys`       | unicode / int / iterable | The string or integer key(s) to compare to.             |
+| `n`          | int                      | The number of similar keys to return. Defaults to `10`. |
+| `batch_size` | int                      | The batch size to use. Defaults to `16`.                |
+| **RETURNS**  | list                     | The `(key, score)` tuples of the most similar vectors.  |
 
 ```python
 most_similar = s2v.most_similar("natural_language_processing|NOUN", n=3)
@@ -667,7 +667,7 @@ the model. The following registry options are available:
 | `registry.split_key`      | Given a string key, return a `(word, sense)` tuple.                                                                                                                                                                                                |
 | `registry.make_spacy_key` | Given a spaCy object (`Token` or `Span`) and a boolean `prefer_ents` keyword argument (whether to prefer the entity label for single tokens), return a `(word, sense)` tuple. Used in extension attributes to generate a key for tokens and spans. |          |
 | `registry.get_phrases`    | Given a spaCy `Doc`, return a list of `Span` objects used for sense2vec phrases (typically noun phrases and named entities).                                                                                                                       |
-| `registry.merge_phrases`  | Given a spaCy `Doc`, get all sense2vec phrases and merge them into single tokens.                                                                                                                                                                  |
+| `registry.merge_phrases`  | Given a spaCy `Doc`, get all sense2vec phrases and merge them into single tokens.                                                                                                                                                                  |
 
 Each registry has a `register` method that can be used as a function decorator
 and takes one argument, the name of the custom function.
@@ -944,7 +944,7 @@ part-of-speech tags or entity labels. For more details, see spaCy's
 | `ADJ`   | adjective                 | big, old, green                      |
 | `ADP`   | adposition                | in, to, during                       |
 | `ADV`   | adverb                    | very, tomorrow, down, where          |
-| `AUX`   | auxiliary                 | is, has (done), will (do)            |
+| `AUX`   | auxiliary                 | is, has (done), will (do)            |
 | `CONJ`  | conjunction               | and, or, but                         |
 | `DET`   | determiner                | a, an, the                           |
 | `INTJ`  | interjection              | psst, ouch, bravo, hello             |
@@ -955,7 +955,7 @@ part-of-speech tags or entity labels. For more details, see spaCy's
 | `PROPN` | proper noun               | Mary, John, London, NATO, HBO        |
 | `PUNCT` | punctuation               | , ? ( )                              |
 | `SCONJ` | subordinating conjunction | if, while, that                      |
-| `SYM`   | symbol                    | \$, %, =, :), 😝                     |
+| `SYM`   | symbol                    | \$, %, =, :), 😝                      |
 | `VERB`  | verb                      | run, runs, running, eat, ate, eating |
 
 | Entity Label  | Description                                          |
