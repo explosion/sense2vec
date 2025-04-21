@@ -192,12 +192,12 @@ The following attributes are available via the `._` property of `Token` and
 `Span` objects – for example `token._.in_s2v`:
 
 | Name               | Attribute Type | Return Type        | Description                                                                        |
-| ------------------ | -------------- | ------------------ | ---------------------------------------------------------------------------------- | --------------- | ------- |
+| ------------------ | -------------- | ------------------ | ---------------------------------------------------------------------------------- |
 | `in_s2v`           | property       | bool               | Whether a key exists in the vector map.                                            |
-| `s2v_key`          | property       | unicode            | The sense2vec key of the given object, e.g. `"duck                                 | NOUN"`.         |
+| `s2v_key`          | property       | unicode            | The sense2vec key of the given object, e.g. `"duck NOUN"`.                         |
 | `s2v_vec`          | property       | `ndarray[float32]` | The vector of the given key.                                                       |
 | `s2v_freq`         | property       | int                | The frequency of the given key.                                                    |
-| `s2v_other_senses` | property       | list               | Available other senses, e.g. `"duck                                                | VERB"`for`"duck | NOUN"`. |
+| `s2v_other_senses` | property       | list               | Available other senses, e.g. `"duck\|VERB"` for `"duck\|NOUN"`.                    |
 | `s2v_most_similar` | method         | list               | Get the `n` most similar terms. Returns a list of `((word, sense), score)` tuples. |
 | `s2v_similarity`   | method         | float              | Get the similarity to another `Token` or `Span`.                                   |
 
@@ -662,10 +662,10 @@ custom functions, swap them out and serialize the custom names when you save out
 the model. The following registry options are available:
 
 | Name                      | Description                                                                                                                                                                                                                                        |
-| ------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- |
-| `registry.make_key`       | Given a `word` and `sense`, return a string of the key, e.g. `"word                                                                                                                                                                                | sense".` |
+| ------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | 
+| `registry.make_key`       | Given a `word` and `sense`, return a string of the key, e.g. `"word\|sense".`                                                                                                                                                                      |
 | `registry.split_key`      | Given a string key, return a `(word, sense)` tuple.                                                                                                                                                                                                |
-| `registry.make_spacy_key` | Given a spaCy object (`Token` or `Span`) and a boolean `prefer_ents` keyword argument (whether to prefer the entity label for single tokens), return a `(word, sense)` tuple. Used in extension attributes to generate a key for tokens and spans. |          |
+| `registry.make_spacy_key` | Given a spaCy object (`Token` or `Span`) and a boolean `prefer_ents` keyword argument (whether to prefer the entity label for single tokens), return a `(word, sense)` tuple. Used in extension attributes to generate a key for tokens and spans. |
 | `registry.get_phrases`    | Given a spaCy `Doc`, return a list of `Span` objects used for sense2vec phrases (typically noun phrases and named entities).                                                                                                                       |
 | `registry.merge_phrases`  | Given a spaCy `Doc`, get all sense2vec phrases and merge them into single tokens.                                                                                                                                                                  |
 
