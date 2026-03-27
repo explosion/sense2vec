@@ -9,6 +9,9 @@ on:
     paths-ignore:
       - "*.md"
 
+permissions:
+  contents: read
+
 env:
   MODULE_NAME: 'sense2vec'
   RUN_MYPY: 'false'
